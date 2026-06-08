@@ -1,6 +1,6 @@
 interface:
   display_name: "GaoGao Office"
-  short_description: "让一个项目总管窗口接管长期项目，并按本机容量调度员工对话"
-  default_prompt: "使用 $gaogao-office 给这个项目做一次只读体检。先判断项目用途；如果判断不出来，只问我一句这个项目主要想做什么。然后提出一份 Agent Office 组织方案，说明当前对话会担任项目总管，我可以继续只和项目总管对话。等我回复 A/B/C/D 后再创建文件、应用 AGENTS.md 或邀请员工入职；A 是按推荐团队正式接管，B 是单窗口接管，C 是自定义团队，D 是暂不接管。接管完成后再问我要不要进入方向顾问模式。"
+  short_description: "把长期 AI 项目整理成可交接、可追踪的 Agent Office"
+  default_prompt: "使用 $gaogao-office 只读体检当前项目，展示接管流程图并提出 A/B/C/D 组织方案；等我确认后，再创建 Agent Office、应用 AGENTS.md 和邀请员工入职。"
 policy:
   allow_implicit_invocation: true
