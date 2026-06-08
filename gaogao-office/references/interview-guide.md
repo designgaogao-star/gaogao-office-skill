@@ -15,10 +15,10 @@ Use concise numbered questions. Ask only what changes the office design.
 1. Which old files are authoritative project truth?
 2. Should old `vibe/`, planning, or context files be absorbed into the new public office?
 3. Should root `AGENTS.md` be replaced after the proposal is reviewed?
-4. Should absorbed old framework files be copied only, or moved into `Agent Office/Archive/Legacy Management/` after approval?
+4. Should absorbed old knowledge files be moved into `Agent Office/Archive/Old Project Memory/` during formal takeover, or left in place for now?
 5. Which roles should become long-running windows now, and which can wait?
 
-Recommended default: absorb durable facts into `Agent Office/`, copy old framework files into `Agent Office/Archive/Legacy Management/`, move originals only after separate explicit approval, and delete originals only after an exact deletion confirmation.
+Recommended default: absorb durable facts into `Agent Office/`, move or copy approved old knowledge into `Agent Office/Archive/Old Project Memory/` during formal takeover, and never delete originals without a separate exact deletion confirmation.
 
 ## Role Planning
 

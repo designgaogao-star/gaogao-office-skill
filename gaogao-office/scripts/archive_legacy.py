@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy or explicitly move approved legacy files into GAOGAO Office archive."""
+"""Copy or explicitly move approved old-knowledge files into GaoGao Office archive."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from pathlib import Path, PureWindowsPath
 
 OFFICE_DIR = "Agent Office"
 ARCHIVE_DIR = "Archive"
-LEGACY_ARCHIVE_DIR = "Legacy Management"
+LEGACY_ARCHIVE_DIR = "Old Project Memory"
 
 SENSITIVE_DIRS = {".ssh", ".aws", ".gnupg"}
 SENSITIVE_NAMES = {
@@ -37,6 +37,7 @@ class ArchiveAction:
     source: str
     destination: str
     action: str
+    source_material: str = ""
 
 
 def is_link(path: Path) -> bool:
@@ -113,6 +114,81 @@ def table_source_paths(section: str) -> list[str]:
     return paths
 
 
+def table_source_lines(section: str) -> dict[str, str]:
+    lines: dict[str, str] = {}
+    for line in section.splitlines():
+        stripped = line.strip()
+        if is_markdown_table_separator(stripped) or "`" not in stripped:
+            continue
+        matches = []
+        for match in re.finditer(r"(`+)(.*?)\1", stripped):
+            value = match.group(2)
+            if value.startswith(" ") and value.endswith(" ") and len(value) >= 2:
+                value = value[1:-1]
+            matches.append(unescape_markdown_table_code(value))
+        if matches:
+            lines[matches[0]] = stripped
+    return lines
+
+
+def report_line_explanation(line: str) -> str:
+    without_code = re.sub(r"(`+)(.*?)\1", " ", line)
+    cleaned = re.sub(r"[\|\-\*\s]+", " ", without_code).strip(" :;,.")
+    return re.sub(r"\s+", " ", cleaned)
+
+
+def absorption_line_is_complete(line: str) -> bool:
+    explanation = report_line_explanation(line).lower()
+    if not explanation:
+        return False
+    if "needs absorption" in explanation or "proposed" in explanation or "pending" in explanation:
+        return False
+    return any(
+        token in explanation
+        for token in [
+            "absorbed",
+            "absorb",
+            "migrated",
+            "migration",
+            "summarized",
+            "summarised",
+            "copied into",
+            "merged into",
+            "吸收",
+            "归纳",
+            "迁移",
+            "写入",
+            "并入",
+        ]
+    )
+
+
+def validate_absorption_ready(report_text: str, sources: list[str]) -> None:
+    absorption_section = markdown_section(report_text, "Absorption Map")
+    absorption_by_source = table_source_lines(absorption_section)
+    incomplete: list[str] = []
+    missing: list[str] = []
+    for source in sources:
+        line = absorption_by_source.get(source)
+        if line is None:
+            missing.append(source)
+        elif not absorption_line_is_complete(line):
+            incomplete.append(source)
+    if missing:
+        raise SystemExit(
+            "Archive sources are missing from `## Absorption Map`: "
+            + ", ".join(missing[:8])
+            + (" ..." if len(missing) > 8 else "")
+        )
+    if incomplete:
+        raise SystemExit(
+            "Archive sources are not marked absorbed in `## Absorption Map`: "
+            + ", ".join(incomplete[:8])
+            + (" ..." if len(incomplete) > 8 else "")
+            + ". Update each Status cell after writing the durable facts into Agent Office."
+        )
+
+
 def is_safe_report_path(raw_path: str) -> bool:
     normalized = raw_path.replace("\\", "/")
     path = Path(normalized)
@@ -139,6 +215,26 @@ def is_sensitive_path(raw_path: str) -> bool:
     return False
 
 
+def assert_safe_source_tree(root: Path, source: Path, raw_source: str) -> None:
+    if not source.exists():
+        raise SystemExit(f"Archive source does not exist: {raw_source}")
+    if has_link_in_path(root, source):
+        raise SystemExit(f"Refusing to archive linked path: {raw_source}")
+    if not is_relative_to(source.resolve(strict=False), root.resolve()):
+        raise SystemExit(f"Archive source escapes project root: {raw_source}")
+    if source.is_file():
+        return
+    if not source.is_dir():
+        raise SystemExit(f"Archive source is not a regular file or directory: {raw_source}")
+    for child in source.rglob("*"):
+        child_rel = child.relative_to(root)
+        child_raw = str(child_rel).replace("\\", "/")
+        if has_link_in_path(root, child):
+            raise SystemExit(f"Refusing to archive linked path inside directory: {child_raw}")
+        if is_sensitive_path(child_raw):
+            raise SystemExit(f"Refusing to archive sensitive-looking path inside directory: {child_raw}")
+
+
 def validate_archive_stamp(archive_stamp: str) -> None:
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", archive_stamp):
         raise SystemExit("Unsafe archive stamp. Use one folder name containing only letters, numbers, dots, underscores, or hyphens.")
@@ -160,13 +256,52 @@ def load_archive_sources(report: Path, *, move_originals: bool) -> list[str]:
     approval_section = markdown_section(text, "User Approval Record")
     if approval_value(approval_section, "Approved archive list") != "YES":
         raise SystemExit("Archive list is not approved. Set `Approved archive list: YES` in `User Approval Record` first.")
-    if move_originals and approval_value(approval_section, "Approved legacy move list") != "YES":
-        raise SystemExit("Move list is not approved. Set `Approved legacy move list: YES` in `User Approval Record` first.")
     archive_section = markdown_section(text, "Proposed Archive List")
-    sources = table_source_paths(archive_section)
-    if not sources:
+    archive_sources = table_source_paths(archive_section)
+    if not archive_sources:
         raise SystemExit("No archive sources found in `## Proposed Archive List`.")
+    if move_originals:
+        if approval_value(approval_section, "Approved legacy move list") != "YES":
+            raise SystemExit("Move list is not approved. Set `Approved legacy move list: YES` in `User Approval Record` first.")
+        move_section = markdown_section(text, "Proposed Move List")
+        move_sources = table_source_paths(move_section)
+        if not move_sources:
+            raise SystemExit("No move sources found in `## Proposed Move List`.")
+        missing = [source for source in move_sources if source not in archive_sources]
+        if missing:
+            raise SystemExit(
+                "Move sources must also appear in `## Proposed Archive List`: "
+                + ", ".join(missing[:8])
+                + (" ..." if len(missing) > 8 else "")
+            )
+        sources = move_sources
+    else:
+        sources = archive_sources
+    validate_absorption_ready(text, sources)
     return sources
+
+
+def newest_agents_backup(root: Path) -> Path | None:
+    backups = [
+        path
+        for path in root.glob("AGENTS.md.gaogao-office-*.bak")
+        if path.is_file() and not has_link_in_path(root, path)
+    ]
+    if not backups:
+        return None
+    return sorted(backups, key=lambda path: (path.stat().st_mtime, path.name))[-1]
+
+
+def archive_material_for_source(root: Path, raw_source: str, source: Path, *, move_originals: bool) -> tuple[Path, str | None]:
+    normalized = raw_source.replace("\\", "/")
+    if normalized != "AGENTS.md":
+        return source, None
+    backup = newest_agents_backup(root)
+    if backup is not None:
+        return backup, "copy-from-backup"
+    if move_originals:
+        raise SystemExit("Refusing to move root `AGENTS.md` directly. Apply the new AGENTS.md first so the old one is backed up, then archive from that backup.")
+    return source, None
 
 
 def plan_archive(root: Path, sources: list[str], archive_stamp: str, *, move_originals: bool) -> list[ArchiveAction]:
@@ -183,12 +318,13 @@ def plan_archive(root: Path, sources: list[str], archive_stamp: str, *, move_ori
         if is_sensitive_path(raw_source):
             raise SystemExit(f"Refusing to archive sensitive-looking path: {raw_source}")
         source = root / raw_source
-        if has_link_in_path(root, source):
-            raise SystemExit(f"Refusing to archive linked path: {raw_source}")
-        if not is_relative_to(source.resolve(strict=False), root.resolve()):
-            raise SystemExit(f"Archive source escapes project root: {raw_source}")
-        if not source.is_file():
-            raise SystemExit(f"Archive source is not a regular file: {raw_source}")
+        assert_safe_source_tree(root, source, raw_source)
+        source_material, forced_action = archive_material_for_source(root, raw_source, source, move_originals=move_originals)
+        if source_material != source:
+            material_rel = str(source_material.relative_to(root)).replace("\\", "/")
+            assert_safe_source_tree(root, source_material, material_rel)
+        else:
+            material_rel = ""
         destination = archive_root / raw_source.replace("\\", "/")
         assert_safe_target(root, destination)
         try:
@@ -198,30 +334,33 @@ def plan_archive(root: Path, sources: list[str], archive_stamp: str, *, move_ori
         if destination.exists():
             if has_link_in_path(root, destination):
                 raise SystemExit(f"Archive destination is linked: {destination}")
-            if move_originals:
+            if source.is_dir():
+                raise SystemExit(f"Archive destination already exists for directory source: {destination}")
+            if move_originals and not forced_action:
                 raise SystemExit(f"Move destination already exists. Refusing to move over archived file: {destination}")
-            if destination.read_bytes() == source.read_bytes():
+            if destination.read_bytes() == source_material.read_bytes():
                 action = "skip-existing"
             else:
                 raise SystemExit(f"Archive destination already exists with different content: {destination}")
         else:
-            action = "move" if move_originals else "copy"
-        actions.append(ArchiveAction(raw_source, str(destination.relative_to(root)).replace("\\", "/"), action))
+            action = forced_action or ("move" if move_originals else "copy")
+        actions.append(ArchiveAction(raw_source, str(destination.relative_to(root)).replace("\\", "/"), action, material_rel))
     return actions
 
 
 def render_index(actions: list[ArchiveAction], archive_stamp: str) -> str:
     lines = [
-        "# Legacy Management Archive Index",
+        "# Old Project Memory Archive Index",
         "",
         f"Archive stamp: {archive_stamp}",
-        "Read boundary: human-review/audit only; ordinary employees should not read this archive.",
+        "Read boundary: old project memory after absorption; ordinary employees should not read this archive.",
         "",
-        "| Source | Archive Copy | Action |",
-        "|---|---|---|",
+        "| Source | Archive Copy | Action | Source Material |",
+        "|---|---|---|---|",
     ]
     for action in actions:
-        lines.append(f"| `{action.source}` | `{action.destination}` | {action.action} |")
+        material = action.source_material or action.source
+        lines.append(f"| `{action.source}` | `{action.destination}` | {action.action} | `{material}` |")
     return "\n".join(lines) + "\n"
 
 
@@ -234,11 +373,13 @@ def write_archive(root: Path, actions: list[ArchiveAction], archive_stamp: str, 
     for action in actions:
         if action.action == "skip-existing":
             continue
-        source = root / action.source
+        source = root / (action.source_material or action.source)
         destination = root / action.destination
         destination.parent.mkdir(parents=True, exist_ok=True)
         if action.action == "move":
-            shutil.move(str(source), str(destination))
+            shutil.move(str(root / action.source), str(destination))
+        elif source.is_dir():
+            shutil.copytree(source, destination)
         else:
             shutil.copy2(source, destination)
     index.parent.mkdir(parents=True, exist_ok=True)
@@ -246,7 +387,7 @@ def write_archive(root: Path, actions: list[ArchiveAction], archive_stamp: str, 
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Copy or explicitly move approved legacy files into the GAOGAO Office archive.")
+    parser = argparse.ArgumentParser(description="Copy or explicitly move approved old-knowledge files into the GaoGao Office archive.")
     parser.add_argument("--project-root", default=".", help="Project root containing Agent Office/migration-report.md")
     parser.add_argument("--report", default="", help="Optional migration report path inside the project root")
     parser.add_argument("--archive-stamp", default=date.today().isoformat(), help="Archive subfolder name")

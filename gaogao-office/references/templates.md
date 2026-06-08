@@ -1,220 +1,235 @@
 # Templates
 
-Use these document-shape templates when writing `Agent Office/` manually. Replace placeholders with the approved dynamic roles for the actual project.
+Use these shapes when writing `Agent Office/` manually. Keep them concise and adapt them to the approved organization.
+
+## User-Visible Chat Output
+
+Follow `references/markdown-output-guide.md` when presenting these templates in chat.
+
+- Human instructions such as where to paste a prompt stay outside fenced blocks.
+- The actual message to send to an employee thread goes only inside a fenced `text` block.
+- Do not put "new window", "suggested title", or other external instructions inside the employee prompt.
+- Use tables for role rosters and migration maps.
+- Use task lists for takeover, health-check, and retirement results.
+- Before final answers, remove internal drafting traces such as `Wait`, `Need final`, `analysis`, tentative link syntax, and implementation chatter.
 
 ## AGENTS.proposed.md
 
 ```md
 # AGENTS.md
 
-## GAOGAO Office Protocol
+## GaoGao Office Protocol
 
-This repository uses `Agent Office/` as the long-running agent project office.
+This project uses `Agent Office/` as the long-running agent office.
 
-Before project work:
-- Read `Agent Office/README.md`, `Agent Office/status.md`, `Agent Office/project-brief.md`, and `Agent Office/task-board.md`.
-- If assigned a role, read only your own employee folder under `Agent Office/Employees/{role-slug}/`.
-- Do not read other employee folders unless the user explicitly asks for office maintenance, audit, or recovery.
-- Do not read `Agent Office/Archive/Legacy Management/` during ordinary work.
+Before work:
+- Read `Agent Office/README.md`, `status.md`, `project-brief.md`, `project-map.md`, and `task-board.md`.
+- If assigned an employee role, read only `Agent Office/Employees/{employee-slug}/`.
+- Do not read `Agent Office/Archive/Old Project Memory/` during ordinary work.
+- The current chat is the founding project manager unless the user changes that.
+- In Codex Desktop, title the current project-manager chat with the job title only.
+- In multi-employee mode, BOSS talks to the project manager by default. The project manager dispatches work to employee threads and reports back.
+- Employee dispatch follows `dispatch_policy`; unknown or low-capacity machines dispatch one employee task at a time.
 
 Coordination:
-- Cross-role requests, answers, and handoffs go in `Agent Office/communication.md`.
-- Current tasks and owners go in `Agent Office/task-board.md`.
-- Durable decisions go in `Agent Office/decisions.md`.
-- End every task with what changed, what was verified, what remains, and who should pick it up next.
+- Cross-employee messages and handoffs go in `communication.md`.
+- Current tasks and owners go in `task-board.md`.
+- Significant work updates the employee's `memory.md` and `current-task.md`.
 ```
 
-## README.md
+## Employee Profile
 
 ```md
-# Agent Office
+# {Job Title}
 
-This is the project office for `{project_name}`.
+## Role Value
 
-Public files in this folder are shared context. Employee folders under `Employees/` are private-by-protocol. `Archive/Legacy Management/` is human-review/audit material after migration absorption.
+{why this employee exists}
+
+## Responsibility Domain
+
+{process or functional domain, such as visual assets, frontend code, publishing checks}
+
+## Judgment Standard
+
+{how this employee decides what good work looks like}
+
+## Inputs
+
+{what the employee reads or receives}
+
+## Outputs
+
+{what the employee produces}
+
+## Write Scope
+
+{allowed files or areas}
+
+## Forbidden
+
+{files, actions, APIs, or decisions this employee must not touch}
+
+## Handoff Target
+
+{project manager or another employee}
+
+## Rules
+
+- Read only this employee folder by default.
+- Do not read other employee folders.
+- Do not read `Archive/Old Project Memory/` during ordinary work.
+- Route out-of-scope work to the project manager.
+- Update memory after meaningful work.
 ```
 
-## status.md
+## Employee Memory
 
 ```md
-# Project Status
+# {Job Title} Memory
 
-Project: {project_name}
+Owner role: `{employee-slug}`
+Privacy: protocol-private.
 Last updated: {date}
-Project type: {project_type}
-Risk level: {risk_level}
 
-## Current Goal
+## Next Action
 
-{project_goal}
+status: waiting
+next: {next action or waiting state}
+reason: {why this is next}
 
-## Current Phase
+## Work Log
 
-First milestone: {first_milestone}
+### {date}
 
-## Current Risks
+- Completed: {what was done}
+- Result: {done / waiting / deferred / cancelled}
+- Validation: {checks or none}
+- New next action: {next action}
 
-- None recorded yet.
+## Durable Notes
 
-## Next Step
+- {facts this employee needs next time}
 
-Confirm the first task in `task-board.md`.
+## Memory Rules
+
+- Append a Work Log entry after meaningful work.
+- Mark postponed work as `deferred`.
+- Mark user-cancelled work as `cancelled by user`.
+- Put shared project truth in the public area.
 ```
 
-## project-brief.md
+## Current Task
 
 ```md
-# Project Brief
+# Current Task
 
-Project: {project_name}
-Generated: {date}
+status: waiting
+current: {assignment}
+owner: {Job Title}
 
-## Goal
+## Required Reading
 
-{project_goal}
+- `AGENTS.md`
+- `Agent Office/README.md`
+- `Agent Office/status.md`
+- `Agent Office/project-brief.md`
+- `Agent Office/task-board.md`
+- this folder's `README.md`
+- this folder's `memory.md`
 
-## Role Decisions
+## Write Scope
 
-{role_decisions}
+{write scope}
 
-## Current Roles
+## On Completion
 
-- {Role} (`{role_slug}`): {mission}. Write scope: {write_scope}
-
-## Deferred Roles
-
-- {deferred_role_or_none}
+- Update status: waiting / active / deferred / cancelled / done.
+- Update `memory.md` Next Action and Work Log.
+- Write a handoff if another employee should continue.
 ```
 
-## project-map.md
-
-```md
-# Project Map
-
-Status: pending scan
-
-## File Map
-
-Record filename-level findings here.
-
-## Absorbed Legacy Material
-
-| Source | Absorbed Into | Notes |
-|---|---|---|
-| `{source}` | `{destination}` | {summary} |
-```
-
-## task-board.md
-
-```md
-# Task Board
-
-| Task | Owner | Status | Reviewer | Write Scope | Notes |
-|---|---|---|---|---|---|
-| T-000 | {owner} | proposed | {reviewer} | {write_scope} | {first_milestone} |
-```
-
-## communication.md
-
-```md
-# Communication And Handoffs
-
-## Open Messages
-
-None.
-
-## Handoffs
-
-None.
-```
-
-## decisions.md
-
-```md
-# Decisions
-
-| ID | Status | Owner | Decision | Notes |
-|---|---|---|---|---|
-| D-000 | proposed | Project owner | No durable decisions yet | Record when needed |
-```
-
-## thread-registry.md
+## Thread Registry
 
 ````md
 # Thread Registry
 
+Current project-manager window title: `Project Manager`
+
 | Role | Thread Title | Thread ID | Mode | Current Assignment | Write Scope | Status |
 |---|---|---|---|---|---|---|
-| {Role} | {project_name} / {Role} | TBD | local | {task} | {write_scope} | active |
+| Project Manager | Project Manager | current-window | local | maintain the office | Agent Office public files | founding-steward |
+| Designer | Designer | TBD | local | waiting | approved design/assets scope | waiting |
 
-## Role Launch Prompts
+## Employee Rejoin / Restart Prompts
 
-**Create a new window: {Role}**
-Suggested title: `{project_name} / {Role}`
+These prompts are for employee onboarding, employee restart, or role recovery after formal takeover. Do not send them before the office is created, AGENTS.md is applied, and absorbed old knowledge is archived.
+
+The project manager should title this current chat first, then invite employees.
+Use automatic Codex Desktop thread creation when available. Manual prompts are fallback only.
+
+BOSS-facing wording:
+- "The office is open, and the project manager is on duty."
+- "Employees are onboarded" after thread creation or manual prompts are ready.
+- "You can keep talking to this project-manager chat; I will dispatch work to employees and bring the result back."
+- "No task is assigned yet; the office is ready when BOSS wants to start" after formal takeover.
+- "I can enter direction-advisor mode next; first tell me whether BOSS already has a direction" after takeover.
+
+## Controller Dispatch
+
+When BOSS sends work to the project manager:
+
+1. decide whether to handle it directly or dispatch it
+2. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
+3. follow `dispatch_policy.max_parallel_employee_tasks`; do not dispatch all employees in parallel unless BOSS explicitly approves it
+4. send the employee a concise task message when thread tools are available
+5. ask the employee to update `memory.md` and `current-task.md`
+6. read the reply, verify it, and report one synthesized answer to BOSS
+
+## Employee Result Reply Shape
+
+Employees reply to the project manager in this shape after real work:
 
 ```text
-You are the {Role} agent employee for this project.
+完成了什么：...
+写到哪里：...
+状态更新：...
+建议下一步：...
+```
 
-Read first:
-1. AGENTS.md
-2. Agent Office/README.md
-3. Agent Office/status.md
-4. Agent Office/project-brief.md
-5. Agent Office/task-board.md
-6. Agent Office/Employees/{role_slug}/README.md
-7. Agent Office/Employees/{role_slug}/memory.md
-8. Agent Office/Employees/{role_slug}/current-task.md
+### Designer
 
-Rules:
-- Read only your own employee folder by default.
-- Do not read Agent Office/Archive/Legacy Management/ during ordinary work.
-- Route out-of-scope work through Agent Office/communication.md.
+**Invite employee: Designer**
+Suggested title: `Designer`
+
+```text
+Conversation role: Designer
+
+You are joining this project as the `Designer`.
+Project: {project name}
+Project root: {project root}
+Default language: {language}
+
+You are the project's Designer. Your value is to keep the visual judgment steady: what should ship, what should be revised, and what belongs outside this role.
+
+First read AGENTS.md, the Agent Office public files, and your own employee folder. Do not edit files during your first reply. Introduce what you own, what you must not touch, and what you are waiting for. Then wait for the project manager's task.
 ```
 ````
 
-## Employee Folder
-
-```text
-Agent Office/Employees/{role_slug}/
-  README.md
-  memory.md
-  current-task.md
-```
-
-## migration-report.md
+## Migration Report Sections
 
 ```md
-# GAOGAO Office Migration Report
-
-## Project Map
-
-| Path | Kind | Read Policy | Size |
-|---|---|---|---:|
-| `{path}` | text | candidate-text | 123 |
-
 ## Absorption Map
 
 | Source | Durable Facts To Absorb | New Office Destination | Status |
 |---|---|---|---|
-| `{source}` | {facts} | `Agent Office/project-brief.md` | proposed |
-
-## Proposed AGENTS Replacement
-
-Draft path: `Agent Office/Proposals/AGENTS.proposed.md`
+| `old/context.md` | project goals and constraints | `Agent Office/project-brief.md` | absorbed |
 
 ## Proposed Archive List
 
 | Source | Proposed Archive Destination | Reason |
 |---|---|---|
-| `{source}` | `Agent Office/Archive/Legacy Management/{date}/{source}` | content absorbed |
-
-## Proposed Move List
-
-No files are proposed for moving yet.
-
-## Proposed Delete List
-
-No files are proposed for deletion yet.
+| `old/context.md` | `Agent Office/Archive/Old Project Memory/{date}/old/context.md` | content absorbed |
 
 ## User Approval Record
 
@@ -222,6 +237,4 @@ Approved archive list: NO
 Approved AGENTS replacement: NO
 Approved legacy move list: NO
 Approved deletion list: NO
-Approved by: <pending>
-Approval date: <pending>
 ```

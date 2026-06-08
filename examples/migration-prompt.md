@@ -3,5 +3,5 @@
 ```text
 Use $gaogao-office to take over this long-running project.
 
-Please scan filenames, inspect old agent instructions, vibe/context folders, roadmap docs, copy docs, task notes, and ADRs. Create a migration report first. Do not delete, move, or overwrite anything. After I confirm the report, absorb durable facts into Agent Office, write Agent Office/Proposals/AGENTS.proposed.md, and copy approved legacy files under Agent Office/Archive/Legacy Management/. Move originals only if I separately approve the exact move list.
+Please scan filenames, inspect likely old-knowledge files such as agent rules, vibe/context folders, roadmap docs, copy docs, task notes, ADRs, workflows, checklists, and changelogs. Do not write files yet. First propose the takeover plan and give me plain A/B/C/D reply options. If I approve formal takeover, absorb durable facts into Agent Office, apply AGENTS with backup, archive absorbed old knowledge under Agent Office/Archive/Old Project Memory/, and only then invite employees.
 ```

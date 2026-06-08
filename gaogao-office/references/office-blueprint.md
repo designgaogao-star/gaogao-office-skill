@@ -1,17 +1,20 @@
-# GAOGAO Office Blueprint
+# Office Blueprint
 
-Use this reference when creating or maintaining the lightweight `Agent Office/` project office.
+GaoGao Office creates a lightweight `Agent Office/` with a public area, employee private areas, and an archive for old project memory.
 
-## Core Model
+## Operating Model
 
-- GAOGAO Office is the skill and brand.
-- `Agent Office/` is the project-local office folder.
-- `AGENTS.md` is the automatic root entrypoint, but it is proposed first and applied only after user approval.
-- Public files live directly in `Agent Office/`.
-- Private role continuity lives under `Agent Office/Employees/{role-slug}/`.
-- Legacy material lives under `Agent Office/Archive/Legacy Management/` after absorption and is not ordinary working context.
+- The user is the final decision-maker. In Chinese chat, address them as `BOSS`.
+- The current GaoGao Office chat becomes the founding project manager by default.
+- In Codex Desktop, the founding project manager chat should be titled with its job title only, not the project name or skill invocation.
+- The project manager maintains public files, routes work, keeps the office clean, and invites employees only after formal takeover.
+- Multi-employee offices use single-entry controller-dispatch by default: BOSS talks mainly to the project manager; the project manager splits tasks, sends work to employee threads, gathers results, and reports back.
+- Employee roster size is not the same as active concurrency. Employees may all be onboarded, but active work dispatch follows `dispatch_policy`; low or unknown local capacity means one employee task at a time.
+- Other employees read public files plus only their own private folder by default.
+- Employees primarily receive work from the project manager. Direct BOSS-to-employee work is allowed only when BOSS explicitly wants it.
+- Old project memory is not ordinary working context after absorption.
 
-## Default Directory
+## Structure
 
 ```text
 AGENTS.md
@@ -28,50 +31,70 @@ Agent Office/
   Proposals/
     AGENTS.proposed.md
   Employees/
-    role-slug/
+    employee-slug/
       README.md
       memory.md
       current-task.md
   Archive/
-    Legacy Management/
+    Old Project Memory/
 ```
 
-## Loading Order
+## Public Area
 
-Ordinary role workers load:
+Files directly under `Agent Office/` are shared context. Keep them short and current. If a file becomes long, summarize the durable facts and move detail into archive or an employee file.
+
+## Employee Area
+
+Each employee folder has:
+
+- `README.md`: employee profile with job value, responsibility domain, judgment standard, write scope, forbidden areas, and handoff rules.
+- `memory.md`: private continuity with `Next Action` at the top and `Work Log` below.
+- `current-task.md`: current status: waiting / active / deferred / cancelled / done.
+
+Employees update their own memory after meaningful work. The project manager may update employee files during onboarding, maintenance, or recovery.
+
+## Archive
+
+`Agent Office/Archive/Old Project Memory/` contains absorbed old knowledge. It is not a trash folder and not a daily context source. Ordinary employees do not read it unless the user asks for audit, recovery, or migration review.
+
+## Reading Order
+
+Ordinary employees load:
 
 1. `AGENTS.md`
 2. `Agent Office/README.md`
 3. `Agent Office/status.md`
 4. `Agent Office/project-brief.md`
 5. `Agent Office/task-board.md`
-6. `Agent Office/Employees/{role-slug}/README.md`
-7. `Agent Office/Employees/{role-slug}/memory.md`
-8. `Agent Office/Employees/{role-slug}/current-task.md`
+6. `Agent Office/Employees/{employee-slug}/README.md`
+7. `Agent Office/Employees/{employee-slug}/memory.md`
+8. `Agent Office/Employees/{employee-slug}/current-task.md`
 
-Read `Agent Office/communication.md` when messages or handoffs are needed. Read `Agent Office/decisions.md` when durable decisions matter. Do not read other employee folders or `Archive/Legacy Management/` unless the user explicitly asks for maintenance, audit, recovery, or migration.
+The project manager may also read `communication.md`, `decisions.md`, `thread-registry.md`, migration reports, and employee files when maintaining the office.
+
+## Controller Dispatch Loop
+
+When BOSS gives work to the project manager after employees are onboarded:
+
+1. classify the request and decide whether it needs employees
+2. split only the necessary subtasks
+3. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
+4. send task messages to employee threads when tools are available
+5. require each employee to update its own `memory.md` and `current-task.md`
+6. read employee replies, verify or reconcile them, update public files, and report one answer to BOSS
+
+This loop should reduce BOSS's coordination burden. It should not create busywork or route tiny tasks to employees just because threads exist.
 
 ## Context Budgets
 
-| File type | Target | Hard limit |
+| File | Target | Hard Limit |
 |---|---:|---:|
 | `AGENTS.md` | 700 words | 1,500 words |
-| public office file | 700 words | 1,500 words |
-| `project-map.md` | 1,200 words | 2,000 words |
+| public status/task/brief files | 800 words each | 1,500 words each |
 | `thread-registry.md` | 1,500 words | 2,500 words |
-| employee `README.md` | 400 words | 700 words |
-| employee `memory.md` | 500 words | 900 words |
-| employee `current-task.md` | 450 words | 800 words |
+| employee `README.md` | 900 words | 1,200 words |
+| employee `memory.md` | 900 words | 1,200 words |
 
-When a file exceeds its hard limit, summarize it and move detail into archive or a focused note.
+## Clean Office Rule
 
-## Completion Gate
-
-Before a role marks work done:
-
-- acceptance criteria are satisfied or explicitly deferred
-- write scope was respected
-- checks were run or skipped with reason
-- public truth is updated when needed
-- the role's own `memory.md` or `current-task.md` is updated when continuity changed
-- handoff is recorded in `communication.md` when another role must continue
+Temporary plans, old prompts, absorbed knowledge files, generated QA output, and migration intermediates should not remain active project entrances. Archive or move them out of the production surface when the user approves formal takeover.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scaffold a lightweight GAOGAO Office project office.
+"""Scaffold a lightweight GaoGao Office project office.
 
 The script writes only inside the selected project root. It creates the
 project office at `Agent Office/` and writes a proposed root `AGENTS.md` under
@@ -23,49 +23,74 @@ OFFICE_DIR = "Agent Office"
 EMPLOYEES_DIR = "Employees"
 PROPOSALS_DIR = "Proposals"
 ARCHIVE_DIR = "Archive"
-LEGACY_ARCHIVE_DIR = "Legacy Management"
+LEGACY_ARCHIVE_DIR = "Old Project Memory"
+OFFICE_SCHEMA_VERSION = "0.2.3"
 
 
 ROLE_DEFINITIONS = {
     "pm": {
-        "title": "Coordinator",
+        "title": "Project Manager",
+        "zh_title": "项目总管",
         "mission": "Maintain shared project truth, task ownership, scope, and handoffs.",
+        "zh_mission": "维护项目共识、任务归属、范围和交接。",
         "authority": "May update public office files and coordinate employee work.",
+        "zh_authority": "可以更新办公室公共文件，并协调员工工作。",
     },
     "builder": {
-        "title": "Builder",
+        "title": "Engineer",
+        "zh_title": "工程师",
         "mission": "Implement assigned work inside the approved write scope and verify it.",
+        "zh_mission": "在批准的写入范围内完成执行工作，并验证结果。",
         "authority": "May change only files named by the current task.",
+        "zh_authority": "只能修改当前任务明确允许的文件。",
     },
     "reviewer": {
         "title": "Reviewer",
+        "zh_title": "审查员",
         "mission": "Review work for correctness, regressions, scope, quality, and missing checks.",
+        "zh_mission": "检查正确性、回归风险、范围、质量和遗漏的验证。",
         "authority": "Read-heavy by default; may update review notes and handoffs.",
+        "zh_authority": "默认以读取和审查为主，可以更新审查记录和交接。",
     },
     "archivist": {
         "title": "Archivist",
+        "zh_title": "档案管理员",
         "mission": "Keep the office clean, absorb old project memory, and archive stale material.",
+        "zh_mission": "保持办公室干净，吸收旧项目记忆，并归档过期资料。",
         "authority": "May update public office files and archive records; does not change product code.",
+        "zh_authority": "可以更新公共办公室文件和归档记录，不修改产品代码。",
     },
     "architect": {
         "title": "Architect",
+        "zh_title": "架构师",
         "mission": "Maintain architecture boundaries and durable technical decisions.",
+        "zh_mission": "维护架构边界和长期技术决策。",
         "authority": "May update decisions and architecture notes; code changes require task assignment.",
+        "zh_authority": "可以更新决策和架构记录；代码修改需要任务授权。",
     },
     "qa": {
-        "title": "QA",
+        "title": "Release Checker",
+        "zh_title": "发布检查员",
         "mission": "Own acceptance scenarios, regression checks, and release confidence.",
+        "zh_mission": "负责验收场景、回归检查和发布信心。",
         "authority": "May update QA notes, task acceptance, and verification records.",
+        "zh_authority": "可以更新 QA 记录、任务验收和验证记录。",
     },
     "security": {
-        "title": "Security",
+        "title": "Security Reviewer",
+        "zh_title": "安全审查员",
         "mission": "Review secrets, permissions, dependency risk, and unsafe automation.",
+        "zh_mission": "审查密钥、权限、依赖风险和不安全的自动化。",
         "authority": "May update security decisions and blocker notes.",
+        "zh_authority": "可以更新安全决策和阻塞记录。",
     },
     "ux": {
-        "title": "UX",
+        "title": "UX Designer",
+        "zh_title": "体验设计师",
         "mission": "Review user flows, accessibility, interaction states, and user-facing clarity.",
+        "zh_mission": "审查用户流程、可访问性、交互状态和用户可理解性。",
         "authority": "May update UX notes and acceptance criteria.",
+        "zh_authority": "可以更新体验记录和验收标准。",
     },
 }
 
@@ -80,6 +105,17 @@ ROLE_WRITE_SCOPES = {
     "ux": "UX notes and acceptance criteria",
 }
 
+ROLE_WRITE_SCOPES_ZH = {
+    "pm": "Agent Office 公共文件",
+    "builder": "仅限当前任务授权范围",
+    "reviewer": "审查记录和任务板更新",
+    "archivist": "Agent Office 公共文件和归档记录",
+    "architect": "决策和架构记录",
+    "qa": "验证记录和验收标准",
+    "security": "安全记录和阻塞决策",
+    "ux": "体验记录和验收标准",
+}
+
 
 @dataclass
 class RoleSpec:
@@ -89,6 +125,16 @@ class RoleSpec:
     authority: str
     write_scope: str
     current_assignment: str
+    domain: str = ""
+    quality_standard: str = ""
+    inputs: str = ""
+    outputs: str = ""
+    forbidden: str = ""
+    current_window: bool = False
+    needs_thread: bool = True
+    thread_title: str = ""
+    thread_id: str = "TBD"
+    status: str = ""
     thread_mode: str = "local"
     handoff_to: str = ""
 
@@ -96,6 +142,7 @@ class RoleSpec:
 @dataclass
 class OfficeSpec:
     project_name: str
+    project_root: str
     project_goal: str
     profile: str
     project_type: str
@@ -105,6 +152,8 @@ class OfficeSpec:
     roles: list[RoleSpec]
     role_decisions: str = ""
     deferred_roles: list[str] = field(default_factory=list)
+    collaboration_mode: str = "controller-dispatch"
+    dispatch_policy: dict[str, Any] = field(default_factory=dict)
 
 
 def normalize_language(raw: str | None) -> str:
@@ -149,26 +198,76 @@ def as_string_list(raw: Any) -> list[str]:
     return [text] if text else []
 
 
+def default_dispatch_policy(language: str) -> dict[str, Any]:
+    if is_zh(language):
+        return {
+            "mode": "adaptive-serial",
+            "max_parallel_employee_tasks": 1,
+            "reason": "未检测本机容量时采用保守策略；员工可全部入职，但默认一次只派一个员工执行。",
+            "source": "default",
+        }
+    return {
+        "mode": "adaptive-serial",
+        "max_parallel_employee_tasks": 1,
+        "reason": "Use a conservative policy when local capacity is unknown; all employees may onboard, but dispatch one employee task at a time by default.",
+        "source": "default",
+    }
+
+
+def normalize_dispatch_policy(raw: Any, language: str) -> dict[str, Any]:
+    policy = default_dispatch_policy(language)
+    if not isinstance(raw, dict):
+        return policy
+    merged = {**policy}
+    for key, value in raw.items():
+        if value is None:
+            continue
+        merged[str(key)] = value
+    try:
+        max_parallel = int(merged.get("max_parallel_employee_tasks", 1))
+    except (TypeError, ValueError):
+        max_parallel = 1
+    merged["max_parallel_employee_tasks"] = max(1, min(max_parallel, 6))
+    mode = str(merged.get("mode") or "adaptive-serial").strip() or "adaptive-serial"
+    merged["mode"] = mode
+    return merged
+
+
 def normalize_thread_mode(raw: Any) -> str:
     value = str(raw or "local").strip().lower()
     return "worktree" if value in {"worktree", "branch"} else "local"
 
 
-def role_from_legacy_key(role: str) -> RoleSpec:
+def role_from_legacy_key(role: str, language: str) -> RoleSpec:
     definition = ROLE_DEFINITIONS[role]
+    is_manager = role == "pm"
+    zh = is_zh(language)
+    title = definition["zh_title"] if zh else definition["title"]
+    mission = definition["zh_mission"] if zh else definition["mission"]
+    authority = definition["zh_authority"] if zh else definition["authority"]
+    write_scope = (ROLE_WRITE_SCOPES_ZH if zh else ROLE_WRITE_SCOPES).get(role, "仅限当前任务授权范围" if zh else "current task scope only")
     return RoleSpec(
         slug=role,
-        title=definition["title"],
-        mission=definition["mission"],
-        authority=definition["authority"],
-        write_scope=ROLE_WRITE_SCOPES.get(role, "current task scope only"),
+        title=title,
+        mission=mission,
+        authority=authority,
+        write_scope=write_scope,
         current_assignment="T-000" if role == "pm" else "waiting",
+        domain=mission,
+        quality_standard="保持范围清楚、结果可验证、下一位 Agent 容易接上。" if zh else "Keep work scoped, verified, and easy for the next agent to resume.",
+        inputs="BOSS 的请求、AGENTS.md、Agent Office 公共文件，以及本员工私有文件。" if zh else "Project owner requests, AGENTS.md, Agent Office public files, and this employee's private files.",
+        outputs="完成的工作、简短状态记录，以及需要别人继续时的交接。" if zh else "Updated work, concise status notes, and handoffs when another employee should continue.",
+        forbidden="不要超出批准的写入范围；默认不读取其他员工文件夹。" if zh else "Do not work outside the approved write scope or read other employee folders by default.",
+        current_window=is_manager,
+        needs_thread=not is_manager,
+        thread_title=title,
+        status=("项目总管" if zh else "founding-steward") if is_manager else "waiting",
         thread_mode="worktree" if role == "builder" else "local",
-        handoff_to="Coordinator" if role != "pm" else "Project owner",
+        handoff_to=("项目总管" if role != "pm" else "BOSS") if zh else ("Project Manager" if role != "pm" else "Project owner"),
     )
 
 
-def parse_roles(raw: str, profile: str) -> list[RoleSpec]:
+def parse_roles(raw: str, profile: str, language: str) -> list[RoleSpec]:
     if raw:
         role_keys = [part.strip().lower() for part in raw.split(",") if part.strip()]
     elif profile == "minimal":
@@ -183,13 +282,16 @@ def parse_roles(raw: str, profile: str) -> list[RoleSpec]:
     duplicates = sorted({role for role in role_keys if role_keys.count(role) > 1})
     if duplicates:
         raise SystemExit(f"Duplicate role(s): {', '.join(duplicates)}")
-    return [role_from_legacy_key(role) for role in role_keys]
+    return [role_from_legacy_key(role, language) for role in role_keys]
 
 
 def role_from_config(raw: dict[str, Any], index: int, default_handoff: str) -> RoleSpec:
     title = coalesce(raw.get("title"), raw.get("name"), default=f"Role {index + 1}")
     slug = slugify(coalesce(raw.get("slug"), default=title), f"role-{index + 1}")
     validate_slug(slug)
+    current_window = bool(raw.get("current_window", raw.get("currentWindow", raw.get("founding_steward", False))))
+    needs_thread_raw = raw.get("needs_thread", raw.get("needsThread", None))
+    needs_thread = (not current_window) if needs_thread_raw is None else bool(needs_thread_raw)
     return RoleSpec(
         slug=slug,
         title=title,
@@ -201,6 +303,16 @@ def role_from_config(raw: dict[str, Any], index: int, default_handoff: str) -> R
         ),
         write_scope=coalesce(raw.get("write_scope"), raw.get("writeScope"), default="current task scope only"),
         current_assignment=coalesce(raw.get("current_assignment"), raw.get("assignment"), raw.get("currentAssignment"), default="waiting"),
+        domain=coalesce(raw.get("domain"), raw.get("responsibility_domain"), raw.get("responsibilityDomain"), default=""),
+        quality_standard=coalesce(raw.get("quality_standard"), raw.get("qualityStandard"), default="Work cleanly, verify the result, and leave the next action obvious."),
+        inputs=coalesce(raw.get("inputs"), default="AGENTS.md, Agent Office public files, this employee's folder, and user instructions."),
+        outputs=coalesce(raw.get("outputs"), default="Completed work, updated employee memory/current-task, and handoffs when needed."),
+        forbidden=coalesce(raw.get("forbidden"), raw.get("do_not"), raw.get("doNot"), default="Do not exceed the approved write scope or read other employee folders by default."),
+        current_window=current_window,
+        needs_thread=needs_thread,
+        thread_title=coalesce(raw.get("thread_title"), raw.get("threadTitle"), default=title),
+        thread_id=coalesce(raw.get("thread_id"), raw.get("threadId"), default="TBD"),
+        status=coalesce(raw.get("status"), default=""),
         thread_mode=normalize_thread_mode(raw.get("thread_mode", raw.get("threadMode"))),
         handoff_to=coalesce(raw.get("handoff_to"), raw.get("handoffTo"), default=default_handoff),
     )
@@ -211,19 +323,38 @@ def infer_default_handoff(roles: list[RoleSpec], language: str) -> str:
         haystack = f"{role.slug} {role.title}".lower()
         if any(token in haystack for token in ["coordinator", "owner", "lead", "manager", "producer"]):
             return role.title
-        if any(token in role.title for token in ["协调", "负责人", "主理", "策展", "主编"]):
+        if any(token in role.title for token in ["总管", "经理", "负责人", "协调", "主理", "策展", "主编"]):
             return role.title
     if roles:
         return roles[0].title
-    return "项目负责人" if is_zh(language) else "Project owner"
+    return "BOSS" if is_zh(language) else "Project owner"
 
 
 def fill_missing_handoffs(roles: list[RoleSpec], default_handoff: str, language: str) -> None:
-    fallback_owner = "项目负责人" if is_zh(language) else "Project owner"
+    fallback_owner = "BOSS" if is_zh(language) else "Project owner"
     inferred = default_handoff or infer_default_handoff(roles, language)
     for role in roles:
         if not role.handoff_to:
             role.handoff_to = fallback_owner if role.title == inferred else inferred
+
+
+def ensure_founding_steward(roles: list[RoleSpec], language: str) -> None:
+    """Make the current chat the first project manager unless config already did."""
+    if not roles:
+        return
+    if any(role.current_window for role in roles):
+        for role in roles:
+            if role.current_window:
+                role.needs_thread = False
+                role.status = role.status or ("founding-steward" if not is_zh(language) else "项目总管")
+                role.thread_id = role.thread_id if role.thread_id != "TBD" else "current-window"
+                role.thread_title = role.thread_title or role.title
+        return
+    roles[0].current_window = True
+    roles[0].needs_thread = False
+    roles[0].status = roles[0].status or ("founding-steward" if not is_zh(language) else "项目总管")
+    roles[0].thread_id = roles[0].thread_id if roles[0].thread_id != "TBD" else "current-window"
+    roles[0].thread_title = roles[0].thread_title or roles[0].title
 
 
 def validate_roles(roles: list[RoleSpec]) -> None:
@@ -235,6 +366,7 @@ def validate_roles(roles: list[RoleSpec]) -> None:
         raise SystemExit(f"Duplicate role slug(s): {', '.join(duplicates)}")
     for role in roles:
         validate_slug(role.slug)
+        role.thread_title = role.thread_title or role.title
 
 
 def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) -> OfficeSpec:
@@ -253,9 +385,11 @@ def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) ->
     if len(roles) != len(role_items):
         raise SystemExit("Each role in config must be a JSON object.")
     fill_missing_handoffs(roles, default_handoff, language)
+    ensure_founding_steward(roles, language)
     validate_roles(roles)
     return OfficeSpec(
         project_name=coalesce(raw.get("project_name"), raw.get("name"), args.project_name, root.name, default="Project"),
+        project_root=str(root),
         project_goal=coalesce(raw.get("project_goal"), raw.get("goal"), args.project_goal, default="Define the first milestone."),
         profile=coalesce(raw.get("profile"), args.profile, default="dynamic"),
         project_type=coalesce(raw.get("project_type"), raw.get("type"), args.project_type, default="unspecified"),
@@ -265,22 +399,29 @@ def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) ->
         roles=roles,
         role_decisions=coalesce(raw.get("role_decisions"), raw.get("role_strategy"), default=""),
         deferred_roles=as_string_list(raw.get("deferred_roles")),
+        collaboration_mode=coalesce(raw.get("collaboration_mode"), raw.get("collaborationMode"), default="controller-dispatch"),
+        dispatch_policy=normalize_dispatch_policy(raw.get("dispatch_policy", raw.get("dispatchPolicy")), language),
     )
 
 
 def load_office_spec(args: argparse.Namespace, root: Path) -> OfficeSpec:
     if args.config:
         return load_config_spec(Path(args.config).resolve(), args, root)
-    roles = parse_roles(args.roles, args.profile)
+    language = normalize_language(args.language)
+    roles = parse_roles(args.roles, args.profile, language)
+    ensure_founding_steward(roles, language)
     return OfficeSpec(
         project_name=args.project_name or root.name or "Project",
+        project_root=str(root),
         project_goal=args.project_goal,
         profile=args.profile,
         project_type=args.project_type,
         risk_level=args.risk_level,
         first_milestone=args.first_milestone,
-        language=normalize_language(args.language),
+        language=language,
         roles=roles,
+        collaboration_mode="controller-dispatch",
+        dispatch_policy=default_dispatch_policy(language),
     )
 
 
@@ -300,11 +441,21 @@ def role_titles(roles: list[RoleSpec]) -> str:
     return ", ".join(role.title for role in roles)
 
 
+def dispatch_policy_summary(spec: OfficeSpec) -> str:
+    policy = spec.dispatch_policy or default_dispatch_policy(spec.language)
+    mode = policy.get("mode", "adaptive-serial")
+    max_parallel = policy.get("max_parallel_employee_tasks", 1)
+    reason = policy.get("reason", "")
+    if is_zh(spec.language):
+        return f"{mode}；最多同时派工 {max_parallel} 个员工。{reason}".strip()
+    return f"{mode}; dispatch at most {max_parallel} employee task(s) at once. {reason}".strip()
+
+
 def render_agents_proposal(language: str) -> str:
     if is_zh(language):
         return """# AGENTS.md
 
-## GAOGAO Office Protocol
+## GaoGao Office Protocol
 
 本仓库使用 `Agent Office/` 作为长期 Agent 项目办公室。
 
@@ -312,18 +463,21 @@ def render_agents_proposal(language: str) -> str:
 - 先读 `Agent Office/README.md`、`Agent Office/status.md`、`Agent Office/project-brief.md` 和 `Agent Office/task-board.md`。
 - 如果你被分配了角色，只读 `Agent Office/Employees/{role-slug}/` 里属于自己的员工文件夹。
 - 不要读取其他员工文件夹，除非用户明确要求维护、审计或恢复办公室。
-- 日常工作不要读取 `Agent Office/Archive/Legacy Management/`；那里是旧框架吸收后的人工查看/审计材料。
+- 日常工作不要读取 `Agent Office/Archive/Old Project Memory/`；那里是已吸收旧知识的历史档案。
 
 协作规则：
-- `Agent Office/thread-registry.md` 是长期 Agent 员工目录和启动提示记录。
+- 当前窗口默认是第一任项目总管，负责给办公室挂牌、路由任务、更新公共区和处理迁移收尾。
+- 多员工模式默认由项目总管做单入口总控：BOSS 主要和项目总管对话，项目总管拆任务、派给员工窗口、回收结果并统一汇报。
+- 员工数量不等于并发数量；项目总管按 `Agent Office/office-plan.json` 的 `dispatch_policy` 控制同时派工数量。
+- `Agent Office/thread-registry.md` 是长期 Agent 员工名册和入职提示记录。
 - 跨角色请求、答复和交接写入 `Agent Office/communication.md`。
 - 当前任务和责任人写入 `Agent Office/task-board.md`。
-- 只有协调角色、归档角色、项目 owner 或被明确授权的角色才更新公共状态。
+- 只有项目总管、BOSS 或被明确授权的员工才更新公共状态。
 - 结束任务时说明改了什么、验证了什么、还剩什么、下一个负责人是谁。
 """
     return """# AGENTS.md
 
-## GAOGAO Office Protocol
+## GaoGao Office Protocol
 
 This repository uses `Agent Office/` as the long-running agent project office.
 
@@ -331,13 +485,16 @@ Before project work:
 - Read `Agent Office/README.md`, `Agent Office/status.md`, `Agent Office/project-brief.md`, and `Agent Office/task-board.md`.
 - If assigned a role, read only your own employee folder under `Agent Office/Employees/{role-slug}/`.
 - Do not read other employee folders unless the user explicitly asks for office maintenance, audit, or recovery.
-- Do not read `Agent Office/Archive/Legacy Management/` during ordinary work; it is human-review/audit material after migration absorption.
+- Do not read `Agent Office/Archive/Old Project Memory/` during ordinary work; it is historical material after old knowledge has been absorbed.
 
 Coordination:
-- `Agent Office/thread-registry.md` is the directory and launch prompt record for long-running agent employees.
+- The current chat is the founding project manager unless the user chooses otherwise.
+- In multi-employee mode, the project manager is the single BOSS-facing controller by default: it splits requests, dispatches work to employee threads, collects results, and reports back.
+- Employee roster size is not active concurrency; the project manager follows `dispatch_policy` in `Agent Office/office-plan.json` when dispatching employee work.
+- `Agent Office/thread-registry.md` is the staff directory and onboarding prompt record for long-running agent employees.
 - Cross-role requests, answers, and handoffs go in `Agent Office/communication.md`.
 - Current tasks and owners go in `Agent Office/task-board.md`.
-- Only the coordinator, archivist, project owner, or explicitly assigned role updates public status.
+- Only the project manager, project owner, or explicitly assigned employee updates public status.
 - End every task with what changed, what was verified, what remains, and who should pick it up next.
 """
 
@@ -347,6 +504,8 @@ def render_readme(spec: OfficeSpec) -> str:
         return f"""# Agent Office
 
 这是 `{spec.project_name}` 的项目办公室。
+
+办公室版本：{OFFICE_SCHEMA_VERSION}
 
 ## 公共区
 
@@ -366,11 +525,21 @@ def render_readme(spec: OfficeSpec) -> str:
 
 ## 归档区
 
-`Archive/Legacy Management/` 是旧框架吸收后的人工查看和审计材料。普通工作不要读取它。
+`Archive/Old Project Memory/` 是已吸收旧知识的历史档案。普通工作不要读取它。
+
+## 项目总管
+
+当前调用 GaoGao Office 的窗口默认接任第一任项目总管。它负责给办公室挂牌、保持公共区干净、把任务分给合适员工，并在正式接管完成后邀请其他员工入职。
+
+多员工模式下，BOSS 可以继续主要和这个项目总管窗口对话。项目总管负责拆解需求、派工给员工窗口、读取员工回复、更新办公室记录，再把整合后的结果汇报给 BOSS。
+
+派工策略：{dispatch_policy_summary(spec)}
 """
     return f"""# Agent Office
 
 This is the project office for `{spec.project_name}`.
+
+Office schema version: {OFFICE_SCHEMA_VERSION}
 
 ## Public Area
 
@@ -390,7 +559,15 @@ Each role has one folder under `Employees/`. A role reads only its own folder by
 
 ## Archive
 
-`Archive/Legacy Management/` is human-review/audit material after old frameworks are absorbed. Ordinary role work should not read it.
+`Archive/Old Project Memory/` is historical material after old project knowledge is absorbed. Ordinary employees should not read it.
+
+## Project Manager
+
+The current GaoGao Office chat becomes the founding project manager by default. It opens the office, keeps the public area clean, routes work to the right employee, and invites employees only after formal takeover is complete.
+
+In multi-employee mode, BOSS can keep using this project-manager chat as the main entry point. The project manager decomposes requests, dispatches work to employee threads, reads employee replies, updates office records, and reports the synthesized result back.
+
+Dispatch policy: {dispatch_policy_summary(spec)}
 """
 
 
@@ -420,7 +597,7 @@ def render_status(spec: OfficeSpec) -> str:
 
 ## 下一步
 
-确认 `task-board.md` 中的第一项任务是否仍然准确。
+BOSS 拍板后，项目总管先确认 `task-board.md` 的第一项任务是否仍然准确。若需要多人协作，项目总管先拆任务并派给必要员工，再把结果统一汇报给 BOSS。
 """
     return f"""# Project Status
 
@@ -445,7 +622,7 @@ First milestone: {spec.first_milestone}
 
 ## Next Step
 
-Confirm whether the first task in `task-board.md` is still accurate.
+After approval, the project manager should confirm whether the first task in `task-board.md` is still accurate. If multiple people are needed, the project manager should split only the necessary subtasks, dispatch them to employees, and report one synthesized result back to BOSS.
 """
 
 
@@ -455,7 +632,11 @@ def render_project_brief(spec: OfficeSpec) -> str:
     if not deferred:
         deferred = "- None recorded yet." if not is_zh(spec.language) else "- 暂无。"
     if is_zh(spec.language):
-        role_lines = "\n".join(f"- {role.title} (`{role.slug}`)：{role.mission} 写入范围：{role.write_scope}" for role in spec.roles)
+        role_lines = "\n".join(
+            f"- {role.title} (`{role.slug}`)：{role.mission} 职责域：{role.domain or role.mission} 写入范围：{role.write_scope}"
+            + (" 当前窗口接任。" if role.current_window else "")
+            for role in spec.roles
+        )
         notes = spec.role_decisions or "角色按当前里程碑动态生成，后续可扩编。"
         return f"""# 项目简报
 
@@ -474,6 +655,9 @@ def render_project_brief(spec: OfficeSpec) -> str:
 
 - 项目类型：{spec.project_type}
 - 办公室配置：{spec.profile}
+- 办公室版本：{OFFICE_SCHEMA_VERSION}
+- 协作方式：{spec.collaboration_mode}
+- 派工策略：{dispatch_policy_summary(spec)}
 - 风险等级：{spec.risk_level}
 - 当前角色：{role_titles(spec.roles)}
 
@@ -481,13 +665,20 @@ def render_project_brief(spec: OfficeSpec) -> str:
 
 {notes}
 
+默认协作方式：BOSS 主要和当前项目总管窗口沟通；项目总管按需派工给员工窗口，并把结果整合后汇报。
+默认派工策略：员工可以全部入职，但项目总管按本机容量控制并发；配置未知或偏低时一次只派一个员工。
+
 {role_lines}
 
 ## 暂不创建的角色
 
 {deferred}
 """
-    role_lines = "\n".join(f"- {role.title} (`{role.slug}`): {role.mission} Write scope: {role.write_scope}" for role in spec.roles)
+    role_lines = "\n".join(
+        f"- {role.title} (`{role.slug}`): {role.mission} Domain: {role.domain or role.mission}. Write scope: {role.write_scope}"
+        + (" Current chat owns this role." if role.current_window else "")
+        for role in spec.roles
+    )
     notes = spec.role_decisions or "Roles were generated dynamically for the current milestone and can be expanded later."
     return f"""# Project Brief
 
@@ -506,12 +697,18 @@ Generated: {today}
 
 - Project type: {spec.project_type}
 - Office profile: {spec.profile}
+- Office schema version: {OFFICE_SCHEMA_VERSION}
+- Collaboration mode: {spec.collaboration_mode}
+- Dispatch policy: {dispatch_policy_summary(spec)}
 - Risk level: {spec.risk_level}
 - Current roles: {role_titles(spec.roles)}
 
 ## Role Decisions
 
 {notes}
+
+Default collaboration style: BOSS primarily talks to the current project-manager chat; the project manager dispatches work to employee threads as needed and reports back with a synthesized result.
+Default dispatch policy: employees may all onboard, but the project manager controls concurrent employee work based on local capacity. Unknown or low-capacity machines dispatch one employee at a time.
 
 {role_lines}
 
@@ -573,6 +770,8 @@ def render_task_board(spec: OfficeSpec) -> str:
 ## 任务规则
 
 - 每项任务必须有 owner、reviewer、写入范围和验收方式。
+- 多员工任务默认由项目总管拆分和派工；员工完成后回给项目总管，由项目总管统一汇报 BOSS。
+- 派工并发按 `office-plan.json` 的 `dispatch_policy` 执行；本机容量未知或偏低时，一次只派一个员工。
 - 如果任务变复杂，再拆出单独任务文件或归档记录。
 """
     return f"""# Task Board
@@ -586,6 +785,8 @@ Last updated: {today}
 ## Task Rules
 
 - Every task needs an owner, reviewer, write scope, and verification approach.
+- Multi-employee work is split and dispatched by the project manager; employees return results to the project manager, who reports back to BOSS.
+- Follow `dispatch_policy` in `office-plan.json`; when local capacity is unknown or low, dispatch one employee at a time.
 - If a task grows too large, split it into a separate task note or archive record.
 """
 
@@ -612,7 +813,8 @@ def render_communication(language: str) -> str:
 
 ## 消息规则
 
-- 职责外请求不要直接执行；先说明应该由哪个角色负责。
+- 职责外请求不要直接抢活；先说明应该由哪个员工负责。
+- BOSS 的需求默认先进入项目总管；项目总管判断是否自己处理，或拆给员工窗口。
 - 需要跨角色处理时，在本文件追加一条消息记录，写清楚 from、to、task、requested response、next owner。
 - 任务完成、阻塞、换 owner 或进入 review 时，在本文件追加交接记录。
 
@@ -629,6 +831,7 @@ def render_communication(language: str) -> str:
 ## Message Rules
 
 - Do not perform out-of-scope requests directly; name the role that should own the work.
+- BOSS requests enter through the project manager by default; the project manager decides whether to handle them or dispatch them to employee threads.
 - When cross-role coordination is needed, append a message here with from, to, task, requested response, and next owner.
 - When work is done, blocked, changes owner, or enters review, append a handoff here.
 
@@ -646,11 +849,29 @@ def render_employee_readme(spec: OfficeSpec, role: RoleSpec) -> str:
     if is_zh(spec.language):
         return f"""# {role.title}
 
-## 使命
+## 岗位价值
 
 {role.mission}
 
-## 权限
+你不是一个功能模块，而是本项目里承担这个岗位判断的人。先守好自己的职责边界，再把工作做扎实。
+
+## 职责域
+
+{role.domain or role.mission}
+
+## 判断标准
+
+{role.quality_standard}
+
+## 输入
+
+{role.inputs}
+
+## 输出
+
+{role.outputs}
+
+## 权限和边界
 
 {role.authority}
 
@@ -666,19 +887,44 @@ def render_employee_readme(spec: OfficeSpec, role: RoleSpec) -> str:
 
 {role.handoff_to}
 
+## 禁区
+
+{role.forbidden}
+
 ## 边界
 
 - 默认只读取本员工文件夹。
 - 不读取其他员工文件夹，除非用户明确要求维护、审计或恢复办公室。
-- 职责外请求先路由给合适角色或协调角色。
+- 日常工作不要读取 `Agent Office/Archive/Old Project Memory/`。
+- 默认接收项目总管派工，完成后把结果回给项目总管；BOSS 直接点名时再直接回应。
+- 职责外请求先路由给合适员工或项目总管。
+- 正经完成任务后，更新 `memory.md` 的 `Next Action` 和 `Work Log`，必要时更新 `current-task.md`。
 """
     return f"""# {role.title}
 
-## Mission
+## Role Value
 
 {role.mission}
 
-## Authority
+You are not a feature module; you are the person holding this job's judgment for the project. Protect the role boundary first, then do the work well.
+
+## Responsibility Domain
+
+{role.domain or role.mission}
+
+## Judgment Standard
+
+{role.quality_standard}
+
+## Inputs
+
+{role.inputs}
+
+## Outputs
+
+{role.outputs}
+
+## Authority And Boundaries
 
 {role.authority}
 
@@ -694,11 +940,18 @@ def render_employee_readme(spec: OfficeSpec, role: RoleSpec) -> str:
 
 {role.handoff_to}
 
+## Forbidden
+
+{role.forbidden}
+
 ## Boundaries
 
 - Read this employee folder by default.
 - Do not read other employee folders unless the user explicitly asks for office maintenance, audit, or recovery.
-- Route out-of-scope requests to the right role or coordinator.
+- Do not read `Agent Office/Archive/Old Project Memory/` during ordinary work.
+- Receive work from the project manager by default and return results to the project manager; respond directly to BOSS only when BOSS explicitly addresses this employee.
+- Route out-of-scope requests to the right employee or project manager.
+- After significant work, update `memory.md` `Next Action` and `Work Log`; update `current-task.md` when needed.
 """
 
 
@@ -711,9 +964,25 @@ Owner role: `{role.slug}`
 Privacy: protocol-private. 默认只有 `{role.title}` 读取和更新。
 Last updated: {today}
 
-## 长期要点
+## Next Action
+
+status: waiting
+next: {role.current_assignment}
+reason: 初始接管状态；等待用户或项目总管确认下一步。
+
+## Work Log
+
+### {today}
+
+- Completed: 员工档案已建好，等待正式入职或下一次任务。
+- Result: waiting
+- Validation: 未执行项目工作。
+- New next action: {role.current_assignment}
+
+## Durable Notes
 
 - 初始使命：{role.mission}
+- 职责域：{role.domain or role.mission}
 - 写入范围：{role.write_scope}
 - 交接对象：{role.handoff_to}
 
@@ -721,9 +990,11 @@ Last updated: {today}
 
 - 暂无。
 
-## 接续记录
+## Memory Rules
 
-- 保持简短，只记录这个角色下次接续真正需要的事实。
+- 每次正经完成任务后追加一条 Work Log。
+- 如果下一步被延后，标记 `status: deferred` 并写明提醒条件。
+- 如果用户明确取消，标记 `status: cancelled by user`。
 - 共享项目事实写到公共区，不要塞进这里。
 """
     return f"""# {role.title} Memory
@@ -732,9 +1003,25 @@ Owner role: `{role.slug}`
 Privacy: protocol-private. By default only `{role.title}` reads and updates this file.
 Last updated: {today}
 
+## Next Action
+
+status: waiting
+next: {role.current_assignment}
+reason: Initial takeover state; waiting for the user or project manager to confirm next work.
+
+## Work Log
+
+### {today}
+
+- Completed: Employee file is ready; waiting for onboarding or the next assignment.
+- Result: waiting
+- Validation: No project work performed.
+- New next action: {role.current_assignment}
+
 ## Durable Notes
 
 - Initial mission: {role.mission}
+- Responsibility domain: {role.domain or role.mission}
 - Write scope: {role.write_scope}
 - Handoff target: {role.handoff_to}
 
@@ -742,9 +1029,11 @@ Last updated: {today}
 
 - None recorded yet.
 
-## Continuity Notes
+## Memory Rules
 
-- Keep this short and record only facts this role needs next time.
+- Append one Work Log entry after meaningful work.
+- If a next action is postponed, mark `status: deferred` and state when to remind the user.
+- If the user cancels it, mark `status: cancelled by user`.
 - Put shared project truth in the public area, not here.
 """
 
@@ -753,7 +1042,9 @@ def render_employee_task(spec: OfficeSpec, role: RoleSpec) -> str:
     if is_zh(spec.language):
         return f"""# Current Task
 
-当前任务：{role.current_assignment}
+status: waiting
+current: {role.current_assignment}
+owner: {role.title}
 
 ## 必读
 
@@ -770,12 +1061,15 @@ def render_employee_task(spec: OfficeSpec, role: RoleSpec) -> str:
 
 ## 完成时
 
-- 更新本文件或 `memory.md` 中的接续信息。
+- 更新本文件状态：waiting / active / deferred / cancelled / done。
+- 更新 `memory.md` 的 `Next Action` 和 `Work Log`。
 - 如有跨角色交接，更新 `Agent Office/communication.md`。
 """
     return f"""# Current Task
 
-Current assignment: {role.current_assignment}
+status: waiting
+current: {role.current_assignment}
+owner: {role.title}
 
 ## Required Reading
 
@@ -792,19 +1086,26 @@ Current assignment: {role.current_assignment}
 
 ## On Completion
 
-- Update continuity notes in this file or `memory.md`.
+- Update this file status: waiting / active / deferred / cancelled / done.
+- Update `memory.md` `Next Action` and `Work Log`.
 - If another role needs context, update `Agent Office/communication.md`.
 """
 
 
 def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
     if is_zh(spec.language):
-        return f"""你是本项目的 {role.title} Agent 员工。
+        return f"""本对话角色：{role.title}
+
+你现在入职这个项目，岗位是「{role.title}」。先守住岗位判断和写入边界，再等项目总管派工。
 
 项目：{spec.project_name}
-当前任务：{role.current_assignment}
-写入范围：{role.write_scope}
-交接对象：{role.handoff_to}
+项目根目录：{spec.project_root}
+默认语言：中文。路径、任务 ID、status enum 和代码标识保持原样。
+
+岗位价值：{role.mission}
+职责域：{role.domain or role.mission}
+判断标准：{role.quality_standard}
+写入边界：{role.write_scope}
 
 请先读取：
 1. AGENTS.md
@@ -816,20 +1117,27 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
 7. Agent Office/Employees/{role.slug}/memory.md
 8. Agent Office/Employees/{role.slug}/current-task.md
 
-工作规则：
-- 只加载和当前任务相关的上下文。
-- 默认只读取自己的员工文件夹，不读取其他员工文件夹。
-- 日常工作不要读取 Agent Office/Archive/Legacy Management/。
-- 不要超出写入范围。
-- 如果用户要求你处理职责外的事情，先说明应由哪个角色负责，或在 Agent Office/communication.md 里留下消息。
-- 重要工作结束后更新自己的 memory.md 或 current-task.md，并在需要时写交接。
+第一轮只做入职确认，不要改文件、不要主动开工。读取后请用 5-8 行汇报：
+1. 你是谁
+2. 你负责什么
+3. 你不能碰什么
+4. 当前在等什么
+5. 你建议下一步做什么
+
+之后等待项目总管安排工作；如果 BOSS 直接点名找你，再直接回应 BOSS。完成正式任务后，更新自己的 memory.md 和 current-task.md，并按“完成了什么 / 写到哪里 / 状态更新 / 建议下一步”回复项目总管。
 """
-    return f"""You are the {role.title} agent employee for this project.
+    return f"""Conversation role: {role.title}
+
+You are joining this project as the `{role.title}`. Protect this role's judgment and write boundary, then wait for the project manager to dispatch work.
 
 Project: {spec.project_name}
-Current assignment: {role.current_assignment}
-Write scope: {role.write_scope}
-Handoff target: {role.handoff_to}
+Project root: {spec.project_root}
+Default language: English. Keep paths, task IDs, status enums, and code identifiers unchanged.
+
+Role value: {role.mission}
+Responsibility domain: {role.domain or role.mission}
+Quality standard: {role.quality_standard}
+Write boundary: {role.write_scope}
 
 Read first:
 1. AGENTS.md
@@ -841,23 +1149,29 @@ Read first:
 7. Agent Office/Employees/{role.slug}/memory.md
 8. Agent Office/Employees/{role.slug}/current-task.md
 
-Rules:
-- Load only task-relevant context.
-- Read only your own employee folder by default; do not read other employee folders.
-- Do not read Agent Office/Archive/Legacy Management/ during ordinary work.
-- Do not exceed the approved write scope.
-- If the user asks for out-of-scope work, name the role that should own it or leave a message in Agent Office/communication.md.
-- After significant work, update your own memory.md or current-task.md and write a handoff when needed.
+For the first reply, only confirm onboarding. Do not edit files and do not start work. After reading, reply in 5-8 lines with:
+1. who you are
+2. what you own
+3. what you must not touch
+4. what is currently waiting
+5. what you recommend next
+
+Then wait for the project manager to dispatch work; respond directly to BOSS only when BOSS explicitly addresses this employee. After real work, update your own memory.md and current-task.md, then report to the project manager in this shape: completed work / output path / status update / recommended next step.
 """
 
 
 def render_thread_registry(spec: OfficeSpec) -> str:
     today = date.today().isoformat()
     rows = []
-    for index, role in enumerate(spec.roles):
-        status = "active" if index == 0 else "waiting"
+    launch_roles = [role for role in spec.roles if role.needs_thread and not role.current_window]
+    manager_titles = [role.thread_title or role.title for role in spec.roles if role.current_window]
+    manager_title = manager_titles[0] if manager_titles else ("项目经理" if is_zh(spec.language) else "Project Manager")
+    for role in spec.roles:
+        status = role.status or ("current-window" if role.current_window else "waiting")
+        thread_id = role.thread_id if role.current_window or role.thread_id != "TBD" else "TBD"
+        thread_title = role.thread_title or role.title
         rows.append(
-            f"| {role.title} | {spec.project_name} / {role.title} | TBD | {role.thread_mode} | {role.current_assignment} | {role.write_scope} | {status} |"
+            f"| {role.title} | {thread_title} | {thread_id} | {role.thread_mode} | {role.current_assignment} | {role.write_scope} | {status} |"
         )
     if is_zh(spec.language):
         sections = [
@@ -865,22 +1179,50 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "",
             f"最后更新：{today}",
             "",
+            f"当前项目经理窗口标题：`{manager_title}`",
+            "",
             "| Role | Thread Title | Thread ID | Mode | Current Assignment | Write Scope | Status |",
             "|---|---|---|---|---|---|---|",
             *rows,
             "",
-            "## 角色启动提示词",
+            "## 员工续任 / 重启提示词",
             "",
-            "默认手动创建长期对话框。下面每个 `text` 代码框只放要发给新窗口的第一条消息。",
+            "> 这些提示词用于员工入职、换窗口续任或角色恢复。办公室挂牌、AGENTS.md 应用和旧资料入库完成前，不要发送这些提示词。",
+            "",
+            "BOSS 授权正式接管后，项目总管会先确认自己已经挂牌，再安排需要独立窗口的员工入职。员工已入职后，本区也可作为以后重建窗口时的启动材料。",
+            "",
+            "项目总管先给当前窗口挂牌，再邀请员工入职。Codex 桌面有线程工具时优先自动创建员工对话；工具不可用时，才手动复制下面的 `text` 代码框。",
+            "",
+            "当前窗口默认已接任项目总管，不需要再为项目总管开一个窗口。",
+            "",
+            "## 派工并发策略",
+            "",
+            dispatch_policy_summary(spec),
+            "",
+            "项目总管可以一次邀请所有员工入职，但正式派工要按这个并发上限执行；本机容量未知或偏低时，一个员工完成后再派下一个。",
+            "",
+            "## 项目总管派工协议",
+            "",
+            "BOSS 默认只需要和项目总管窗口对话。项目总管判断任务是否需要员工；需要时，先更新任务板和员工 current-task，再把下面这种派工消息发给员工窗口。",
+            "",
+            "```text",
+            "本次派工：{任务编号或一句话任务}",
+            "请先读取 AGENTS.md、Agent Office 公共文件，以及你自己的员工文件夹。",
+            "写入范围：{明确路径或范围}",
+            "交付内容：{期望输出}",
+            "完成后请更新你的 memory.md 和 current-task.md，然后把结果回复给项目总管。",
+            "```",
             "",
         ]
-        for role in spec.roles:
+        if not launch_roles:
+            sections.extend(["暂无需要新建的员工窗口。", ""])
+        for role in launch_roles:
             sections.extend(
                 [
                     f"### {role.title}",
                     "",
-                    f"**新建一个窗口：{role.title}**",
-                    f"建议标题：`{spec.project_name} / {role.title}`",
+                    f"**员工续任 / 重启：{role.title}**",
+                    f"建议标题：`{role.thread_title or role.title}`",
                     "",
                     "```text",
                     render_prompt_body(spec, role).rstrip(),
@@ -894,22 +1236,48 @@ def render_thread_registry(spec: OfficeSpec) -> str:
         "",
         f"Last updated: {today}",
         "",
+        f"Current project-manager window title: `{manager_title}`",
+        "",
         "| Role | Thread Title | Thread ID | Mode | Current Assignment | Write Scope | Status |",
         "|---|---|---|---|---|---|---|",
         *rows,
         "",
-        "## Role Launch Prompts",
+        "## Employee Rejoin / Restart Prompts",
         "",
-        "Create one long-running window for each approved role. Each `text` block contains only the first message to send.",
+        "> Use these prompts for employee onboarding, employee restart, or role recovery after formal takeover. Do not send them before the office is created, AGENTS.md is applied, and absorbed old knowledge is archived.",
+        "",
+        "The project manager should title the current chat first, then onboard employees. After employees are onboarded, this section can also restart a role in a fresh chat. In Codex Desktop, create employee threads automatically when tools are available. Use these manual prompts only as fallback.",
+        "",
+        "The current chat is the project manager by default; do not create a second project-manager thread.",
+        "",
+        "## Dispatch Concurrency Policy",
+        "",
+        dispatch_policy_summary(spec),
+        "",
+        "The project manager may onboard all employees, but real work dispatch must respect this concurrency limit. When local capacity is unknown or low, wait for one employee to finish before dispatching the next.",
+        "",
+        "## Project-Manager Dispatch Protocol",
+        "",
+        "BOSS only needs to talk to the project-manager chat by default. The project manager decides whether a task needs employees; when it does, update the task board and employee current-task first, then send a concise task message like this to the employee thread.",
+        "",
+        "```text",
+        "Dispatch task: {task id or one-sentence task}",
+        "First read AGENTS.md, Agent Office public files, and your own employee folder.",
+        "Write scope: {explicit paths or scope}",
+        "Deliverable: {expected output}",
+        "After completion, update your memory.md and current-task.md, then reply to the project manager with the result.",
+        "```",
         "",
     ]
-    for role in spec.roles:
+    if not launch_roles:
+        sections.extend(["No additional employee windows are needed.", ""])
+    for role in launch_roles:
         sections.extend(
             [
                 f"### {role.title}",
                 "",
-                f"**Create a new window: {role.title}**",
-                f"Suggested title: `{spec.project_name} / {role.title}`",
+                f"**Employee rejoin / restart: {role.title}**",
+                f"Suggested title: `{role.thread_title or role.title}`",
                 "",
                 "```text",
                 render_prompt_body(spec, role).rstrip(),
@@ -923,7 +1291,8 @@ def render_thread_registry(spec: OfficeSpec) -> str:
 def spec_to_json(spec: OfficeSpec) -> str:
     payload = asdict(spec)
     payload["office_directory"] = OFFICE_DIR
-    payload["agents_apply_phrase"] = "确认应用 AGENTS.md"
+    payload["office_schema_version"] = OFFICE_SCHEMA_VERSION
+    payload["agents_apply_authorization"] = "current approved reply option or another explicit user approval"
     return json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
 
 
@@ -1037,7 +1406,7 @@ def write_scaffold(root: Path, spec: OfficeSpec, args: argparse.Namespace) -> li
     for target in planned:
         assert_safe_target(root, target)
     if args.apply_agents and not args.confirm_apply_agents:
-        raise SystemExit("Refusing to apply AGENTS.md without --confirm-apply-agents. Use it only after the user says `确认应用 AGENTS.md`.")
+        raise SystemExit("Refusing to apply AGENTS.md without --confirm-apply-agents. Use it only after the current approved reply option or another explicit user approval authorizes AGENTS.md.")
     if args.force and not args.confirm_overwrite and not args.dry_run:
         existing = [path for path in planned if path.exists() and path.name != "AGENTS.md"]
         if existing:
@@ -1083,7 +1452,7 @@ def write_scaffold(root: Path, spec: OfficeSpec, args: argparse.Namespace) -> li
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Scaffold a lightweight GAOGAO Office project office.")
+    parser = argparse.ArgumentParser(description="Scaffold a lightweight GaoGao Office project office.")
     parser.add_argument("--project-root", default=".", help="Project root to scaffold")
     parser.add_argument("--config", default=None, help="Path to office-plan.json with dynamic role definitions")
     parser.add_argument("--project-name", default=None, help="Project display name")

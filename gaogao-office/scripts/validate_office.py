@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""Validate a lightweight GAOGAO Office project office."""
+"""Validate a lightweight GaoGao Office project office."""
 
 from __future__ import annotations
 
 import argparse
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
 
 
 OFFICE_DIR = "Agent Office"
+OFFICE_SCHEMA_VERSION = "0.2.3"
 
 REQUIRED_FILES = [
     "Agent Office/README.md",
@@ -27,7 +29,7 @@ REQUIRED_FILES = [
 REQUIRED_DIRS = [
     "Agent Office/Employees",
     "Agent Office/Proposals",
-    "Agent Office/Archive/Legacy Management",
+    "Agent Office/Archive/Old Project Memory",
 ]
 
 BUDGETS = {
@@ -42,10 +44,21 @@ BUDGETS = {
 }
 
 EMPLOYEE_BUDGETS = {
-    "README.md": 700,
-    "memory.md": 900,
+    "README.md": 1200,
+    "memory.md": 1200,
     "current-task.md": 800,
 }
+
+BAD_ROLE_TITLE_TOKENS = [
+    "pipeline",
+    "runtime",
+    "workflow",
+    "system",
+    "scope",
+    "qa 与发布",
+    "视觉资产管线",
+    "前端运行层",
+]
 
 
 @dataclass
@@ -182,6 +195,9 @@ def archive_contains_source(archive_dir: Path, archived: list[Path], source: str
             continue
         if len(archived_parts) >= len(source_parts) and archived_parts[-len(source_parts) :] == source_parts:
             return True
+        for index in range(0, len(archived_parts) - len(source_parts)):
+            if archived_parts[index : index + len(source_parts)] == source_parts:
+                return True
     return False
 
 
@@ -201,6 +217,30 @@ def entry_has_disposition(line: str) -> bool:
     return any(token in explanation for token in ["migrated", "migration", "absorbed", "absorb", "discarded", "discard", "吸收", "迁移", "丢弃"])
 
 
+def entry_absorption_complete(line: str) -> bool:
+    explanation = report_line_explanation(line).lower()
+    if "needs absorption" in explanation or "proposed" in explanation or "pending" in explanation:
+        return False
+    return any(
+        token in explanation
+        for token in [
+            "migrated",
+            "migration",
+            "absorbed",
+            "absorb",
+            "summarized",
+            "summarised",
+            "merged into",
+            "copied into",
+            "吸收",
+            "归纳",
+            "迁移",
+            "写入",
+            "并入",
+        ]
+    )
+
+
 def validate_required_paths(root: Path, findings: list[Finding]) -> None:
     for rel in REQUIRED_FILES:
         path = root / rel
@@ -216,6 +256,8 @@ def validate_required_paths(root: Path, findings: list[Finding]) -> None:
             findings.append(Finding("error", rel, "required directory is missing"))
     if (root / "docs" / "agent-office").exists():
         findings.append(Finding("warning", "legacy-v0.1-office", "legacy v0.1 nested office path exists; migrate or archive it before relying on v0.2 layout"))
+    if (root / "Agent Office" / "Archive" / "Legacy Management").exists():
+        findings.append(Finding("warning", "Agent Office/Archive/Legacy Management", "old archive directory name exists; prefer `Agent Office/Archive/Old Project Memory/`"))
 
 
 def validate_content(root: Path, findings: list[Finding]) -> None:
@@ -231,19 +273,23 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
     prompt_file = root / "Agent Office/thread-registry.md"
     if prompt_file.exists() and not has_link_in_path(root, prompt_file):
         text = read_text(prompt_file)
-        prompt_requirements = [
-            ["AGENTS.md"],
-            ["Agent Office/README.md"],
-            ["Agent Office/status.md"],
-            ["Agent Office/project-brief.md"],
-            ["Agent Office/task-board.md"],
-            ["Agent Office/Employees/"],
-            ["memory.md"],
-            ["current-task.md"],
-        ]
-        for options in prompt_requirements:
-            if not contains_any(text, options):
-                findings.append(Finding("warning", "Agent Office/thread-registry.md", f"thread launch prompts should mention `{label(options)}`"))
+        if "```text" in text:
+            prompt_requirements = [
+                ["AGENTS.md"],
+                ["Agent Office/README.md"],
+                ["Agent Office/status.md"],
+                ["Agent Office/project-brief.md"],
+                ["Agent Office/task-board.md"],
+                ["Agent Office/Employees/"],
+                ["memory.md"],
+                ["current-task.md"],
+                ["本对话角色", "Conversation role"],
+                ["项目总管派工协议", "Project-Manager Dispatch Protocol"],
+                ["BOSS"],
+            ]
+            for options in prompt_requirements:
+                if not contains_any(text, options):
+                    findings.append(Finding("warning", "Agent Office/thread-registry.md", f"thread launch prompts should mention `{label(options)}`"))
 
     communication = root / "Agent Office/communication.md"
     if communication.exists() and not has_link_in_path(root, communication):
@@ -251,6 +297,44 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
         for options in [["out-of-scope", "职责外"], ["Handoffs", "交接"], ["Open Messages", "消息"]]:
             if not contains_any(text, options):
                 findings.append(Finding("warning", "Agent Office/communication.md", f"communication protocol should mention `{label(options)}`"))
+        if not contains_any(text, ["project manager by default", "默认先进入项目总管"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain controller-dispatch entry through the project manager"))
+
+    brief = root / "Agent Office/project-brief.md"
+    if brief.exists() and not has_link_in_path(root, brief):
+        text = read_text(brief)
+        if not contains_any(text, ["controller-dispatch", "项目总管按需派工"]):
+            findings.append(Finding("warning", "Agent Office/project-brief.md", "project brief should record the controller-dispatch collaboration style"))
+
+    plan = root / "Agent Office/office-plan.json"
+    if plan.exists() and not has_link_in_path(root, plan):
+        try:
+            data = json.loads(read_text(plan))
+        except json.JSONDecodeError:
+            findings.append(Finding("error", "Agent Office/office-plan.json", "office plan is not valid JSON"))
+        else:
+            if data.get("office_schema_version") != OFFICE_SCHEMA_VERSION:
+                findings.append(
+                    Finding(
+                        "warning",
+                        "Agent Office/office-plan.json",
+                        f"office schema version is missing or stale; expected `{OFFICE_SCHEMA_VERSION}`",
+                    )
+                )
+            if data.get("collaboration_mode") != "controller-dispatch":
+                findings.append(Finding("warning", "Agent Office/office-plan.json", "collaboration_mode should be `controller-dispatch`"))
+            dispatch_policy = data.get("dispatch_policy")
+            if not isinstance(dispatch_policy, dict):
+                findings.append(Finding("warning", "Agent Office/office-plan.json", "dispatch_policy should record local-capacity-aware employee dispatch"))
+            else:
+                try:
+                    max_parallel = int(dispatch_policy.get("max_parallel_employee_tasks", 0))
+                except (TypeError, ValueError):
+                    max_parallel = 0
+                if max_parallel < 1:
+                    findings.append(Finding("warning", "Agent Office/office-plan.json", "dispatch_policy.max_parallel_employee_tasks should be at least 1"))
+                if not dispatch_policy.get("mode"):
+                    findings.append(Finding("warning", "Agent Office/office-plan.json", "dispatch_policy.mode is missing"))
 
 
 def validate_employees(root: Path, findings: list[Finding]) -> None:
@@ -261,8 +345,29 @@ def validate_employees(root: Path, findings: list[Finding]) -> None:
     if not employee_dirs:
         findings.append(Finding("error", "Agent Office/Employees", "no employee role folders found"))
     registry_text = read_text(root / "Agent Office/thread-registry.md")
+    if registry_text and not contains_any(registry_text, ["current-window", "founding-steward", "项目总管"]):
+        findings.append(Finding("warning", "Agent Office/thread-registry.md", "registry should identify the current chat as the founding project manager"))
+    if registry_text and not contains_any(registry_text, ["Current project-manager window title", "当前项目经理窗口标题"]):
+        findings.append(Finding("warning", "Agent Office/thread-registry.md", "registry should state the title for the current project-manager chat"))
+    if registry_text:
+        for line in registry_text.splitlines():
+            if line.startswith("|") and " / " in line and "Thread Title" not in line and "---" not in line:
+                findings.append(Finding("warning", "Agent Office/thread-registry.md", "thread title should use the employee job title only, not `project / role`"))
+                break
     for employee in sorted(employee_dirs):
         rel_employee = str(employee.relative_to(root)).replace("\\", "/")
+        readme_text = read_text(employee / "README.md")
+        title_match = re.search(r"^#\s+(.+)$", readme_text, re.MULTILINE)
+        title = title_match.group(1).strip() if title_match else employee.name
+        current_window_employee = bool(
+            registry_text
+            and re.search(rf"^\|\s*{re.escape(title)}\s*\|[^\n]*(current-window|founding-steward|项目总管)", registry_text, re.MULTILINE)
+        )
+        title_lower = title.lower()
+        if any(token in title_lower or token in title for token in BAD_ROLE_TITLE_TOKENS):
+            findings.append(Finding("warning", f"{rel_employee}/README.md", "employee display title looks like a responsibility domain; use a human job title"))
+        if not contains_any(readme_text, ["职责域", "Responsibility Domain"]):
+            findings.append(Finding("warning", f"{rel_employee}/README.md", "employee profile should separate job title from responsibility domain"))
         for filename in ["README.md", "memory.md", "current-task.md"]:
             path = employee / filename
             rel = f"{rel_employee}/{filename}"
@@ -276,8 +381,16 @@ def validate_employees(root: Path, findings: list[Finding]) -> None:
             if count > limit:
                 findings.append(Finding("warning", rel, f"word count {count} exceeds hard limit {limit}"))
         for rel in [f"{rel_employee}/README.md", f"{rel_employee}/memory.md", f"{rel_employee}/current-task.md"]:
-            if registry_text and rel not in registry_text:
+            if registry_text and not current_window_employee and rel not in registry_text:
                 findings.append(Finding("warning", "Agent Office/thread-registry.md", f"thread launch prompts should mention `{rel}`"))
+        memory_text = read_text(employee / "memory.md")
+        if not contains_any(memory_text, ["## Next Action"]):
+            findings.append(Finding("warning", f"{rel_employee}/memory.md", "memory should have a `## Next Action` section"))
+        if not contains_any(memory_text, ["## Work Log"]):
+            findings.append(Finding("warning", f"{rel_employee}/memory.md", "memory should have a `## Work Log` section"))
+        task_text = read_text(employee / "current-task.md")
+        if not contains_any(task_text, ["status: waiting", "status: active", "status: deferred", "status: cancelled", "status: done"]):
+            findings.append(Finding("warning", f"{rel_employee}/current-task.md", "current-task should record a task status"))
 
 
 def validate_budgets(root: Path, findings: list[Finding]) -> None:
@@ -295,7 +408,7 @@ def validate_budgets(root: Path, findings: list[Finding]) -> None:
 
 def validate_migration_report(root: Path, findings: list[Finding]) -> None:
     report = root / "Agent Office/migration-report.md"
-    archive_dir = root / "Agent Office/Archive/Legacy Management"
+    archive_dir = root / "Agent Office/Archive/Old Project Memory"
     if not report.exists():
         return
     if has_link_in_path(root, report):
@@ -330,13 +443,22 @@ def validate_migration_report(root: Path, findings: list[Finding]) -> None:
     archive_section = markdown_section(text, "Proposed Archive List")
     approval_section = markdown_section(text, "User Approval Record")
     proposed_archive = table_source_paths(archive_section)
+    absorption_entries = {entry.path: entry for entry in table_source_entries(markdown_section(text, "Absorption Map"))}
     archived = archive_files(archive_dir) if not has_link_in_path(root, archive_dir) else []
+    archive_approved = approval_value(approval_section, "Approved archive list") == "YES"
     for source in proposed_archive:
         if not is_safe_report_path(source):
             findings.append(Finding("error", rel_report, f"`{source}` is not a safe project-relative archive path"))
         elif not (root / source).exists() and not archive_contains_source(archive_dir, archived, source):
             findings.append(Finding("warning", rel_report, f"`{source}` is missing from the project and no archive copy with the same filename was found"))
-    if proposed_archive and approval_value(approval_section, "Approved archive list") != "YES":
+        absorption_entry = absorption_entries.get(source)
+        if absorption_entry is None:
+            severity = "error" if archive_approved else "warning"
+            findings.append(Finding(severity, rel_report, f"`{source}` appears in the archive list but not in the absorption map"))
+        elif not entry_absorption_complete(absorption_entry.line):
+            severity = "error" if archive_approved else "warning"
+            findings.append(Finding(severity, rel_report, f"`{source}` must be marked absorbed in the absorption map before archiving"))
+    if proposed_archive and not archive_approved:
         findings.append(Finding("info", rel_report, "archive plan is not marked approved yet"))
 
     move_entries = table_source_entries(markdown_section(text, "Proposed Move List"))
@@ -383,7 +505,7 @@ def validate(root: Path) -> list[Finding]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate a GAOGAO Office project office.")
+    parser = argparse.ArgumentParser(description="Validate a GaoGao Office project office.")
     parser.add_argument("--project-root", default=".", help="Project root to validate")
     parser.add_argument("--warn-only", action="store_true", help="Always exit 0")
     args = parser.parse_args()
@@ -391,9 +513,9 @@ def main() -> int:
     root = Path(args.project_root).resolve()
     findings = validate(root)
     if not findings:
-        print("GAOGAO Office validation passed.")
+        print("GaoGao Office validation passed.")
         return 0
-    print("# GAOGAO Office Validation Report\n")
+    print("# GaoGao Office Validation Report\n")
     for finding in findings:
         print(f"- [{finding.severity.upper()}] `{finding.path}`: {finding.message}")
     has_error = any(item.severity == "error" for item in findings)

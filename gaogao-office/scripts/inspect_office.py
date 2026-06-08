@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect a project for GAOGAO Office migration and cleanup.
+"""Inspect a project for GaoGao Office migration and cleanup.
 
 Default mode is read-only and writes the report to stdout. If --output is used,
 the output path must stay inside the selected project root.
@@ -30,6 +30,11 @@ SKIP_DIRS = {
     ".cache",
     ".playwright-cli",
     ".gpt-image-venv",
+    "output",
+    "outputs",
+    "tmp",
+    "temp",
+    "logs",
 }
 
 SENSITIVE_DIRS = {".ssh", ".aws", ".gnupg"}
@@ -78,14 +83,29 @@ KEYWORD_ORDER = [
     "sprint",
     "meeting",
     "copy",
+    "brief",
+    "guide",
+    "rule",
+    "boundary",
+    "workflow",
+    "checklist",
+    "changelog",
     "文案",
     "策划",
     "任务",
     "计划",
     "上下文",
+    "规则",
+    "边界",
+    "流程",
+    "检查",
+    "交接",
+    "决策",
 ]
 
-TEXT_EXTS = {".md", ".txt", ".rst", ".adoc", ".toml", ".yaml", ".yml", ".json", ".csv"}
+PLAIN_TEXT_EXTS = {".md", ".txt", ".rst", ".adoc"}
+STRUCTURED_TEXT_EXTS = {".toml", ".yaml", ".yml", ".json", ".jsonl", ".csv", ".tsv"}
+TEXT_EXTS = PLAIN_TEXT_EXTS | STRUCTURED_TEXT_EXTS
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".bmp", ".tiff"}
 MEDIA_EXTS = {".mp4", ".mov", ".avi", ".mp3", ".wav", ".m4a"}
 MAX_TEXT_BYTES = 2_000_000
@@ -170,6 +190,16 @@ def file_kind(path: Path) -> str:
     return "binary-or-unknown"
 
 
+def has_management_hint(rel: Path) -> bool:
+    lower_path = str(rel).replace("\\", "/").lower()
+    lower_name = rel.name.lower()
+    if lower_name in EXACT_NAMES_LOWER:
+        return True
+    if ".github/" in lower_path or ".codex/" in lower_path or ".agents/" in lower_path:
+        return True
+    return any(keyword in lower_path for keyword in KEYWORD_ORDER)
+
+
 def read_policy(path: Path, rel: Path, root: Path) -> str:
     if has_link_in_path(root, path):
         return "linked-skip"
@@ -184,6 +214,8 @@ def read_policy(path: Path, rel: Path, root: Path) -> str:
         return "unreadable"
     if size > MAX_TEXT_BYTES:
         return "large-text-skip"
+    if path.suffix.lower() in STRUCTURED_TEXT_EXTS and not has_management_hint(rel):
+        return "structured-metadata-only"
     return "candidate-text"
 
 
@@ -247,7 +279,21 @@ def classify(rel_path: str, text: str) -> tuple[str, int, list[str]]:
         kind = "task-tracking"
     elif "roadmap" in lower_path or "plan" in lower_path or "milestone" in lower_path or "计划" in lower_path:
         kind = "planning"
-    elif "status" in lower_path or "handoff" in lower_path or "context" in lower_path or "vibe" in lower_path or "上下文" in lower_path:
+    elif (
+        "status" in lower_path
+        or "handoff" in lower_path
+        or "context" in lower_path
+        or "vibe" in lower_path
+        or "rule" in lower_path
+        or "boundary" in lower_path
+        or "workflow" in lower_path
+        or "checklist" in lower_path
+        or "changelog" in lower_path
+        or "上下文" in lower_path
+        or "规则" in lower_path
+        or "边界" in lower_path
+        or "流程" in lower_path
+    ):
         kind = "project-memory"
     elif "copy" in lower_path or "文案" in lower_path:
         kind = "project-copy"
@@ -338,7 +384,7 @@ def render_absorption_table(candidates: list[Candidate]) -> list[str]:
     for item in migratable:
         facts, destination = absorption_destination(item.kind)
         lines.append(
-            f"| {markdown_table_cell(markdown_code(item.path))} | {markdown_table_cell(facts)} | {markdown_table_cell(markdown_code(destination))} | proposed |"
+            f"| {markdown_table_cell(markdown_code(item.path))} | {markdown_table_cell(facts)} | {markdown_table_cell(markdown_code(destination))} | needs absorption note |"
         )
     return lines
 
@@ -349,9 +395,11 @@ def render_archive_table(candidates: list[Candidate], archive_stamp: str) -> lis
         return ["No items proposed."]
     lines = ["| Source | Proposed Archive Destination | Reason |", "|---|---|---|"]
     for item in migratable:
-        destination = f"Agent Office/Archive/Legacy Management/{archive_stamp}/{item.path}"
+        destination = f"Agent Office/Archive/Old Project Memory/{archive_stamp}/{item.path}"
+        facts, office_destination = absorption_destination(item.kind)
+        reason = f"archive after absorbing {facts} into {office_destination}; source classified as {item.kind}"
         lines.append(
-            f"| {markdown_table_cell(markdown_code(item.path))} | {markdown_table_cell(markdown_code(destination))} | content absorbed from {item.kind} |"
+            f"| {markdown_table_cell(markdown_code(item.path))} | {markdown_table_cell(markdown_code(destination))} | {markdown_table_cell(reason)} |"
         )
     return lines
 
@@ -367,7 +415,7 @@ def render_markdown(root: Path, inventory: list[FileEntry], candidates: list[Can
     conflicts = [item for item in migratable if item.kind in {"agent-instructions", "tooling-config", "possible-management-doc"} and item not in authoritative]
 
     lines = [
-        "# GAOGAO Office Migration Report",
+        "# GaoGao Office Migration Report",
         "",
         f"Project: `{root.name}`",
         "Project root: current `--project-root`; absolute path omitted to avoid leaking local paths.",
@@ -380,11 +428,11 @@ def render_markdown(root: Path, inventory: list[FileEntry], candidates: list[Can
         f"- Migratable candidates: {len(migratable)}",
         f"- Sensitive files skipped without reading: {len(sensitive)}",
         f"- Linked paths skipped without reading: {len(linked)}",
-        "- Absorb durable facts into `Agent Office/` before archiving or moving old framework files.",
+            "- Absorb durable facts into `Agent Office/` before archiving or moving old knowledge files.",
         "",
         "## Project Map",
         "",
-        "This is a filename-level map. `metadata-only`, `sensitive-skip`, `linked-skip`, and `large-text-skip` entries were not content-read.",
+        "This is a filename-level map. `metadata-only`, `structured-metadata-only`, `sensitive-skip`, `linked-skip`, and `large-text-skip` entries were not content-read.",
         "",
     ]
     lines.extend(render_inventory_table(inventory))
@@ -414,19 +462,19 @@ def render_markdown(root: Path, inventory: list[FileEntry], candidates: list[Can
             "",
             "Draft path: `Agent Office/Proposals/AGENTS.proposed.md`",
             "",
-            "Keep root `AGENTS.md` unchanged until the user manually copies this draft or explicitly approves replacing the root file with this exact proposal by saying `确认应用 AGENTS.md`.",
+            "Keep root `AGENTS.md` unchanged until the current approved reply option explicitly authorizes formal takeover or AGENTS application.",
             "",
             "## Recommended Roles",
             "",
             "These are role-design hints, not an approved roster. Choose final roles dynamically after the user confirms current deliverables, write scopes, and handoff targets.",
             "",
-            "- Coordinator: keep public office files short and current.",
-            "- Archivist: absorb old project memory and archive approved legacy files.",
-            "- Domain roles: create only when the current milestone needs distinct long-running work.",
+            "- Project Manager: the current chat should take this job by default.",
+            "- Human job titles: use names like Designer, Engineer, Release Checker, Researcher, or Editor.",
+            "- Responsibility domains: put pipeline/process wording inside employee profiles, not in the job title.",
             "",
             "## Proposed Archive List",
             "",
-            "Archive only after durable facts have been absorbed and the user approves this exact list.",
+            "Archive only after durable facts have been absorbed and the user approves this exact list. This is historical memory, not ordinary working context.",
             "",
         ]
     )
@@ -450,8 +498,8 @@ def render_markdown(root: Path, inventory: list[FileEntry], candidates: list[Can
             "",
             "- Which candidate files are authoritative project truth?",
             "- Should `Agent Office/Proposals/AGENTS.proposed.md` replace root `AGENTS.md`?",
-            "- Should absorbed old framework originals be moved into the legacy archive after copy verification?",
-            "- Which roles should become long-running employee windows?",
+            "- Should absorbed old knowledge originals be moved into `Old Project Memory` after archive verification?",
+            "- Which employees should be invited after formal takeover is complete?",
             "",
             "## User Approval Record",
             "",
@@ -467,7 +515,7 @@ def render_markdown(root: Path, inventory: list[FileEntry], candidates: list[Can
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Inspect a project for GAOGAO Office migration candidates.")
+    parser = argparse.ArgumentParser(description="Inspect a project for GaoGao Office migration candidates.")
     parser.add_argument("--project-root", default=".", help="Project root to inspect")
     parser.add_argument("--output", default="", help="Optional report path inside project root")
     parser.add_argument("--force-output", action="store_true", help="Overwrite --output if it already exists")

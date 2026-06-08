@@ -1,33 +1,79 @@
 # Role Catalog
 
-Use this only when role boundaries need help. Do not treat it as a required roster.
+Use this only when employee boundaries need help. Do not treat it as a required roster.
 
-## Role Rules
+## Core Principle
 
-- Create few, necessary roles.
-- Split only when responsibilities, inputs, outputs, write scope, or review authority are meaningfully different.
-- Each role gets `Agent Office/Employees/{role-slug}/README.md`, `memory.md`, and `current-task.md`.
-- A role reads only its own employee folder by default.
-- A role asked to do out-of-scope work should route it through `Agent Office/communication.md` or the coordinator.
+Create people-shaped jobs, not process-shaped modules.
 
-## Common Role Patterns
+Good display titles:
 
-- **Coordinator**: owns public office truth, task ownership, scope, and handoffs.
-- **Builder**: implements assigned work inside a task write scope.
-- **Reviewer**: reviews diffs, outputs, regressions, missing tests, and scope fit.
-- **Archivist**: absorbs old project memory, keeps public files short, and manages archive material.
-- **Architect**: owns architecture boundaries and durable decisions.
-- **QA**: owns acceptance scenarios and verification.
-- **Security**: owns secrets, permissions, dependency risk, and unsafe automation checks.
-- **UX / Content / Research**: create only when the current project needs those distinct long-running responsibilities.
+- Project Manager
+- Designer
+- Frontend Engineer
+- Release Checker
+- Researcher
+- Writer
+- Editor
+- Architect
+- Security Reviewer
 
-## Compression Check
+Avoid display titles like:
 
-Before proposing roles, ask:
+- Visual Asset Pipeline
+- Frontend Runtime
+- QA And Publishing
+- Migration Archive
+- Context Maintenance
 
-- Could one role handle the first milestone without confusion?
-- Do any proposed roles share the same write scope?
-- Is this role useful now, or merely plausible later?
-- Would the user understand why this role deserves a separate window?
+Put those process names in the responsibility domain inside the employee profile.
 
-Merge or defer roles that fail this check.
+## Current Chat
+
+The current GaoGao Office chat is the founding project manager by default. Do not ask the user to create another project-manager window. In Codex Desktop, rename this current chat to the project-manager job title only, such as `项目经理`, `项目总管`, or `Project Manager`, before inviting other employees. If the current chat later becomes too long, it may write a successor prompt for a new project-manager chat.
+
+The project manager is the BOSS-facing controller in multi-employee mode. BOSS can keep talking to that one chat; the manager decides what to do directly, what to dispatch, and how to merge employee results.
+
+## Split Test
+
+Create a separate employee only when at least two are true:
+
+- the work has a distinct professional judgment standard
+- the write scope is different
+- the employee needs long-running private memory
+- context would become noisy if mixed with another employee
+- the project manager benefits from delegating to that employee, or BOSS explicitly wants direct employee access
+
+Merge or defer jobs that fail this test.
+
+## Dynamic Examples
+
+Use these as examples, not templates:
+
+| Situation | Possible employee | Responsibility domain |
+|---|---|---|
+| visual portfolio with assets | Designer | visual assets, art direction, image boundaries |
+| web app implementation | Frontend Engineer | UI code, components, runtime behavior |
+| launch or website publishing | Release Checker | QA, broken links, release readiness |
+| research-heavy project | Researcher | sources, claims, evidence notes |
+| writing-heavy project | Editor | narrative, copy, structure |
+
+## Employee Profile Requirements
+
+Every employee needs:
+
+- human job title
+- responsibility domain
+- role value
+- judgment standard
+- inputs and outputs
+- write scope
+- forbidden areas
+- handoff target
+- memory update rule
+
+## Onboarding
+
+After formal takeover, first title the current project-manager chat, then invite employees. In Codex Desktop, create threads automatically when authorized and set titles to the job title only. If manual prompts are needed, start with `Conversation role: Job Title` or `本对话角色：职位名`.
+
+After onboarding, do not push BOSS into every employee window. Treat employee chats as managed workrooms unless BOSS asks to enter one directly.

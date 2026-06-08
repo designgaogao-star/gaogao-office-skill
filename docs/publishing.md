@@ -1,4 +1,6 @@
-# Publishing GAOGAO Office
+# Publishing GaoGao Office
+
+Publish only after the local install has passed real project testing. Do not tag, zip, or create a GitHub release just because the local skill changed.
 
 ## 1. Validate
 
@@ -15,33 +17,33 @@ From the package repository:
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v0.2.0"
+git commit -m "Release gaogao office v0.2.3"
 ```
 
 ## 3. Tag
 
 ```bash
-git tag v0.2.0
+git tag v0.2.3
 git push origin main
-git push origin v0.2.0
+git push origin v0.2.3
 ```
 
 ## 4. Release Notes
 
 ```md
-# GAOGAO Office v0.2.0
+# GaoGao Office v0.2.3
 
-Lightweight public/private Agent Office redesign.
+Practical takeover, capacity-aware dispatch, and final-answer refinement.
 
 Highlights:
-- skill renamed to `$gaogao-office` with display name GAOGAO Office
-- generated project folder is `Agent Office/`
-- public files live directly in `Agent Office/`
-- each role gets one private folder under `Agent Office/Employees/`
-- root `AGENTS.md` is proposed first and applied only after `确认应用 AGENTS.md`
-- migration starts with full filename scanning and candidate text reads
-- old `vibe/` and planning files are absorbed before archive or move
-- approved legacy files archive to `Agent Office/Archive/Legacy Management/`
+- current chat becomes the founding project manager
+- users choose first-use takeover style with plain A/B/C/D replies
+- direction planning moves to post-takeover direction-advisor mode
+- employees use human job titles and onboarding language
+- Codex Desktop can create employee threads automatically after approval
+- project managers throttle employee dispatch based on local capacity
+- final-answer preflight prevents internal draft leakage
+- absorbed old knowledge archives to `Agent Office/Archive/Old Project Memory/`
 ```
 
 ## 5. Install Prompt

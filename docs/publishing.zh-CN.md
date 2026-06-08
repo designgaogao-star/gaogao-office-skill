@@ -1,4 +1,6 @@
-# 发布 GAOGAO Office
+# 发布 GaoGao Office
+
+只有本机安装版在真实项目里测试通过后，才考虑发布。不要因为本地 skill 改了就自动打 tag、打包或发 GitHub release。
 
 ## 1. 校验
 
@@ -15,33 +17,33 @@ python work/run_gaogao_office_gate.py --workspace .
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v0.2.0"
+git commit -m "Release gaogao office v0.2.3"
 ```
 
 ## 3. 打标签
 
 ```bash
-git tag v0.2.0
+git tag v0.2.3
 git push origin main
-git push origin v0.2.0
+git push origin v0.2.3
 ```
 
 ## 4. Release Notes
 
 ```md
-# GAOGAO Office v0.2.0
+# GaoGao Office v0.2.3
 
-轻量化公共区/员工私有区重构。
+实战接管、容量派工和最终回复体验改进。
 
 Highlights:
-- skill 改名为 `$gaogao-office`，显示名为 GAOGAO Office
-- 项目内生成目录为 `Agent Office/`
-- 公共文件直接放在 `Agent Office/`
-- 每个角色在 `Agent Office/Employees/` 下有自己的私有文件夹
-- 根 `AGENTS.md` 先生成提案，只有回复 `确认应用 AGENTS.md` 后才应用
-- 迁移先完整扫描文件名，再读取候选文本
-- 旧 `vibe/` 和计划文件先吸收到新 office，再归档或移动
-- 已批准旧文件归档到 `Agent Office/Archive/Legacy Management/`
+- 当前窗口默认接任第一任项目总管
+- 用户通过 A/B/C/D 回复选择首次接管方式
+- 方案咨询从接管选项中移除，改为接管完成后的方向顾问模式
+- 员工使用人类岗位名和入职式提示
+- Codex 桌面可在授权后自动创建员工对话
+- 项目总管根据本机容量控制员工并发派工
+- 最终回复增加公开输出自检，避免内部草稿泄露
+- 已吸收旧知识归档到 `Agent Office/Archive/Old Project Memory/`
 ```
 
 ## 5. 安装提示
