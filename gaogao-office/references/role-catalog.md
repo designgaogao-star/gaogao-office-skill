@@ -32,7 +32,7 @@ Put those process names in the responsibility domain inside the employee profile
 
 The current GaoGao Office chat is the founding project manager by default. Do not ask the user to create another project-manager window. In Codex Desktop, rename this current chat to the project-manager job title only, such as `项目经理`, `项目总管`, or `Project Manager`, before inviting other employees. If the current chat later becomes too long, it may write a successor prompt for a new project-manager chat.
 
-The project manager is the BOSS-facing controller in multi-employee mode. BOSS can keep talking to that one chat; the manager decides what to do directly, what to dispatch, and how to merge employee results.
+The project manager is the user-facing controller in multi-employee mode. The user can keep talking to that one chat; the manager decides what to do directly, what to dispatch, and how to merge employee results.
 
 ## Split Test
 
@@ -42,7 +42,7 @@ Create a separate employee only when at least two are true:
 - the write scope is different
 - the employee needs long-running private memory
 - context would become noisy if mixed with another employee
-- the project manager benefits from delegating to that employee, or BOSS explicitly wants direct employee access
+- the project manager benefits from delegating to that employee, or the user explicitly wants direct employee access
 
 Merge or defer jobs that fail this test.
 
@@ -76,4 +76,4 @@ Every employee needs:
 
 After formal takeover, first title the current project-manager chat, then invite employees. In Codex Desktop, create threads automatically when authorized and set titles to the job title only. If manual prompts are needed, start with `Conversation role: Job Title` or `本对话角色：职位名`.
 
-After onboarding, do not push BOSS into every employee window. Treat employee chats as managed workrooms unless BOSS asks to enter one directly.
+After onboarding, do not push the user into every employee window. Treat employee chats as managed workrooms unless the user asks to enter one directly.

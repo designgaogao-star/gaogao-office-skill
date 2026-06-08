@@ -2,7 +2,7 @@
 
 Use this when GaoGao Office writes user-visible chat output for onboarding, proposals, migration reports, maintenance reports, retirement summaries, or employee launch prompts.
 
-The goal is readability, not decoration. Use the smallest Markdown structure that helps BOSS scan, decide, copy, or verify.
+The goal is readability, not decoration. Use the smallest Markdown structure that helps the user scan, decide, copy, or verify. In Chinese chat, `BOSS` is the preferred address; in English chat, use natural `you` wording.
 
 ## Default Rules
 
@@ -52,19 +52,21 @@ Use `text` blocks for copyable replies. When an example contains a fenced code b
 
 ## First-Use Reply Shape
 
-Use this structure for a first invocation:
+Use this structure for a Chinese first invocation:
 
 ````md
-BOSS，我先给这个项目做一次项目体检。现在只看，不写文件。
+BOSS，我先给这个项目做一次只读体检：看目录、README、旧规则和项目线索，先不写文件。
+体检后我会给你一份接管方案；你确认前，我不会创建 `Agent Office/`、改 `AGENTS.md` 或邀请员工。
 
-> 现在只读，不写文件。等你回复 A/B/C/D 后，我再执行对应动作。
+> 现在只读，不写文件。等你看到方案并回复 A/B/C/D 后，我再执行对应动作。
 
 ```mermaid
 flowchart LR
-  A["只读体检"] --> B["组织方案"]
+  A["只读体检"] --> B["接管方案"]
   B --> C["BOSS 选 A/B/C/D"]
-  C --> D["正式接管"]
-  D --> E["员工入职"]
+  C -->|接管| D["创建办公室/应用规则"]
+  C -->|暂不| X["停止，不写文件"]
+  D --> E["员工入职或单窗口就位"]
   E --> F["询问是否进入方向顾问模式"]
 ```
 
@@ -79,13 +81,50 @@ flowchart LR
 如果这个判断不对，直接纠正我；如果判断对，我会给你接管方案。
 ````
 
+Use this structure for an English first invocation:
+
+````md
+I’ll give this project a read-only office checkup first: directory clues, README, existing rules, and old project memory. I will not write files yet.
+After the checkup, I’ll bring you a takeover proposal; before you confirm, I will not create `Agent Office/`, change `AGENTS.md`, or onboard employees.
+
+> Read-only for now. After you review the proposal and reply A/B/C/D, I’ll take only the action you chose.
+
+```mermaid
+flowchart LR
+  A["Read-only checkup"] --> B["Takeover proposal"]
+  B --> C["You choose A/B/C/D"]
+  C -->|take over| D["Create office/apply rules"]
+  C -->|pause| X["Stop, no file changes"]
+  D --> E["Employees onboarded or single window ready"]
+  E --> F["Ask whether to enter direction-advisor mode"]
+```
+
+**Project Checkup**
+- Path: `...`
+- Clues: ...
+
+**My Read**
+I think this is ...
+
+**Next**
+If this is wrong, correct me; if it is right, I’ll bring you the takeover proposal.
+````
+
 Use this first-use roadmap only during onboarding, migration takeover, or upgrade takeover. Do not add Mermaid to ordinary progress updates.
 
 If the project purpose is unknown, ask one light question in a `text` block:
 
 ````md
 ```text
-BOSS，这个项目主要想做什么？随便说一句就行，我会先按你的描述判断该怎么组建属于您的团队。
+BOSS，这个项目主要想做什么？随便说一句就行，我先按你的描述判断该怎么组团队。
+```
+````
+
+English:
+
+````md
+```text
+What is this project mainly trying to do? One casual sentence is enough; I’ll use it to decide how to shape the team.
 ```
 ````
 
@@ -109,6 +148,24 @@ A. 按推荐团队正式接管
 创建 Agent Office、应用 AGENTS.md、邀请员工入职。
 ````
 
+English option shape:
+
+````md
+**Takeover Proposal**
+
+| Employee | Why Needed | Boundary | Onboard? |
+|---|---|---|---|
+| Project Manager | Receive requests and keep the office coherent | Public office files, task routing, final reports | Current chat |
+| Designer | Keep visual judgment stable | Design-related files and this employee folder | Recommended |
+
+```text
+Reply with one letter: A / B / C / D
+```
+
+A. Take over with the recommended team
+Create `Agent Office/`, apply `AGENTS.md` with the agreed backup behavior, and onboard employees.
+````
+
 ## Completion Shapes
 
 For A-style formal takeover, use a task list:
@@ -125,7 +182,21 @@ For A-style formal takeover, use a task list:
 > 当前还没有安排任务。你可以继续只和项目总管窗口说话。
 ```
 
-After takeover, ask whether BOSS wants direction-advisor mode:
+English:
+
+```md
+**Takeover Complete**
+
+- [x] Created `Agent Office/`
+- [x] Applied `AGENTS.md`
+- [x] Employees onboarded
+- [x] Dispatch policy recorded
+- [ ] Assigned project work
+
+> No project task is assigned yet. You can keep talking to this project-manager chat.
+```
+
+After takeover, ask whether the user wants direction-advisor mode:
 
 ````md
 > 办公室已经就位，但我还没有安排项目任务。
@@ -135,16 +206,26 @@ BOSS，你现在对这个项目有没有明确方向？有的话直接说你的�
 ```
 ````
 
+English:
+
+````md
+> The office is ready, but no project task has been assigned yet.
+
+```text
+Do you already have a clear direction for this project? If yes, tell me your idea; if not, I’ll help judge 2-3 possible directions.
+```
+````
+
 ## Final Answer Preflight
 
-Before replying to BOSS, remove private drafting traces. The final answer must not contain:
+Before replying to the user, remove private drafting traces. The final answer must not contain:
 
 - internal thinking such as `Wait`, `Need final`, `analysis`, `draft`, `TODO`, `abs?`, or `no need?`
 - implementation chatter such as temporary config names, internal IDs, or "I need to figure out the link syntax"
-- raw multi-thread logs unless BOSS asks for them
+- raw multi-thread logs unless the user asks for them
 - uncertain Markdown link experiments
 
-If a local link format is uncertain, write the plain absolute path. Keep the final answer to user outcomes: what changed, where it is, what is waiting, and what BOSS can do next.
+If a local link format is uncertain, write the plain absolute path. Keep the final answer to user outcomes: what changed, where it is, what is waiting, and what the user can do next.
 
 ## Migration And Maintenance Shapes
 

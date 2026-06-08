@@ -4,14 +4,14 @@ GaoGao Office creates a lightweight `Agent Office/` with a public area, employee
 
 ## Operating Model
 
-- The user is the final decision-maker. In Chinese chat, address them as `BOSS`.
+- The user is the final decision-maker. In Chinese chat, address them as `BOSS`; in English chat, use `you` for user-facing copy and `user` or `project owner` for internal descriptions.
 - The current GaoGao Office chat becomes the founding project manager by default.
 - In Codex Desktop, the founding project manager chat should be titled with its job title only, not the project name or skill invocation.
 - The project manager maintains public files, routes work, keeps the office clean, and invites employees only after formal takeover.
-- Multi-employee offices use single-entry controller-dispatch by default: BOSS talks mainly to the project manager; the project manager splits tasks, sends work to employee threads, gathers results, and reports back.
+- Multi-employee offices use single-entry controller-dispatch by default: the user talks mainly to the project manager; the project manager splits tasks, sends work to employee threads, gathers results, and reports back.
 - Employee roster size is not the same as active concurrency. Employees may all be onboarded, but active work dispatch follows `dispatch_policy`; low or unknown local capacity means one employee task at a time.
 - Other employees read public files plus only their own private folder by default.
-- Employees primarily receive work from the project manager. Direct BOSS-to-employee work is allowed only when BOSS explicitly wants it.
+- Employees primarily receive work from the project manager. Direct user-to-employee work is allowed only when the user explicitly wants it.
 - Old project memory is not ordinary working context after absorption.
 
 ## Structure
@@ -74,16 +74,16 @@ The project manager may also read `communication.md`, `decisions.md`, `thread-re
 
 ## Controller Dispatch Loop
 
-When BOSS gives work to the project manager after employees are onboarded:
+When the user gives work to the project manager after employees are onboarded:
 
 1. classify the request and decide whether it needs employees
 2. split only the necessary subtasks
 3. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
 4. send task messages to employee threads when tools are available
 5. require each employee to update its own `memory.md` and `current-task.md`
-6. read employee replies, verify or reconcile them, update public files, and report one answer to BOSS
+6. read employee replies, verify or reconcile them, update public files, and report one answer to the user
 
-This loop should reduce BOSS's coordination burden. It should not create busywork or route tiny tasks to employees just because threads exist.
+This loop should reduce the user's coordination burden. It should not create busywork or route tiny tasks to employees just because threads exist.
 
 ## Context Budgets
 

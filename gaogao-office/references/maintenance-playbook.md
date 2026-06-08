@@ -2,7 +2,7 @@
 
 Use this when auditing or cleaning an existing `Agent Office/`.
 
-If BOSS has updated the skill and runs it again in a project that already has `Agent Office/`, treat that as an office upgrade/re-takeover request, not a fresh initialization.
+If the user has updated the skill and runs it again in a project that already has `Agent Office/`, treat that as an office upgrade/re-takeover request, not a fresh initialization.
 
 For user-visible maintenance, follow `references/markdown-output-guide.md`: use task lists for health checks and retirement summaries, tables for stale-entry maps, and warning blocks for deletion or move risks.
 
@@ -17,7 +17,7 @@ Start read-only. Produce a maintenance report before cleanup edits unless the us
 - `task-board.md` tasks missing owner, reviewer, write scope, status, or verification
 - `communication.md` messages or handoffs that are unresolved
 - `thread-registry.md` entries that are missing thread IDs, stale, retired, or still waiting
-- whether controller-dispatch is still true: BOSS requests should enter through the project manager by default, and employee threads should have current task/memory updates
+- whether controller-dispatch is still true: user requests should enter through the project manager by default, and employee threads should have current task/memory updates
 - employee folders missing `README.md`, `memory.md`, or `current-task.md`
 - employee `memory.md` files that are too long, stale, or contain shared facts that belong in public files
 - `decisions.md` entries that are superseded or unresolved
@@ -33,7 +33,7 @@ Start read-only. Produce a maintenance report before cleanup edits unless the us
 
 ## Team Retirement / Downsizing
 
-Use this when BOSS asks to withdraw employees, remove the team, switch back to one chat, cancel a direction, or archive employee windows.
+Use this when the user asks to withdraw employees, remove the team, switch back to one chat, cancel a direction, or archive employee windows.
 
 If the request is clear, this is a safe maintenance action: preserve records, archive/retire the employee routes, and stop dispatch. Ask a follow-up only when the user might mean deletion rather than retirement.
 
@@ -45,8 +45,8 @@ Rules:
 - If Codex thread tools are available, archive the retired employee threads after the user clearly asked to withdraw the team.
 - Update each retired employee's `current-task.md` with a withdrawal note, and append a short `memory.md` Work Log entry so a future reactivation can understand what happened.
 - Update project-manager `memory.md`, `status.md`, `task-board.md`, `communication.md`, and `decisions.md`.
-- Add or preserve an `AGENTS.md` rule that archived/withdrawn employees must not receive new dispatches unless BOSS explicitly reactivates them.
-- Keep useful work products in place if they are still reference material; move them to `Agent Office/Archive/Old Project Memory/` only when BOSS says the old direction itself is obsolete.
+- Add or preserve an `AGENTS.md` rule that archived/withdrawn employees must not receive new dispatches unless the user explicitly reactivates them.
+- Keep useful work products in place if they are still reference material; move them to `Agent Office/Archive/Old Project Memory/` only when the user says the old direction itself is obsolete.
 
 Good closing style:
 
@@ -76,7 +76,7 @@ Good closing style:
 
 When upgrading an existing office:
 
-1. Start read-only and tell BOSS the old office will not be deleted automatically.
+1. Start read-only and tell the user the old office will not be deleted automatically.
 2. Summarize current public truth and employee memories that must survive.
 3. Propose what to refresh, what to archive, and what to leave alone.
 4. Ask for A/B/C/D approval before overwriting active office files.

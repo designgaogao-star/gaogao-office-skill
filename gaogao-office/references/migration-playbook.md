@@ -8,7 +8,7 @@ For user-visible migration summaries, follow `references/markdown-output-guide.m
 
 Turn old project knowledge into a clean `Agent Office/` without letting old frameworks keep competing for agent attention.
 
-Use office language in chat. Say "项目体检" for the read-only scan, "旧资料入库" for archiving absorbed knowledge, and "办公室挂牌" for the approved takeover. Keep BOSS in control: present what will happen, then wait for the A/B/C/D reply.
+Use office language in chat. Say "项目体检" for the read-only scan, "旧资料入库" for archiving absorbed knowledge, and "办公室挂牌" for the approved takeover in Chinese. Keep the user in control: present what will happen, then wait for the A/B/C/D reply.
 
 Formal takeover means:
 
@@ -52,7 +52,7 @@ Typical destinations:
 | employee-specific continuity | `Agent Office/Employees/{role-slug}/memory.md` |
 | old source material after absorption | `Agent Office/Archive/Old Project Memory/` |
 
-For BOSS-facing migration reports, use this table shape:
+For user-facing migration reports, use this table shape:
 
 ```md
 | 旧资料 | 吸收位置 | 归档动作 |
@@ -74,7 +74,7 @@ C. 我想自己指定员工数量或岗位
 D. 先暂停，我只看方案
 
 Make clear that A includes creating `Agent Office/`, applying `AGENTS.md` with backup, archiving absorbed old knowledge, and only then onboarding employees.
-If A invites employees, also make clear that BOSS can keep using the current project-manager chat as the single entry point; the manager will dispatch work to employee threads.
+If A invites employees, also make clear that the user can keep using the current project-manager chat as the single entry point; the manager will dispatch work to employee threads.
 
 Use a blockquote or warning callout for the risk boundary:
 
@@ -117,7 +117,7 @@ If root `AGENTS.md` was replaced during formal takeover, archive the pre-apply b
 Do not invite employees before formal takeover. After takeover:
 
 - current chat is the project manager
-- project manager is BOSS's default single entry point and dispatches work to employee threads
+- project manager is the user's default single entry point and dispatches work to employee threads
 - rename the current project-manager chat to its job title only; if this cannot be done automatically, tell the user the exact manual title
 - each other employee gets a human job title
 - employee profiles are written before launch prompts

@@ -13,6 +13,7 @@ import argparse
 import json
 import re
 import shutil
+import sys
 from dataclasses import asdict, dataclass, field
 from datetime import date
 from pathlib import Path
@@ -285,29 +286,38 @@ def parse_roles(raw: str, profile: str, language: str) -> list[RoleSpec]:
     return [role_from_legacy_key(role, language) for role in role_keys]
 
 
-def role_from_config(raw: dict[str, Any], index: int, default_handoff: str) -> RoleSpec:
+def role_from_config(raw: dict[str, Any], index: int, default_handoff: str, language: str) -> RoleSpec:
+    zh = is_zh(language)
     title = coalesce(raw.get("title"), raw.get("name"), default=f"Role {index + 1}")
     slug = slugify(coalesce(raw.get("slug"), default=title), f"role-{index + 1}")
     validate_slug(slug)
     current_window = bool(raw.get("current_window", raw.get("currentWindow", raw.get("founding_steward", False))))
     needs_thread_raw = raw.get("needs_thread", raw.get("needsThread", None))
     needs_thread = (not current_window) if needs_thread_raw is None else bool(needs_thread_raw)
+    default_mission = "负责一个经过批准的清晰工作范围，并把结果交接干净。" if zh else "Own a distinct part of the approved workflow."
+    default_authority = "只更新批准的写入范围和本员工私有文件夹。" if zh else "May update only the approved write scope and this employee's private folder."
+    default_write_scope = "仅限当前任务授权范围" if zh else "current task scope only"
+    default_assignment = "等待项目总管派工" if zh else "waiting"
+    default_quality = "边界清楚、结果可验证、下一步容易接上。" if zh else "Work cleanly, verify the result, and leave the next action obvious."
+    default_inputs = "AGENTS.md、Agent Office 公共文件、本员工文件夹，以及项目总管或用户指令。" if zh else "AGENTS.md, Agent Office public files, this employee's folder, and user instructions."
+    default_outputs = "完成的工作、更新后的员工记忆和当前任务，以及必要交接。" if zh else "Completed work, updated employee memory/current-task, and handoffs when needed."
+    default_forbidden = "不要超出批准的写入范围；默认不要读取其他员工文件夹或旧档案。" if zh else "Do not exceed the approved write scope or read other employee folders or old archives by default."
     return RoleSpec(
         slug=slug,
         title=title,
-        mission=coalesce(raw.get("mission"), raw.get("purpose"), default="Own a distinct part of the approved workflow."),
+        mission=coalesce(raw.get("mission"), raw.get("purpose"), default=default_mission),
         authority=coalesce(
             raw.get("authority"),
             raw.get("boundaries"),
-            default="May update only the approved write scope and this employee's private folder.",
+            default=default_authority,
         ),
-        write_scope=coalesce(raw.get("write_scope"), raw.get("writeScope"), default="current task scope only"),
-        current_assignment=coalesce(raw.get("current_assignment"), raw.get("assignment"), raw.get("currentAssignment"), default="waiting"),
+        write_scope=coalesce(raw.get("write_scope"), raw.get("writeScope"), default=default_write_scope),
+        current_assignment=coalesce(raw.get("current_assignment"), raw.get("assignment"), raw.get("currentAssignment"), default=default_assignment),
         domain=coalesce(raw.get("domain"), raw.get("responsibility_domain"), raw.get("responsibilityDomain"), default=""),
-        quality_standard=coalesce(raw.get("quality_standard"), raw.get("qualityStandard"), default="Work cleanly, verify the result, and leave the next action obvious."),
-        inputs=coalesce(raw.get("inputs"), default="AGENTS.md, Agent Office public files, this employee's folder, and user instructions."),
-        outputs=coalesce(raw.get("outputs"), default="Completed work, updated employee memory/current-task, and handoffs when needed."),
-        forbidden=coalesce(raw.get("forbidden"), raw.get("do_not"), raw.get("doNot"), default="Do not exceed the approved write scope or read other employee folders by default."),
+        quality_standard=coalesce(raw.get("quality_standard"), raw.get("qualityStandard"), default=default_quality),
+        inputs=coalesce(raw.get("inputs"), default=default_inputs),
+        outputs=coalesce(raw.get("outputs"), default=default_outputs),
+        forbidden=coalesce(raw.get("forbidden"), raw.get("do_not"), raw.get("doNot"), default=default_forbidden),
         current_window=current_window,
         needs_thread=needs_thread,
         thread_title=coalesce(raw.get("thread_title"), raw.get("threadTitle"), default=title),
@@ -367,6 +377,29 @@ def validate_roles(roles: list[RoleSpec]) -> None:
     for role in roles:
         validate_slug(role.slug)
         role.thread_title = role.thread_title or role.title
+        title_lc = role.title.strip().lower()
+        process_tokens = [
+            "pipeline",
+            "runtime",
+            "archive",
+            "context maintenance",
+            "module",
+            "workflow",
+            "管线",
+            "运行时",
+            "模块",
+            "流程",
+            "系统",
+        ]
+        if (
+            not role.title.strip()
+            or re.fullmatch(r"role\s+\d+", title_lc)
+            or any(token in title_lc or token in role.title for token in process_tokens)
+        ):
+            print(
+                f"Warning: role title `{role.title}` looks process-shaped. Prefer a human job title such as Designer, Engineer, Release Checker, Researcher, Editor, 设计师, 工程师, 发布检查员, 研究员, or 编辑.",
+                file=sys.stderr,
+            )
 
 
 def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) -> OfficeSpec:
@@ -381,7 +414,7 @@ def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) ->
         raise SystemExit("Office config must contain a non-empty `roles` list.")
     language = normalize_language(coalesce(raw.get("language"), args.language, default="en"))
     default_handoff = coalesce(raw.get("default_handoff_to"), raw.get("handoff_to"), default="")
-    roles = [role_from_config(item, index, default_handoff) for index, item in enumerate(role_items) if isinstance(item, dict)]
+    roles = [role_from_config(item, index, default_handoff, language) for index, item in enumerate(role_items) if isinstance(item, dict)]
     if len(roles) != len(role_items):
         raise SystemExit("Each role in config must be a JSON object.")
     fill_missing_handoffs(roles, default_handoff, language)
@@ -461,7 +494,7 @@ def render_agents_proposal(language: str) -> str:
 
 开始项目工作前：
 - 先读 `Agent Office/README.md`、`Agent Office/status.md`、`Agent Office/project-brief.md` 和 `Agent Office/task-board.md`。
-- 如果你被分配了角色，只读 `Agent Office/Employees/{role-slug}/` 里属于自己的员工文件夹。
+- 如果你被分配了角色，读取公共区和 `Agent Office/Employees/{role-slug}/` 里属于自己的员工文件夹。
 - 不要读取其他员工文件夹，除非用户明确要求维护、审计或恢复办公室。
 - 日常工作不要读取 `Agent Office/Archive/Old Project Memory/`；那里是已吸收旧知识的历史档案。
 
@@ -472,6 +505,7 @@ def render_agents_proposal(language: str) -> str:
 - `Agent Office/thread-registry.md` 是长期 Agent 员工名册和入职提示记录。
 - 跨角色请求、答复和交接写入 `Agent Office/communication.md`。
 - 当前任务和责任人写入 `Agent Office/task-board.md`。
+- 员工完成有意义工作后，先更新自己的 `memory.md` 和 `current-task.md`，再向项目总管汇报。
 - 只有项目总管、BOSS 或被明确授权的员工才更新公共状态。
 - 结束任务时说明改了什么、验证了什么、还剩什么、下一个负责人是谁。
 """
@@ -483,17 +517,18 @@ This repository uses `Agent Office/` as the long-running agent project office.
 
 Before project work:
 - Read `Agent Office/README.md`, `Agent Office/status.md`, `Agent Office/project-brief.md`, and `Agent Office/task-board.md`.
-- If assigned a role, read only your own employee folder under `Agent Office/Employees/{role-slug}/`.
+- If assigned a role, read the public office files and your own employee folder under `Agent Office/Employees/{role-slug}/`.
 - Do not read other employee folders unless the user explicitly asks for office maintenance, audit, or recovery.
 - Do not read `Agent Office/Archive/Old Project Memory/` during ordinary work; it is historical material after old knowledge has been absorbed.
 
 Coordination:
 - The current chat is the founding project manager unless the user chooses otherwise.
-- In multi-employee mode, the project manager is the single BOSS-facing controller by default: it splits requests, dispatches work to employee threads, collects results, and reports back.
+- In multi-employee mode, the project manager is the single user-facing controller by default: it splits requests, dispatches work to employee threads, collects results, and reports back.
 - Employee roster size is not active concurrency; the project manager follows `dispatch_policy` in `Agent Office/office-plan.json` when dispatching employee work.
 - `Agent Office/thread-registry.md` is the staff directory and onboarding prompt record for long-running agent employees.
 - Cross-role requests, answers, and handoffs go in `Agent Office/communication.md`.
 - Current tasks and owners go in `Agent Office/task-board.md`.
+- After meaningful work, employees update their own `memory.md` and `current-task.md` before reporting back to the project manager.
 - Only the project manager, project owner, or explicitly assigned employee updates public status.
 - End every task with what changed, what was verified, what remains, and who should pick it up next.
 """
@@ -521,7 +556,7 @@ def render_readme(spec: OfficeSpec) -> str:
 
 ## 私有区
 
-`Employees/` 下每个角色一个文件夹。角色默认只读自己的文件夹，不读其他员工文件夹。
+`Employees/` 下每个角色一个文件夹。角色默认读取公共区和自己的员工文件夹，不读其他员工文件夹。
 
 ## 归档区
 
@@ -555,7 +590,7 @@ All employee roles may read the public files in this folder:
 
 ## Private Area
 
-Each role has one folder under `Employees/`. A role reads only its own folder by default.
+Each role has one folder under `Employees/`. A role reads public office files and its own employee folder by default.
 
 ## Archive
 
@@ -565,7 +600,7 @@ Each role has one folder under `Employees/`. A role reads only its own folder by
 
 The current GaoGao Office chat becomes the founding project manager by default. It opens the office, keeps the public area clean, routes work to the right employee, and invites employees only after formal takeover is complete.
 
-In multi-employee mode, BOSS can keep using this project-manager chat as the main entry point. The project manager decomposes requests, dispatches work to employee threads, reads employee replies, updates office records, and reports the synthesized result back.
+In multi-employee mode, the user can keep using this project-manager chat as the main entry point. The project manager decomposes requests, dispatches work to employee threads, reads employee replies, updates office records, and reports the synthesized result back.
 
 Dispatch policy: {dispatch_policy_summary(spec)}
 """
@@ -622,7 +657,7 @@ First milestone: {spec.first_milestone}
 
 ## Next Step
 
-After approval, the project manager should confirm whether the first task in `task-board.md` is still accurate. If multiple people are needed, the project manager should split only the necessary subtasks, dispatch them to employees, and report one synthesized result back to BOSS.
+After approval, the project manager should confirm whether the first task in `task-board.md` is still accurate. If multiple people are needed, the project manager should split only the necessary subtasks, dispatch them to employees, and report one synthesized result back to the user.
 """
 
 
@@ -707,7 +742,7 @@ Generated: {today}
 
 {notes}
 
-Default collaboration style: BOSS primarily talks to the current project-manager chat; the project manager dispatches work to employee threads as needed and reports back with a synthesized result.
+Default collaboration style: the user primarily talks to the current project-manager chat; the project manager dispatches work to employee threads as needed and reports back with a synthesized result.
 Default dispatch policy: employees may all onboard, but the project manager controls concurrent employee work based on local capacity. Unknown or low-capacity machines dispatch one employee at a time.
 
 {role_lines}
@@ -785,7 +820,7 @@ Last updated: {today}
 ## Task Rules
 
 - Every task needs an owner, reviewer, write scope, and verification approach.
-- Multi-employee work is split and dispatched by the project manager; employees return results to the project manager, who reports back to BOSS.
+- Multi-employee work is split and dispatched by the project manager; employees return results to the project manager, who reports back to the user.
 - Follow `dispatch_policy` in `office-plan.json`; when local capacity is unknown or low, dispatch one employee at a time.
 - If a task grows too large, split it into a separate task note or archive record.
 """
@@ -831,7 +866,7 @@ def render_communication(language: str) -> str:
 ## Message Rules
 
 - Do not perform out-of-scope requests directly; name the role that should own the work.
-- BOSS requests enter through the project manager by default; the project manager decides whether to handle them or dispatch them to employee threads.
+- User requests enter through the project manager by default; the project manager decides whether to handle them or dispatch them to employee threads.
 - When cross-role coordination is needed, append a message here with from, to, task, requested response, and next owner.
 - When work is done, blocked, changes owner, or enters review, append a handoff here.
 
@@ -893,7 +928,7 @@ def render_employee_readme(spec: OfficeSpec, role: RoleSpec) -> str:
 
 ## 边界
 
-- 默认只读取本员工文件夹。
+- 默认读取公共区和本员工文件夹。
 - 不读取其他员工文件夹，除非用户明确要求维护、审计或恢复办公室。
 - 日常工作不要读取 `Agent Office/Archive/Old Project Memory/`。
 - 默认接收项目总管派工，完成后把结果回给项目总管；BOSS 直接点名时再直接回应。
@@ -946,10 +981,10 @@ You are not a feature module; you are the person holding this job's judgment for
 
 ## Boundaries
 
-- Read this employee folder by default.
+- Read public office files and this employee folder by default.
 - Do not read other employee folders unless the user explicitly asks for office maintenance, audit, or recovery.
 - Do not read `Agent Office/Archive/Old Project Memory/` during ordinary work.
-- Receive work from the project manager by default and return results to the project manager; respond directly to BOSS only when BOSS explicitly addresses this employee.
+- Receive work from the project manager by default and return results to the project manager; respond directly to the user only when explicitly addressed.
 - Route out-of-scope requests to the right employee or project manager.
 - After significant work, update `memory.md` `Next Action` and `Work Log`; update `current-task.md` when needed.
 """
@@ -960,9 +995,9 @@ def render_employee_memory(spec: OfficeSpec, role: RoleSpec) -> str:
     if is_zh(spec.language):
         return f"""# {role.title} Memory
 
-Owner role: `{role.slug}`
-Privacy: protocol-private. 默认只有 `{role.title}` 读取和更新。
-Last updated: {today}
+员工标识：`{role.slug}`
+隐私：protocol-private。默认只有 `{role.title}` 读取和更新。
+最后更新：{today}
 
 ## Next Action
 
@@ -974,10 +1009,10 @@ reason: 初始接管状态；等待用户或项目总管确认下一步。
 
 ### {today}
 
-- Completed: 员工档案已建好，等待正式入职或下一次任务。
-- Result: waiting
-- Validation: 未执行项目工作。
-- New next action: {role.current_assignment}
+- 完成：员工档案已建好，等待正式入职或下一次任务。
+- 结果：waiting
+- 验证：未执行项目工作。
+- 新的下一步：{role.current_assignment}
 
 ## Durable Notes
 
@@ -1048,6 +1083,7 @@ owner: {role.title}
 
 ## 必读
 
+- `AGENTS.md`
 - `Agent Office/README.md`
 - `Agent Office/status.md`
 - `Agent Office/project-brief.md`
@@ -1073,6 +1109,7 @@ owner: {role.title}
 
 ## Required Reading
 
+- `AGENTS.md`
 - `Agent Office/README.md`
 - `Agent Office/status.md`
 - `Agent Office/project-brief.md`
@@ -1096,7 +1133,7 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
     if is_zh(spec.language):
         return f"""本对话角色：{role.title}
 
-你现在入职这个项目，岗位是「{role.title}」。先守住岗位判断和写入边界，再等项目总管派工。
+你现在入职这个项目，岗位是「{role.title}」。先守住岗位判断、读取边界和写入边界；第一轮只做入职确认，不主动开工。
 
 项目：{spec.project_name}
 项目根目录：{spec.project_root}
@@ -1106,6 +1143,8 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
 职责域：{role.domain or role.mission}
 判断标准：{role.quality_standard}
 写入边界：{role.write_scope}
+禁区：{role.forbidden}
+交接对象：{role.handoff_to}
 
 请先读取：
 1. AGENTS.md
@@ -1121,14 +1160,14 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
 1. 你是谁
 2. 你负责什么
 3. 你不能碰什么
-4. 当前在等什么
-5. 你建议下一步做什么
+4. 当前等待什么派工
+5. 如需开工，你需要项目总管给什么输入
 
-之后等待项目总管安排工作；如果 BOSS 直接点名找你，再直接回应 BOSS。完成正式任务后，更新自己的 memory.md 和 current-task.md，并按“完成了什么 / 写到哪里 / 状态更新 / 建议下一步”回复项目总管。
+之后等待项目总管派工；只有 BOSS 明确点名找你时，才直接回应 BOSS。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再按“完成了什么 / 写到哪里 / 状态更新 / 建议下一步”回复项目总管。
 """
     return f"""Conversation role: {role.title}
 
-You are joining this project as the `{role.title}`. Protect this role's judgment and write boundary, then wait for the project manager to dispatch work.
+You are joining this project as the `{role.title}`. Protect this role's judgment, reading boundary, and write boundary. For the first reply, confirm onboarding only; do not start work.
 
 Project: {spec.project_name}
 Project root: {spec.project_root}
@@ -1138,6 +1177,8 @@ Role value: {role.mission}
 Responsibility domain: {role.domain or role.mission}
 Quality standard: {role.quality_standard}
 Write boundary: {role.write_scope}
+Forbidden: {role.forbidden}
+Handoff target: {role.handoff_to}
 
 Read first:
 1. AGENTS.md
@@ -1153,10 +1194,10 @@ For the first reply, only confirm onboarding. Do not edit files and do not start
 1. who you are
 2. what you own
 3. what you must not touch
-4. what is currently waiting
-5. what you recommend next
+4. what dispatch you are waiting for
+5. what input you would need from the project manager to start
 
-Then wait for the project manager to dispatch work; respond directly to BOSS only when BOSS explicitly addresses this employee. After real work, update your own memory.md and current-task.md, then report to the project manager in this shape: completed work / output path / status update / recommended next step.
+Then wait for the project manager to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md, then report to the project manager in this shape: completed work / output path / status update / recommended next step.
 """
 
 
@@ -1258,7 +1299,7 @@ def render_thread_registry(spec: OfficeSpec) -> str:
         "",
         "## Project-Manager Dispatch Protocol",
         "",
-        "BOSS only needs to talk to the project-manager chat by default. The project manager decides whether a task needs employees; when it does, update the task board and employee current-task first, then send a concise task message like this to the employee thread.",
+        "The user only needs to talk to the project-manager chat by default. The project manager decides whether a task needs employees; when it does, update the task board and employee current-task first, then send a concise task message like this to the employee thread.",
         "",
         "```text",
         "Dispatch task: {task id or one-sentence task}",
