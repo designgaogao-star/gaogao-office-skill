@@ -8,15 +8,17 @@
 
 ## 它能做什么
 
-- 初始化新的 `docs/agent-office/` 项目办公室。
+- 先进行轻量聊天式咨询和只读项目判断。
+- 能判断项目用途时先向你确认，判断不了时用编号问题快速询问。
+- 只有你明确确认方案后，才初始化新的 `docs/agent-office/` 项目办公室。
 - 创建短小的 `AGENTS.md`，作为 Agent 自动加载入口。
-- 把项目类型、风险等级、第一里程碑和角色决策写入 `context-packs/project-brief.md`。
-- 创建 PM、Architect、Builder、Reviewer、Archivist 等角色卡。
+- 把项目类型、风险等级、第一里程碑和动态角色决策写入 `context-packs/project-brief.md`。
+- 按真实项目情况创建角色卡，不套固定岗位模板。
 - 创建 task、message、handoff、ADR 模板。
 - 创建 `communication.md`，让不同角色线程知道如何开消息、回复、关闭和交接工作。
 - 审计旧项目里已有的计划、规则、任务、架构和上下文文档。
 - 迁移旧框架时先归档，再确认删除，避免误删。
-- 写出 `context-packs/thread-launch-prompts.md`，里面有每个长期 Agent 角色对话框的初始提示词。
+- 写出 `context-packs/thread-launch-prompts.md`，并在当前聊天框给出可直接复制的长期 Agent 角色启动提示词。
 - 提供安全脚本用于脚手架、旧项目扫描和健康检查。
 
 ## 本机安装
@@ -46,7 +48,7 @@ cp -R ./agent-office-os "$dest"
 然后在项目里对 Codex 说：
 
 ```text
-Use $agent-office-os to initialize this project as a new Agent Office OS workspace.
+Use $agent-office-os to inspect this project read-only, infer what it is, ask me concise numbered questions, propose dynamic agent roles, and wait for my approval before creating files.
 ```
 
 或者：
@@ -78,7 +80,13 @@ python agent-office-os/scripts/validate_office.py --project-root ./demo-project 
 
 如果路径里有空格，请给路径加引号。
 
-脚手架生成后，先看 `demo-project/docs/agent-office/context-packs/project-brief.md` 和 `demo-project/docs/agent-office/communication.md`，再打开 `demo-project/docs/agent-office/context-packs/thread-launch-prompts.md`，按里面的提示创建长期 Agent 对话框。每创建一个，就把返回的 thread ID 记录到 `docs/agent-office/thread-registry.md`。
+动态角色推荐由 Skill 在咨询后生成。你确认方案后，可以把批准的方案保存为 `office-plan.json`，再运行：
+
+```bash
+python agent-office-os/scripts/scaffold_office.py --project-root ./demo-project --config ./office-plan.json
+```
+
+脚手架生成后，先看 `demo-project/docs/agent-office/context-packs/project-brief.md` 和 `demo-project/docs/agent-office/communication.md`，再使用当前聊天框输出的提示词，或打开 `demo-project/docs/agent-office/context-packs/thread-launch-prompts.md`，按里面的提示创建长期 Agent 对话框。每创建一个，就把返回的 thread ID 记录到 `docs/agent-office/thread-registry.md`。
 
 旧项目迁移报告审查完成，并且在 `User Approval Record` 里写入 `Approved archive list: YES` 后，可以这样复制已批准的旧框架文件：
 

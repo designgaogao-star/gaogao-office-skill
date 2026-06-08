@@ -89,8 +89,8 @@ $skill-installer https://github.com/<owner>/agent-office-os-skill/tree/main/agen
 7. Push and tag:
    ```bash
    git push origin main
-   git tag v0.1.0
-   git push origin v0.1.0
+   git tag v0.1.1
+   git push origin v0.1.1
    ```
 8. Create a GitHub release with:
    - what the skill does
@@ -101,16 +101,20 @@ $skill-installer https://github.com/<owner>/agent-office-os-skill/tree/main/agen
 ## Suggested Release Notes
 
 ```md
-# Agent Office OS v0.1.0
+# Agent Office OS v0.1.1
 
-Initial release of an Agent Office OS skill for initializing, migrating, and maintaining a durable project office for agent projects.
+First-use experience update for Agent Office OS.
 
 Highlights:
+- lightweight chat consultation before scaffolding
+- read-only project inference before asking questions
+- explicit approval gate before file creation
+- dynamic role generation from project context
+- Chinese document and role prompt generation
 - new project office scaffolding
 - project brief and thread-launch prompts for long-running agent roles
 - communication protocol for cross-role messages and handoffs
 - old project migration playbook
-- PM/Architect/Builder/Reviewer/Archivist role cards
 - task, message, handoff, and ADR templates
 - safe audit, archive-copy, and validation scripts
 ```

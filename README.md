@@ -8,15 +8,17 @@ The package is optimized for Codex installation, but the core workflow is plain 
 
 ## What It Does
 
-- Initializes a new `docs/agent-office/` workspace.
+- Starts with a lightweight chat consultation and read-only project inspection.
+- Confirms the project purpose or asks concise numbered questions before writing files.
+- Initializes a new `docs/agent-office/` workspace only after explicit approval.
 - Writes a short `AGENTS.md` entrypoint.
-- Records project type, risk level, first milestone, and role decisions in `context-packs/project-brief.md`.
-- Creates role cards for PM, Architect, Builder, Reviewer, Archivist, and optional specialists.
+- Records project type, risk level, first milestone, and dynamic role decisions in `context-packs/project-brief.md`.
+- Creates role cards based on the actual project rather than a fixed template.
 - Creates task, message, handoff, and decision workflows.
 - Creates `communication.md` so role threads know how to open, answer, close, and hand off cross-role work.
 - Audits old project-management files before migration.
 - Archives old frameworks before any deletion.
-- Writes `context-packs/thread-launch-prompts.md` with one starter prompt per long-running agent role.
+- Writes `context-packs/thread-launch-prompts.md` with one copyable starter prompt per approved long-running agent role.
 - Provides safe helper scripts for scaffolding, inspection, and validation.
 
 ## Install Locally
@@ -46,7 +48,7 @@ Restart Codex after installing or updating the skill.
 Then ask Codex:
 
 ```text
-Use $agent-office-os to initialize this project as a new Agent Office OS workspace.
+Use $agent-office-os to inspect this project read-only, infer what it is, ask me concise numbered questions, propose dynamic agent roles, and wait for my approval before creating files.
 ```
 
 or:
@@ -80,7 +82,13 @@ python agent-office-os/scripts/validate_office.py --project-root ./demo-project 
 
 Quote paths that contain spaces.
 
-After scaffolding, review `demo-project/docs/agent-office/context-packs/project-brief.md`, `demo-project/docs/agent-office/communication.md`, then open `demo-project/docs/agent-office/context-packs/thread-launch-prompts.md` and create the recommended long-running agent threads. Record each returned thread ID in `docs/agent-office/thread-registry.md`.
+For dynamic roles, save an approved `office-plan.json` and run:
+
+```bash
+python agent-office-os/scripts/scaffold_office.py --project-root ./demo-project --config ./office-plan.json
+```
+
+After scaffolding, review `demo-project/docs/agent-office/context-packs/project-brief.md`, `demo-project/docs/agent-office/communication.md`, then use the prompts printed in chat or saved in `demo-project/docs/agent-office/context-packs/thread-launch-prompts.md` to create the approved long-running agent threads. Record each returned thread ID in `docs/agent-office/thread-registry.md`.
 
 After a migration report is reviewed and `Approved archive list: YES` is recorded in `User Approval Record`, copy approved legacy files with:
 

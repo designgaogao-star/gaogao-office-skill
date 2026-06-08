@@ -1,15 +1,30 @@
 # Role Catalog
 
-Use this reference to choose and write role cards.
+Use this reference to design and write role cards. The role names below are examples and fallback building blocks, not a required default roster.
 
 ## Contents
 
-- [Standing Roles](#standing-roles)
+- [Dynamic Role Rules](#dynamic-role-rules)
+- [Common Role Building Blocks](#common-role-building-blocks)
 - [Optional Roles](#optional-roles)
 - [Thread Prompt Template](#thread-prompt-template)
 - [Thread Launch Checklist](#thread-launch-checklist)
 
-## Standing Roles
+## Dynamic Role Rules
+
+Create roles from the actual project context.
+
+- Use few, necessary roles.
+- Do not split roles just to sound professional.
+- Split only when responsibilities, inputs, outputs, write scope, or review authority are clearly different.
+- Do not allow two default writer roles to own the same file scope.
+- Every active role needs a current assignment, default reading material, write boundary, and handoff target.
+- Defer roles that are plausible later but not needed for the first milestone.
+- Explain both why a role exists now and why likely alternatives are not created yet.
+
+The stable part is the office structure: `AGENTS.md`, `docs/agent-office/status.md`, role cards, task packets, messages, handoffs, ADRs, and launch prompts. The flexible part is who uses those documents.
+
+## Common Role Building Blocks
 
 ### PM / Coordinator
 
@@ -85,6 +100,8 @@ Owns release notes, rollout plans, rollback steps, versioning, and launch readin
 
 ## Thread Prompt Template
 
+Generate this prompt in the user's language. The fenced text block should contain only the message to send to the new thread.
+
 ```text
 You are the {ROLE} agent employee for this project.
 
@@ -100,6 +117,7 @@ Rules:
 - Load only task-relevant context.
 - Current assignment: {TASK}
 - Write scope: {WRITE_SCOPE}
+- Handoff target: {HANDOFF_TARGET}
 - Write cross-role messages as separate files under docs/agent-office/messages/open/.
 - End significant work with a handoff under docs/agent-office/handoffs/.
 - Do not silently modify unrelated project-management files.

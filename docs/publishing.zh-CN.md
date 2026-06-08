@@ -72,25 +72,30 @@ git push -u origin main
 ## 6. 打版本标签
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
-然后在 GitHub 页面创建 release，选择 `v0.1.0`。
+然后在 GitHub 页面创建 release，选择 `v0.1.1`。
 
 建议 release notes：
 
 ```md
-# Agent Office OS v0.1.0
+# Agent Office OS v0.1.1
 
-Agent Office OS skill 初始发布，用于初始化、迁移和维护长期可持续的 Agent 项目办公室。
+Agent Office OS 首次使用体验更新。
 
 包含：
+- 脚手架前的轻量聊天式咨询
+- 提问前先只读判断项目用途
+- 写文件前必须经过明确确认
+- 按真实项目动态生成角色，而不是套固定角色表
+- 中文文档和中文角色启动提示
+- 可直接复制到新窗口的角色 prompt
 - 新项目办公室脚手架
 - 项目简报和长期 Agent 角色线程启动提示
 - 跨角色 message/handoff 通信协议
 - 旧项目迁移 playbook
-- PM、Architect、Builder、Reviewer、Archivist 等角色卡
 - task、message、handoff、ADR 模板
 - 安全的扫描、归档复制和校验脚本
 ```

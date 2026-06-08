@@ -1,6 +1,6 @@
 interface:
   display_name: "Agent Office OS"
-  short_description: "Initialize, migrate, and maintain agent project offices"
-  default_prompt: "Use $agent-office-os to initialize, migrate, or maintain this project's Agent Office OS."
+  short_description: "Initialize, migrate, and maintain dynamic agent project offices"
+  default_prompt: "Use $agent-office-os to inspect this project read-only, propose dynamic roles, and wait for approval before creating or maintaining the Agent Office OS."
 policy:
   allow_implicit_invocation: true

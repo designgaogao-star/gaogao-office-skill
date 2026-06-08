@@ -128,6 +128,14 @@ def markdown_section(text: str, heading: str) -> str:
     return text[body_start : body_start + next_heading.start()]
 
 
+def contains_any(text: str, options: list[str]) -> bool:
+    return any(option in text for option in options)
+
+
+def label(options: list[str]) -> str:
+    return " / ".join(options)
+
+
 def approval_value(section: str, key: str) -> str | None:
     pattern = re.compile(rf"^[ \t]*(?:[-*][ \t]*)?{re.escape(key)}:[ \t]*(YES|NO)[ \t]*$", re.MULTILINE | re.IGNORECASE)
     matches = list(pattern.finditer(section))
@@ -256,13 +264,21 @@ def validate(root: Path, stale_days: int) -> list[Finding]:
             launch_text = launch_prompts.read_text(encoding="utf-8", errors="replace")
         except OSError:
             launch_text = ""
-        for token in ["You are the", "project-brief.md", "thread-registry.md", "communication.md", "messages/open", "handoffs"]:
-            if token not in launch_text:
+        prompt_requirements = [
+            ["AGENTS.md"],
+            ["project-brief.md"],
+            ["thread-registry.md"],
+            ["communication.md"],
+            ["messages/open"],
+            ["handoffs"],
+        ]
+        for options in prompt_requirements:
+            if not contains_any(launch_text, options):
                 findings.append(
                     Finding(
                         "warning",
                         "docs/agent-office/context-packs/thread-launch-prompts.md",
-                        f"thread launch prompts should mention `{token}`",
+                        f"thread launch prompts should mention `{label(options)}`",
                     )
                 )
     communication = root / "docs/agent-office/communication.md"
@@ -271,13 +287,21 @@ def validate(root: Path, stale_days: int) -> list[Finding]:
             communication_text = communication.read_text(encoding="utf-8", errors="replace")
         except OSError:
             communication_text = ""
-        for token in ["messages/open", "messages/closed", "handoffs", "status: open", "status: resolved", "next owner"]:
-            if token not in communication_text:
+        communication_requirements = [
+            ["messages/open"],
+            ["messages/closed"],
+            ["handoffs"],
+            ["status: open"],
+            ["status: resolved"],
+            ["next owner", "下一负责人", "下一个负责人"],
+        ]
+        for options in communication_requirements:
+            if not contains_any(communication_text, options):
                 findings.append(
                     Finding(
                         "warning",
                         "docs/agent-office/communication.md",
-                        f"communication protocol should mention `{token}`",
+                        f"communication protocol should mention `{label(options)}`",
                     )
                 )
     project_brief = root / "docs/agent-office/context-packs/project-brief.md"
@@ -286,13 +310,20 @@ def validate(root: Path, stale_days: int) -> list[Finding]:
             brief_text = project_brief.read_text(encoding="utf-8", errors="replace")
         except OSError:
             brief_text = ""
-        for token in ["Project type:", "Office profile:", "Risk level:", "Standing roles:", "First Milestone"]:
-            if token not in brief_text:
+        brief_requirements = [
+            ["Project type:", "项目类型"],
+            ["Office profile:", "办公室配置"],
+            ["Risk level:", "风险等级"],
+            ["Standing roles:", "长期角色"],
+            ["First Milestone", "第一里程碑"],
+        ]
+        for options in brief_requirements:
+            if not contains_any(brief_text, options):
                 findings.append(
                     Finding(
                         "warning",
                         "docs/agent-office/context-packs/project-brief.md",
-                        f"project brief should mention `{token}`",
+                        f"project brief should mention `{label(options)}`",
                     )
                 )
     for rel in REQUIRED_DIRS:
@@ -349,9 +380,15 @@ def validate(root: Path, stale_days: int) -> list[Finding]:
                 value = frontmatter_value(text, key)
                 if value is not None and not value:
                     findings.append(Finding("warning", rel, f"task packet has blank `{key}`"))
-            for section in ["## Goal", "## Write Scope", "## Acceptance Criteria", "## Verification"]:
-                if section not in text:
-                    findings.append(Finding("warning", rel, f"task packet is missing `{section}`"))
+            section_requirements = [
+                ["## Goal", "## 目标"],
+                ["## Write Scope", "## 写入范围"],
+                ["## Acceptance Criteria", "## 验收标准"],
+                ["## Verification", "## 验证"],
+            ]
+            for options in section_requirements:
+                if not contains_any(text, options):
+                    findings.append(Finding("warning", rel, f"task packet is missing `{label(options)}`"))
 
     open_messages = root / "docs/agent-office/messages/open"
     if open_messages.is_dir() and not has_link_in_path(root, open_messages):

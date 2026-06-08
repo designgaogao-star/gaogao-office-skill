@@ -1,21 +1,28 @@
 # Interview Guide
 
-Use this guide to ask only questions that change the office design. Prefer answering discoverable facts by inspecting the repo first.
+Use this guide to ask only questions that change the office design. Prefer answering discoverable facts by inspecting the repo first. Use ordinary chat by default; Plan Mode is optional, not required.
 
 ## New Project Questions
 
-Ask these when the project is new or empty:
+Ask these when the project is new, empty, or unclear. Use at most 3-5 numbered questions per round and accept numbered answers.
 
-1. What is the project name and one-sentence goal?
-2. What kind of project is it: app, library, website, research, content, infrastructure, data, or mixed?
-3. How large do you expect it to become: solo/small, multi-module, production-critical, or enterprise?
-4. Which roles should be standing threads now: PM, Builder, Reviewer, Architect, Archivist, QA, Security, UX, Data, Release?
-5. Should the office be minimal, standard, or expanded?
-6. Does the project use Git and should implementation agents use worktrees?
-7. What should count as done for the first milestone?
-8. Do you want GitHub publishing materials or only local project management docs?
+1. What is this project trying to produce?
+2. Who is the primary user, audience, or customer?
+3. What should the first milestone accomplish?
+4. What work is coming next: design, writing, coding, data, review, migration, release, research, or something else?
+5. Are there file areas that should be protected from casual edits?
 
-Recommended default: standard office with PM, Architect, Builder, Reviewer, and Archivist. Use the minimal profile with PM, Builder, and Reviewer for small solo projects.
+When project clues are visible, start by confirming the inference instead of asking from zero:
+
+```text
+I think this is a portfolio site for showcasing AIGC projects and services. Is that right?
+If yes, answer these:
+1. Who is the intended audience?
+2. What is the first milestone?
+3. Which work matters most next: content, visual design, implementation, review, or release?
+```
+
+Do not ask the user to pick from a fixed role list. The model should infer the smallest useful role roster from the project and explain it.
 
 ## Existing Project Questions
 
@@ -41,11 +48,25 @@ Ask only if not obvious:
 
 Recommended default: read-only report first, then small cleanup after user approval.
 
-## Role Recommendation Heuristic
+## Office Plan Response
 
-- Solo prototype: PM, Builder, Reviewer in one or two threads.
-- Production app: PM, Architect, Builder, Reviewer, Archivist.
-- Security-sensitive project: add Security as optional or standing.
-- UI-heavy project: add UX/QA as optional.
-- Data-heavy project: add Data role.
-- Old or messy project: add Archivist from day one.
+Before scaffolding, produce a plan with:
+
+- project understanding
+- recommended roles and why each exists now
+- roles deliberately deferred and why
+- responsibilities, default inputs, outputs, write scope, and handoff target for each role
+- first task, DRI, reviewer, and verification expectation
+- whether worktree mode is useful
+
+Then ask for explicit approval before writing files.
+
+## Role Design Heuristic
+
+- Start with fewer roles than seem impressive.
+- Keep a role only if it has a distinct job, distinct inputs/outputs, and a distinct write scope.
+- Do not give two writer roles default ownership over the same files.
+- Merge coordination and archiving when the project is small.
+- Split review from building when there is meaningful implementation risk.
+- Add specialist roles only when the first milestone needs them now.
+- Defer plausible later roles and name the trigger for adding them.

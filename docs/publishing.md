@@ -72,25 +72,30 @@ git push -u origin main
 ## 6. Tag a Release
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
-In GitHub, create a release for `v0.1.0`.
+In GitHub, create a release for `v0.1.1`.
 
 Suggested release notes:
 
 ```md
-# Agent Office OS v0.1.0
+# Agent Office OS v0.1.1
 
-Initial release of an Agent Office OS skill for initializing, migrating, and maintaining a durable project office.
+First-use experience update for Agent Office OS.
 
 Includes:
+- lightweight chat consultation before scaffolding
+- read-only project inference before asking questions
+- explicit approval gate before file creation
+- dynamic role generation from the actual project context
+- Chinese document and role prompt generation
+- prompt blocks that are ready to paste into new agent windows
 - project office scaffolding
 - project brief and thread-launch prompts for long-running agent roles
 - communication protocol for cross-role messages and handoffs
 - old project migration playbook
-- role cards for PM, Architect, Builder, Reviewer, and Archivist
 - task, message, handoff, and ADR templates
 - safe inspection, archive-copy, and validation scripts
 ```
