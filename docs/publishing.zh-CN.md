@@ -1,124 +1,53 @@
-# GitHub 发布指南
+# 发布 GAOGAO Office
 
-这份说明给没有发布过 GitHub 项目的人使用，重点是避免把本地无关文件或敏感文件发到公开仓库。
+## 1. 校验
 
-## 1. 创建仓库
-
-1. 打开 GitHub。
-2. 新建一个公开仓库，推荐名称：`agent-office-os-skill`。
-3. 如果本地已经有 `README.md` 和 `LICENSE`，GitHub 创建页面里不要再勾选自动生成 README 或 License。
-
-## 2. 提交前先验证
-
-进入包含 `README.md` 和 `agent-office-os/` 的文件夹，先创建一个临时 demo 项目跑通流程：
+在工作区根目录运行：
 
 ```bash
-mkdir demo-project
-python agent-office-os/scripts/scaffold_office.py --project-root ./demo-project --project-name Demo
-python agent-office-os/scripts/inspect_office.py --project-root ./demo-project
-python agent-office-os/scripts/validate_office.py --project-root ./demo-project
+python work/run_gaogao_office_gate.py --workspace .
 ```
 
-再校验 skill frontmatter：
+## 2. 提交
 
-macOS/Linux：
-
-```bash
-python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py ./agent-office-os
-```
-
-PowerShell：
-
-```powershell
-python "$env:USERPROFILE\.codex\skills\.system\skill-creator\scripts\quick_validate.py" .\agent-office-os
-```
-
-检查完以后，手动删除临时 `demo-project` 目录。
-
-## 3. 检查即将发布的内容
-
-运行：
+进入发布包仓库后：
 
 ```bash
 git status --short
-git diff -- README.md README.zh-CN.md LICENSE docs examples agent-office-os .gitignore
+git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
+git commit -m "Release gaogao office v0.2.0"
 ```
 
-不要发布 secrets、本地缓存、私人项目文件或临时测试目录。
-
-## 4. 本地提交
+## 3. 打标签
 
 ```bash
-git init
-git add README.md README.zh-CN.md LICENSE .gitignore docs examples agent-office-os
-git status --short
-git diff --cached
-git commit -m "Initial release of agent-office-os skill"
+git tag v0.2.0
+git push origin main
+git push origin v0.2.0
 ```
 
-提交前认真看 `git status --short` 和 `git diff --cached`，确认只包含 skill 包和发布文档。
-
-## 5. 绑定 GitHub 仓库
-
-把 `<owner>` 换成你的 GitHub 用户名或组织名，并在 push 前确认远程地址正确：
-
-```bash
-git branch -M main
-git remote add origin https://github.com/<owner>/agent-office-os-skill.git
-git remote -v
-git push -u origin main
-```
-
-## 6. 打版本标签
-
-```bash
-git tag v0.1.3
-git push origin v0.1.3
-```
-
-然后在 GitHub 页面创建 release，选择 `v0.1.3`。
-
-建议 release notes：
+## 4. Release Notes
 
 ```md
-# Agent Office OS v0.1.3
+# GAOGAO Office v0.2.0
 
-Agent Office OS 旧项目接管流程加强。
+轻量化公共区/员工私有区重构。
 
-包含：
-- 脚手架前的轻量聊天式咨询
-- 提问前先只读判断项目用途
-- 写文件前必须经过明确确认
-- 按真实项目动态生成角色，而不是套固定角色表
-- 旧项目已有 `AGENTS.md` 时先生成 `docs/agent-office/proposals/AGENTS.proposed.md`
-- 对旧计划、规则、任务和 `vibe/` 项目记忆生成吸收表
-- 旧框架归档区默认只供人工查看或明确审计，不作为角色日常上下文
-- 可选 `--move-originals`，但必须有单独的明确移动批准
-- 中文文档和中文角色启动提示
-- 可直接复制到新窗口的角色 prompt
-- 新项目办公室脚手架
-- 项目简报和长期 Agent 角色线程启动提示
-- 跨角色 message/handoff 通信协议
-- 旧项目迁移 playbook
-- task、message、handoff、ADR 模板
-- 安全的扫描、归档复制和校验脚本
+Highlights:
+- skill 改名为 `$gaogao-office`，显示名为 GAOGAO Office
+- 项目内生成目录为 `Agent Office/`
+- 公共文件直接放在 `Agent Office/`
+- 每个角色在 `Agent Office/Employees/` 下有自己的私有文件夹
+- 根 `AGENTS.md` 先生成提案，只有回复 `确认应用 AGENTS.md` 后才应用
+- 迁移先完整扫描文件名，再读取候选文本
+- 旧 `vibe/` 和计划文件先吸收到新 office，再归档或移动
+- 已批准旧文件归档到 `Agent Office/Archive/Legacy Management/`
 ```
 
-## 7. 安装链接
+## 5. 安装提示
 
-发布后，别人可以把下面这句粘贴到 Codex 对话里：
+发布后，别人可以让 Codex 安装：
 
 ```text
-$skill-installer https://github.com/<owner>/agent-office-os-skill/tree/main/agent-office-os
+Install the skill from https://github.com/<owner>/gaogao-office-skill and restart Codex after installation.
 ```
-
-安装或更新后，重启 Codex，让新版本 skill 重新加载。
-
-## 8. 以后怎么更新
-
-1. 修改 skill。
-2. 运行校验和脚本测试。
-3. 只 stage 需要发布的文件。
-4. 提交 commit。
-5. 打新 tag，比如 `v0.2.0`。
-6. 在 GitHub 更新 release notes。

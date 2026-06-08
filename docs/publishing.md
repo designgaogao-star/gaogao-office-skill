@@ -1,126 +1,53 @@
-# Publishing Guide
+# Publishing GAOGAO Office
 
-This guide shows how to publish `agent-office-os-skill` on GitHub safely.
+## 1. Validate
 
-## 1. Create the Repository
-
-1. Open GitHub.
-2. Create a new public repository named `agent-office-os-skill`.
-3. Do not add a README or license in GitHub if these files already exist locally.
-
-## 2. Validate Before Commit
-
-From the folder that contains `README.md` and `agent-office-os/`, run a real smoke test in a disposable demo directory:
+Run the gate from the workspace root:
 
 ```bash
-mkdir demo-project
-python agent-office-os/scripts/scaffold_office.py --project-root ./demo-project --project-name Demo
-python agent-office-os/scripts/inspect_office.py --project-root ./demo-project
-python agent-office-os/scripts/validate_office.py --project-root ./demo-project
+python work/run_gaogao_office_gate.py --workspace .
 ```
 
-Validate the skill frontmatter:
+## 2. Commit
 
-macOS/Linux:
-
-```bash
-python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py ./agent-office-os
-```
-
-PowerShell:
-
-```powershell
-python "$env:USERPROFILE\.codex\skills\.system\skill-creator\scripts\quick_validate.py" .\agent-office-os
-```
-
-Review and remove the disposable `demo-project` directory manually after checking it.
-
-## 3. Check What Will Be Published
-
-Run:
+From the package repository:
 
 ```bash
 git status --short
-git diff -- README.md README.zh-CN.md LICENSE docs examples agent-office-os .gitignore
+git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
+git commit -m "Release gaogao office v0.2.0"
 ```
 
-Do not publish secrets, local caches, private project files, or generated smoke-test directories.
-
-## 4. Commit Locally
+## 3. Tag
 
 ```bash
-git init
-git add README.md README.zh-CN.md LICENSE .gitignore docs examples agent-office-os
-git status --short
-git diff --cached
-git commit -m "Initial release of agent-office-os skill"
+git tag v0.2.0
+git push origin main
+git push origin v0.2.0
 ```
 
-Review `git status --short` and `git diff --cached` before committing. The staged files should be only the skill package and release docs.
-
-## 5. Connect Remote
-
-Replace `<owner>` with your GitHub username or organization, then confirm the URL is correct before pushing.
-
-```bash
-git branch -M main
-git remote add origin https://github.com/<owner>/agent-office-os-skill.git
-git remote -v
-git push -u origin main
-```
-
-## 6. Tag a Release
-
-```bash
-git tag v0.1.3
-git push origin v0.1.3
-```
-
-In GitHub, create a release for `v0.1.3`.
-
-Suggested release notes:
+## 4. Release Notes
 
 ```md
-# Agent Office OS v0.1.3
+# GAOGAO Office v0.2.0
 
-Migration takeover hardening for Agent Office OS.
+Lightweight public/private Agent Office redesign.
 
-Includes:
-- lightweight chat consultation before scaffolding
-- read-only project inference before asking questions
-- explicit approval gate before file creation
-- dynamic role generation from the actual project context
-- existing `AGENTS.md` preservation with `docs/agent-office/proposals/AGENTS.proposed.md`
-- absorption maps for old planning, rule, task, and `vibe/` project-memory files
-- human-review-only legacy archive boundary for ordinary role workers
-- optional `--move-originals` with separate explicit move approval
-- Chinese document and role prompt generation
-- prompt blocks that are ready to paste into new agent windows
-- project office scaffolding
-- project brief and thread-launch prompts for long-running agent roles
-- communication protocol for cross-role messages and handoffs
-- old project migration playbook
-- task, message, handoff, and ADR templates
-- safe inspection, archive-copy, and validation scripts
+Highlights:
+- skill renamed to `$gaogao-office` with display name GAOGAO Office
+- generated project folder is `Agent Office/`
+- public files live directly in `Agent Office/`
+- each role gets one private folder under `Agent Office/Employees/`
+- root `AGENTS.md` is proposed first and applied only after `确认应用 AGENTS.md`
+- migration starts with full filename scanning and candidate text reads
+- old `vibe/` and planning files are absorbed before archive or move
+- approved legacy files archive to `Agent Office/Archive/Legacy Management/`
 ```
 
-## 7. Installation Link
+## 5. Install Prompt
 
-After publishing, users can paste this into Codex chat:
+After publishing, users can ask Codex:
 
 ```text
-$skill-installer https://github.com/<owner>/agent-office-os-skill/tree/main/agent-office-os
+Install the skill from https://github.com/<owner>/gaogao-office-skill and restart Codex after installation.
 ```
-
-After installation or update, restart Codex so the skill is reloaded.
-
-## 8. Maintenance
-
-For future versions:
-
-1. Update the skill.
-2. Run validation and smoke tests.
-3. Stage only intended files.
-4. Commit changes.
-5. Tag a new version such as `v0.2.0`.
-6. Update the GitHub release notes.

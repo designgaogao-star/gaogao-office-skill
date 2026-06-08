@@ -1,0 +1,6 @@
+interface:
+  display_name: "GAOGAO Office"
+  short_description: "Create lightweight Agent Office workspaces with public and private agent areas"
+  default_prompt: "Use $gaogao-office to inspect this project read-only, propose a lightweight Agent Office with dynamic employee roles, and wait for approval before creating files."
+policy:
+  allow_implicit_invocation: true

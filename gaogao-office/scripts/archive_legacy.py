@@ -1,14 +1,5 @@
 #!/usr/bin/env python3
-"""Copy or explicitly move approved legacy management files into the Agent Office archive.
-
-Default mode never deletes or moves files. It reads the approved archive list
-from docs/agent-office/migration-report.md, preflights every source and
-destination, then copies files into a dated legacy-management archive.
-
-If --move-originals is passed, it also requires `Approved legacy move list: YES`
-in the report approval record and moves the exact approved source files into
-the archive instead of copying them.
-"""
+"""Copy or explicitly move approved legacy files into GAOGAO Office archive."""
 
 from __future__ import annotations
 
@@ -16,10 +7,14 @@ import argparse
 import json
 import re
 import shutil
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path, PureWindowsPath
 
+
+OFFICE_DIR = "Agent Office"
+ARCHIVE_DIR = "Archive"
+LEGACY_ARCHIVE_DIR = "Legacy Management"
 
 SENSITIVE_DIRS = {".ssh", ".aws", ".gnupg"}
 SENSITIVE_NAMES = {
@@ -94,9 +89,7 @@ def is_markdown_table_separator(line: str) -> bool:
     if "|" not in line:
         return False
     cells = [cell.strip() for cell in line.strip("|").split("|")]
-    if not cells:
-        return False
-    return all(re.fullmatch(r":?-{3,}:?", cell or "") for cell in cells)
+    return bool(cells) and all(re.fullmatch(r":?-{3,}:?", cell or "") for cell in cells)
 
 
 def unescape_markdown_table_code(value: str) -> str:
@@ -146,6 +139,11 @@ def is_sensitive_path(raw_path: str) -> bool:
     return False
 
 
+def validate_archive_stamp(archive_stamp: str) -> None:
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", archive_stamp):
+        raise SystemExit("Unsafe archive stamp. Use one folder name containing only letters, numbers, dots, underscores, or hyphens.")
+
+
 def assert_safe_target(root: Path, path: Path) -> None:
     resolved_root = root.resolve()
     resolved_target = path.resolve(strict=False)
@@ -155,11 +153,6 @@ def assert_safe_target(root: Path, path: Path) -> None:
         raise SystemExit(f"Refusing destination outside project root: {path}")
     if has_link_in_path(root, path.parent if path.parent.exists() else path):
         raise SystemExit(f"Refusing destination through symlink or junction: {path}")
-
-
-def validate_archive_stamp(archive_stamp: str) -> None:
-    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", archive_stamp):
-        raise SystemExit("Unsafe archive stamp. Use one folder name containing only letters, numbers, dots, underscores, or hyphens.")
 
 
 def load_archive_sources(report: Path, *, move_originals: bool) -> list[str]:
@@ -177,7 +170,7 @@ def load_archive_sources(report: Path, *, move_originals: bool) -> list[str]:
 
 
 def plan_archive(root: Path, sources: list[str], archive_stamp: str, *, move_originals: bool) -> list[ArchiveAction]:
-    archive_base = root / "docs" / "agent-office" / "archive" / "legacy-management"
+    archive_base = root / OFFICE_DIR / ARCHIVE_DIR / LEGACY_ARCHIVE_DIR
     archive_root = archive_base / archive_stamp
     actions: list[ArchiveAction] = []
     seen: set[str] = set()
@@ -198,6 +191,10 @@ def plan_archive(root: Path, sources: list[str], archive_stamp: str, *, move_ori
             raise SystemExit(f"Archive source is not a regular file: {raw_source}")
         destination = archive_root / raw_source.replace("\\", "/")
         assert_safe_target(root, destination)
+        try:
+            destination.resolve(strict=False).relative_to(archive_base.resolve(strict=False))
+        except ValueError:
+            raise SystemExit(f"Archive destination is outside legacy archive: {destination}")
         if destination.exists():
             if has_link_in_path(root, destination):
                 raise SystemExit(f"Archive destination is linked: {destination}")
@@ -209,10 +206,6 @@ def plan_archive(root: Path, sources: list[str], archive_stamp: str, *, move_ori
                 raise SystemExit(f"Archive destination already exists with different content: {destination}")
         else:
             action = "move" if move_originals else "copy"
-        try:
-            destination.resolve(strict=False).relative_to(archive_base.resolve(strict=False))
-        except ValueError:
-            raise SystemExit(f"Archive destination is outside legacy-management archive: {destination}")
         actions.append(ArchiveAction(raw_source, str(destination.relative_to(root)).replace("\\", "/"), action))
     return actions
 
@@ -222,6 +215,7 @@ def render_index(actions: list[ArchiveAction], archive_stamp: str) -> str:
         "# Legacy Management Archive Index",
         "",
         f"Archive stamp: {archive_stamp}",
+        "Read boundary: human-review/audit only; ordinary employees should not read this archive.",
         "",
         "| Source | Archive Copy | Action |",
         "|---|---|---|",
@@ -232,31 +226,32 @@ def render_index(actions: list[ArchiveAction], archive_stamp: str) -> str:
 
 
 def write_archive(root: Path, actions: list[ArchiveAction], archive_stamp: str, dry_run: bool) -> None:
-    archive_root = root / "docs" / "agent-office" / "archive" / "legacy-management" / archive_stamp
+    archive_root = root / OFFICE_DIR / ARCHIVE_DIR / LEGACY_ARCHIVE_DIR / archive_stamp
     index = archive_root / "_archive-index.md"
     assert_safe_target(root, index)
-    if not dry_run:
-        for action in actions:
-            if action.action == "skip-existing":
-                continue
-            source = root / action.source
-            destination = root / action.destination
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            if action.action == "move":
-                shutil.move(str(source), str(destination))
-            else:
-                shutil.copy2(source, destination)
-        index.parent.mkdir(parents=True, exist_ok=True)
-        index.write_text(render_index(actions, archive_stamp), encoding="utf-8", newline="\n")
+    if dry_run:
+        return
+    for action in actions:
+        if action.action == "skip-existing":
+            continue
+        source = root / action.source
+        destination = root / action.destination
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if action.action == "move":
+            shutil.move(str(source), str(destination))
+        else:
+            shutil.copy2(source, destination)
+    index.parent.mkdir(parents=True, exist_ok=True)
+    index.write_text(render_index(actions, archive_stamp), encoding="utf-8", newline="\n")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Copy or explicitly move approved legacy files into the Agent Office archive.")
-    parser.add_argument("--project-root", default=".", help="Project root containing docs/agent-office/migration-report.md")
+    parser = argparse.ArgumentParser(description="Copy or explicitly move approved legacy files into the GAOGAO Office archive.")
+    parser.add_argument("--project-root", default=".", help="Project root containing Agent Office/migration-report.md")
     parser.add_argument("--report", default="", help="Optional migration report path inside the project root")
     parser.add_argument("--archive-stamp", default=date.today().isoformat(), help="Archive subfolder name")
-    parser.add_argument("--move-originals", action="store_true", help="Move approved originals into the archive; requires explicit move approval in the report")
-    parser.add_argument("--dry-run", action="store_true", help="Plan actions without copying files")
+    parser.add_argument("--move-originals", action="store_true", help="Move approved originals into the archive; requires explicit move approval")
+    parser.add_argument("--dry-run", action="store_true", help="Plan actions without copying or moving files")
     parser.add_argument("--json", action="store_true", help="Print JSON output")
     args = parser.parse_args()
 
@@ -264,7 +259,7 @@ def main() -> int:
     if not root.exists():
         raise SystemExit(f"Project root does not exist: {root}")
     validate_archive_stamp(args.archive_stamp)
-    report = Path(args.report).resolve() if args.report else root / "docs" / "agent-office" / "migration-report.md"
+    report = Path(args.report).resolve() if args.report else root / OFFICE_DIR / "migration-report.md"
     if not is_relative_to(report, root):
         raise SystemExit("--report must be inside --project-root")
     if has_link_in_path(root, report):
@@ -275,7 +270,6 @@ def main() -> int:
     sources = load_archive_sources(report, move_originals=args.move_originals)
     actions = plan_archive(root, sources, args.archive_stamp, move_originals=args.move_originals)
     write_archive(root, actions, args.archive_stamp, args.dry_run)
-
     payload = {
         "project_name": root.name,
         "archive_stamp": args.archive_stamp,
@@ -284,7 +278,7 @@ def main() -> int:
         "actions": [asdict(action) for action in actions],
     }
     if args.json:
-        print(json.dumps(payload, indent=2))
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
     else:
         for action in actions:
             print(f"{action.action}: {action.source} -> {action.destination}")
