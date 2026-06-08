@@ -72,24 +72,28 @@ git push -u origin main
 ## 6. 打版本标签
 
 ```bash
-git tag v0.1.2
-git push origin v0.1.2
+git tag v0.1.3
+git push origin v0.1.3
 ```
 
-然后在 GitHub 页面创建 release，选择 `v0.1.2`。
+然后在 GitHub 页面创建 release，选择 `v0.1.3`。
 
 建议 release notes：
 
 ```md
-# Agent Office OS v0.1.2
+# Agent Office OS v0.1.3
 
-Agent Office OS 首次使用体验更新。
+Agent Office OS 旧项目接管流程加强。
 
 包含：
 - 脚手架前的轻量聊天式咨询
 - 提问前先只读判断项目用途
 - 写文件前必须经过明确确认
 - 按真实项目动态生成角色，而不是套固定角色表
+- 旧项目已有 `AGENTS.md` 时先生成 `docs/agent-office/proposals/AGENTS.proposed.md`
+- 对旧计划、规则、任务和 `vibe/` 项目记忆生成吸收表
+- 旧框架归档区默认只供人工查看或明确审计，不作为角色日常上下文
+- 可选 `--move-originals`，但必须有单独的明确移动批准
 - 中文文档和中文角色启动提示
 - 可直接复制到新窗口的角色 prompt
 - 新项目办公室脚手架

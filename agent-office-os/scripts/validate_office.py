@@ -31,6 +31,7 @@ REQUIRED_DIRS = [
     "docs/agent-office/handoffs",
     "docs/agent-office/decisions",
     "docs/agent-office/context-packs",
+    "docs/agent-office/proposals",
     "docs/agent-office/cadences",
     "docs/agent-office/archive/legacy-management",
     "docs/agent-office/role-memory",
@@ -241,7 +242,7 @@ def delete_entry_has_reason(line: str) -> bool:
 
 def delete_entry_has_disposition(line: str) -> bool:
     explanation = report_line_explanation(line).lower()
-    return any(token in explanation for token in ["migrated", "migration", "discarded", "discard"])
+    return any(token in explanation for token in ["migrated", "migration", "absorbed", "absorb", "discarded", "discard"])
 
 
 def task_id_from_stem(stem: str) -> str:
@@ -471,8 +472,11 @@ def validate(root: Path, stale_days: int) -> list[Finding]:
             "Stale Or Conflicting Files",
             "Active Tasks Found",
             "Decisions Found",
+            "Absorption Map",
+            "Proposed AGENTS Replacement",
             "Recommended Roles",
             "Proposed Archive List",
+            "Proposed Move List",
             "Proposed Delete List",
             "User Questions",
             "User Approval Record",
@@ -480,6 +484,28 @@ def validate(root: Path, stale_days: int) -> list[Finding]:
         for heading in required_sections:
             if f"## {heading}" not in text:
                 findings.append(Finding("warning", rel_report, f"migration report is missing `## {heading}`"))
+
+        agents_section = markdown_section(text, "Proposed AGENTS Replacement")
+        proposed_agents = root / "docs/agent-office/proposals/AGENTS.proposed.md"
+        if agents_section and "AGENTS.proposed.md" not in agents_section:
+            findings.append(
+                Finding(
+                    "warning",
+                    rel_report,
+                    "proposed AGENTS replacement section should point to `docs/agent-office/proposals/AGENTS.proposed.md`",
+                )
+            )
+        if "AGENTS.proposed.md" in agents_section:
+            if proposed_agents.exists() and has_link_in_path(root, proposed_agents):
+                findings.append(Finding("error", "docs/agent-office/proposals/AGENTS.proposed.md", "proposed AGENTS path contains a symlink or junction"))
+            elif not proposed_agents.is_file():
+                findings.append(
+                    Finding(
+                        "info",
+                        "docs/agent-office/proposals/AGENTS.proposed.md",
+                        "migration report names a proposed AGENTS replacement, but the proposal file is not written yet",
+                    )
+                )
 
         archive_section = markdown_section(text, "Proposed Archive List")
         approval_section = markdown_section(text, "User Approval Record")
@@ -519,6 +545,40 @@ def validate(root: Path, stale_days: int) -> list[Finding]:
                         f"`{source}` is missing from the project and no archive copy with the same filename was found",
                     )
                 )
+
+        move_section = markdown_section(text, "Proposed Move List")
+        move_entries = table_source_entries(move_section)
+        proposed_move = [entry.path for entry in move_entries]
+        if proposed_move and not proposed_archive:
+            findings.append(Finding("error", rel_report, "move list exists but no archive list was found"))
+        for entry in move_entries:
+            source = entry.path
+            if not is_safe_report_path(source):
+                findings.append(Finding("error", rel_report, f"`{source}` is not a safe project-relative move path"))
+                continue
+            if proposed_archive and source not in proposed_archive:
+                findings.append(Finding("error", rel_report, f"`{source}` move entry must also appear in the proposed archive list"))
+            if not delete_entry_has_reason(entry.line):
+                findings.append(Finding("error", rel_report, f"`{source}` move entry needs a per-file reason"))
+            if not delete_entry_has_disposition(entry.line):
+                findings.append(
+                    Finding(
+                        "error",
+                        rel_report,
+                        f"`{source}` move entry must say the content was absorbed, migrated, or intentionally discarded",
+                    )
+                )
+            source_path = root / source
+            if not source_path.exists() and not archive_contains_source(archive_dir, archived, source):
+                findings.append(
+                    Finding(
+                        "error",
+                        rel_report,
+                        f"`{source}` move entry is missing from the project and has no durable archive copy",
+                    )
+                )
+        if proposed_move and approval_value(approval_section, "Approved legacy move list") != "YES":
+            findings.append(Finding("error", rel_report, "move list exists but is not marked approved"))
 
         delete_section = markdown_section(text, "Proposed Delete List")
         delete_entries = table_source_entries(delete_section)

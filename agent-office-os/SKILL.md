@@ -39,7 +39,7 @@ For first-time setup requests, read `references/first-use-playbook.md` before sc
 On initial invocation:
 
 - Introduce Agent Office OS briefly: it designs a durable agent project office, first performs a read-only project check, and will not create files until the user explicitly approves.
-- Explain fit and safety briefly: best for long-running project folders, not short one-off chats; first pass is read-only; existing files are skipped by default, confirmed overwrites create backups, migration archives copy files before any separate deletion approval, and the user can ask for a restore plan from those backups/archives.
+- Explain fit and safety briefly: best for long-running project folders, not short one-off chats; first pass is read-only; existing files are skipped by default, existing `AGENTS.md` gets a proposed replacement first, confirmed overwrites create backups, migration archives copy files before any separate move/delete approval, and the user can ask for a restore plan from those backups/archives.
 - Inspect project clues read-only: directory name, README, package/config files, `docs/`, existing agent instructions, and Git status.
 - During first-use consultation, do not run `inspect_office.py --output` or write a report before approval; keep findings in chat until the user approves file creation.
 - Run a lightweight suitability check before continuing. If the request or folder looks like a one-off task, isolated edit, no durable project folder, or unrelated multi-task chat, say Agent Office OS may be overkill and ordinary chat is likely cheaper unless the user wants a durable project office.
@@ -59,7 +59,7 @@ Use `references/interview-guide.md` when project details are not obvious. Ask co
 - expected project size and risk level
 - first milestone or definition of initial success
 - dynamic standing roles and their distinct write scopes
-- whether old management docs should be archived, left in place, or later deleted after confirmation
+- whether old management docs should be absorbed into the new office, archived for human review, moved after approval, left in place, or later deleted after confirmation
 - whether GitHub publishing materials are needed
 
 Do not use a fixed role set just because a project resembles a known type. Create only the roles that are currently useful and whose responsibilities, inputs, outputs, and write scopes are meaningfully different. Archive-before-delete remains the default migration policy.
@@ -91,6 +91,7 @@ Do not use a fixed role set just because a project resembles a known type. Creat
    - `docs/agent-office/context-packs/`
    - `docs/agent-office/context-packs/project-brief.md`
    - `docs/agent-office/context-packs/thread-launch-prompts.md`
+   - `docs/agent-office/proposals/`
    - `docs/agent-office/cadences/`
    - `docs/agent-office/archive/legacy-management/`
 8. In the current chat, output the approved role launch prompts so the user can copy them directly. Put "new window" and suggested title instructions outside the fenced code block; put only the message to send in the code block.
@@ -106,11 +107,13 @@ Use `scripts/scaffold_office.py` for deterministic scaffolding when the target p
    - planning docs such as roadmap, tasks, architecture, ADRs, status notes, meeting notes
    - existing `.codex/`, `.agents/`, `.github/`, issue templates, or automation notes
 3. Produce `docs/agent-office/migration-report.md` or a proposed report before changing legacy files.
-4. Present an exact archive/overwrite/delete plan and ask for approval. Do not copy, overwrite, archive, or delete legacy management files until the user approves the exact list.
-5. Scaffold the new office if it does not exist. If `AGENTS.md` already exists, preserve it by default and propose a merged replacement instead of using `--force`.
-6. Migrate durable shared facts into `status.md`, role cards, task packets, decisions, and archive notes. Create role memory files for approved roles, but do not copy broad legacy history into a role's private memory unless the user explicitly approves that role-specific summary.
-7. Copy approved old framework files under `docs/agent-office/archive/legacy-management/`; use `scripts/archive_legacy.py` when the approved report is clear. Leave originals in place until separate deletion approval.
-8. Delete old framework files only after a separate explicit user confirmation and a reviewed deletion list.
+4. Build an absorption map: for each old management file, say which durable facts move into `status.md`, `project-brief.md`, task packets, ADRs, role cards, messages, handoffs, or archive notes.
+5. Present an exact absorb/archive/move/overwrite/delete plan and ask for approval. Do not copy, move, overwrite, archive, or delete legacy management files until the user approves the exact list.
+6. Scaffold the new office if it does not exist. If `AGENTS.md` already exists, preserve it by default and write a merged proposed replacement to `docs/agent-office/proposals/AGENTS.proposed.md` instead of using `--force`.
+7. Migrate durable shared facts into `status.md`, `context-packs/project-brief.md`, role cards, task packets, decisions, messages, handoffs, and archive notes. Create role memory files for approved roles, but do not copy broad legacy history into a role's private memory unless the user explicitly approves that role-specific summary.
+8. Copy approved old framework files under `docs/agent-office/archive/legacy-management/`; use `scripts/archive_legacy.py` when the approved report is clear. Leave originals in place unless the user separately approves moving the exact absorbed files.
+9. If the user approves moving absorbed legacy files, move only the exact list into `docs/agent-office/archive/legacy-management/<date>/` and record provenance in `_archive-index.md`.
+10. Delete old framework files only after a separate explicit user confirmation and a reviewed deletion list.
 
 Do not silently copy, delete, or overwrite old project management files.
 
@@ -121,8 +124,13 @@ When a project already has `AGENTS.md`, `AGENTS.override.md`, or an equivalent a
 - inspect it first and identify durable build, test, security, and review rules
 - preserve those rules in the new office or proposed replacement
 - keep the final `AGENTS.md` short and index-like
-- write a proposed replacement or patch for user review
+- write `docs/agent-office/proposals/AGENTS.proposed.md` for user review
+- tell the user to manually copy it over root `AGENTS.md`, or apply it yourself only after the user explicitly approves that exact replacement
 - never run `scaffold_office.py --force` during migration or maintenance without an approved overwrite list
+
+### Legacy Archive Read Boundary
+
+Treat `docs/agent-office/archive/legacy-management/` as human-review and audit material, not normal working context. Once old files have been absorbed into current office docs, role threads should not read the legacy archive by default. Only the coordinator, archivist, or an explicitly authorized migration/audit task may read it.
 
 ## Maintenance Flow
 
@@ -149,6 +157,7 @@ Default to manual thread creation with copyable prompts. If the user explicitly 
 - Do not allow multiple writer threads to own the same file scope.
 - If a role is asked to work outside its scope, it should route the request to the right role or write a message under `docs/agent-office/messages/open/` instead of doing the work silently.
 - Each role may read and update only its own `docs/agent-office/role-memory/{role-slug}.md` by default. Do not read another role's memory unless the user explicitly asks for office maintenance, audit, or recovery.
+- Do not read `docs/agent-office/archive/legacy-management/` during ordinary role work. It is human-review/audit material after migration absorption.
 - Do not create files during first-use consultation before explicit approval.
 - Treat worktree offices as isolated proposals until the owner, coordinator, or archivist integrates them.
 - Do not edit `.git`, secrets, home directory files, or external configuration while scaffolding.
@@ -168,5 +177,5 @@ Default to manual thread creation with copyable prompts. If the user explicitly 
 - `references/github-publishing.md`: GitHub release and installation guide.
 - `scripts/scaffold_office.py`: create a safe office scaffold.
 - `scripts/inspect_office.py`: read-only migration discovery.
-- `scripts/archive_legacy.py`: copy approved legacy files into the office archive without deleting originals.
+- `scripts/archive_legacy.py`: copy approved legacy files into the office archive; optionally move originals only with explicit move approval.
 - `scripts/validate_office.py`: structure and health checks.

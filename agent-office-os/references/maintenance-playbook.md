@@ -29,6 +29,7 @@ Include:
 - Mark an ADR `superseded` only when a newer ADR or explicit decision replaces it.
 - Summarize long files before moving detail into archive.
 - Treat role memory as protocol-private. For ordinary maintenance, check existence, size, owner path, and freshness; read another role's memory only when the user explicitly asks for office maintenance, audit, or recovery.
+- Treat `archive/legacy-management/` as human-review and audit material. Do not read it during ordinary health checks unless the maintenance task is specifically about migration absorption, missing facts, or restore.
 - Do not delete office history unless the user approves an exact deletion list.
 
 ## Suggested Maintenance States

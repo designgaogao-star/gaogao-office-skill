@@ -89,27 +89,31 @@ $skill-installer https://github.com/<owner>/agent-office-os-skill/tree/main/agen
 7. Push and tag:
    ```bash
    git push origin main
-   git tag v0.1.2
-   git push origin v0.1.2
+   git tag v0.1.3
+   git push origin v0.1.3
    ```
 8. Create a GitHub release with:
    - what the skill does
    - install instructions
-   - safety note: archive-before-delete migration
+   - safety note: absorb-before-archive and archive-before-delete migration
    - known limitations
 
 ## Suggested Release Notes
 
 ```md
-# Agent Office OS v0.1.2
+# Agent Office OS v0.1.3
 
-First-use experience update for Agent Office OS.
+Migration takeover hardening for Agent Office OS.
 
 Highlights:
 - lightweight chat consultation before scaffolding
 - read-only project inference before asking questions
 - explicit approval gate before file creation
 - dynamic role generation from project context
+- existing `AGENTS.md` preservation with `docs/agent-office/proposals/AGENTS.proposed.md`
+- absorption maps for old planning, rule, task, and `vibe/` project-memory files
+- human-review-only legacy archive boundary
+- optional `--move-originals` with separate explicit move approval
 - Chinese document and role prompt generation
 - new project office scaffolding
 - project brief and thread-launch prompts for long-running agent roles

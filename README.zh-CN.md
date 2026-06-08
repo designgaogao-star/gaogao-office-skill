@@ -17,14 +17,14 @@
 - 先进行轻量聊天式咨询和只读项目判断。
 - 能判断项目用途时先向你确认，判断不了时用编号问题快速询问。
 - 只有你明确确认方案后，才初始化新的 `docs/agent-office/` 项目办公室。
-- 创建短小的 `AGENTS.md`，作为 Agent 自动加载入口。
+- 新项目会创建短小的 `AGENTS.md`；旧项目如果已有 `AGENTS.md`，先写 `docs/agent-office/proposals/AGENTS.proposed.md` 供你审核或明确授权后覆盖。
 - 把项目类型、风险等级、第一里程碑和动态角色决策写入 `context-packs/project-brief.md`。
 - 按真实项目情况创建角色卡，不套固定岗位模板。
 - 给每个已确认角色创建一份协议私有的 `role-memory/{role}.md`，用于角色换对话框后的长期接续。
 - 创建 task、message、handoff、ADR 模板。
 - 创建 `communication.md`，让不同角色线程知道如何开消息、回复、关闭和交接工作。
-- 审计旧项目里已有的计划、规则、任务、架构和上下文文档。
-- 迁移旧框架时先归档，再确认删除，避免误删。
+- 审计并吸收旧项目里已有的计划、规则、任务、架构、上下文文档，以及 `vibe/` 这类旧项目记忆。
+- 迁移旧框架时先把有效信息吸收到新 office，再归档给人查看；只有明确批准后才移动原文件或删除。
 - 写出 `context-packs/thread-launch-prompts.md`，并在当前聊天框给出可直接复制的长期 Agent 角色启动提示词。
 - 提供安全脚本用于脚手架、旧项目扫描和健康检查。
 
@@ -102,13 +102,20 @@ python agent-office-os/scripts/archive_legacy.py --project-root ./old-project --
 python agent-office-os/scripts/archive_legacy.py --project-root ./old-project
 ```
 
+如果这些旧文件的信息已经被吸收到新 office，并且你明确写入 `Approved legacy move list: YES`，可以把原文件移动进归档区：
+
+```bash
+python agent-office-os/scripts/archive_legacy.py --project-root ./old-project --move-originals --dry-run
+python agent-office-os/scripts/archive_legacy.py --project-root ./old-project --move-originals
+```
+
 安全默认值：
 
 - `scaffold_office.py` 不删除文件，默认不覆盖已有文件。
 - `scaffold_office.py` 只有加 `--create-root` 才会创建不存在的项目根目录，覆盖已有文件时必须同时使用 `--force` 和 `--confirm-overwrite`；确认覆盖会先创建 `.bak` 备份。
 - `scaffold_office.py` 会拒绝通过符号链接或 junction 解析到项目根目录之外的路径。
 - `inspect_office.py` 默认只读扫描；如果指定 `--output`，输出路径必须在项目根目录内；链接路径会被跳过，不读取外部内容。
-- `archive_legacy.py` 只复制已经明确批准的归档清单，会拒绝链接路径或疑似敏感路径，并且永远不删除原文件。
+- `archive_legacy.py` 默认只复制已经明确批准的归档清单，会拒绝链接路径或疑似敏感路径，不删除原文件；只有单独批准移动并显式加 `--move-originals` 时才移动原文件。
 - `validate_office.py` 只报告问题，不修改文件。
 
 ## 发布到 GitHub

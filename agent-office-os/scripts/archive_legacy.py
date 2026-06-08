@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Copy approved legacy management files into the Agent Office archive.
+"""Copy or explicitly move approved legacy management files into the Agent Office archive.
 
-The script never deletes or moves files. It reads the approved archive list
+Default mode never deletes or moves files. It reads the approved archive list
 from docs/agent-office/migration-report.md, preflights every source and
 destination, then copies files into a dated legacy-management archive.
+
+If --move-originals is passed, it also requires `Approved legacy move list: YES`
+in the report approval record and moves the exact approved source files into
+the archive instead of copying them.
 """
 
 from __future__ import annotations
@@ -158,11 +162,13 @@ def validate_archive_stamp(archive_stamp: str) -> None:
         raise SystemExit("Unsafe archive stamp. Use one folder name containing only letters, numbers, dots, underscores, or hyphens.")
 
 
-def load_archive_sources(report: Path) -> list[str]:
+def load_archive_sources(report: Path, *, move_originals: bool) -> list[str]:
     text = report.read_text(encoding="utf-8", errors="replace")
     approval_section = markdown_section(text, "User Approval Record")
     if approval_value(approval_section, "Approved archive list") != "YES":
         raise SystemExit("Archive list is not approved. Set `Approved archive list: YES` in `User Approval Record` first.")
+    if move_originals and approval_value(approval_section, "Approved legacy move list") != "YES":
+        raise SystemExit("Move list is not approved. Set `Approved legacy move list: YES` in `User Approval Record` first.")
     archive_section = markdown_section(text, "Proposed Archive List")
     sources = table_source_paths(archive_section)
     if not sources:
@@ -170,7 +176,7 @@ def load_archive_sources(report: Path) -> list[str]:
     return sources
 
 
-def plan_archive(root: Path, sources: list[str], archive_stamp: str) -> list[ArchiveAction]:
+def plan_archive(root: Path, sources: list[str], archive_stamp: str, *, move_originals: bool) -> list[ArchiveAction]:
     archive_base = root / "docs" / "agent-office" / "archive" / "legacy-management"
     archive_root = archive_base / archive_stamp
     actions: list[ArchiveAction] = []
@@ -195,12 +201,14 @@ def plan_archive(root: Path, sources: list[str], archive_stamp: str) -> list[Arc
         if destination.exists():
             if has_link_in_path(root, destination):
                 raise SystemExit(f"Archive destination is linked: {destination}")
+            if move_originals:
+                raise SystemExit(f"Move destination already exists. Refusing to move over archived file: {destination}")
             if destination.read_bytes() == source.read_bytes():
                 action = "skip-existing"
             else:
                 raise SystemExit(f"Archive destination already exists with different content: {destination}")
         else:
-            action = "copy"
+            action = "move" if move_originals else "copy"
         try:
             destination.resolve(strict=False).relative_to(archive_base.resolve(strict=False))
         except ValueError:
@@ -229,21 +237,25 @@ def write_archive(root: Path, actions: list[ArchiveAction], archive_stamp: str, 
     assert_safe_target(root, index)
     if not dry_run:
         for action in actions:
-            if action.action != "copy":
+            if action.action == "skip-existing":
                 continue
             source = root / action.source
             destination = root / action.destination
             destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, destination)
+            if action.action == "move":
+                shutil.move(str(source), str(destination))
+            else:
+                shutil.copy2(source, destination)
         index.parent.mkdir(parents=True, exist_ok=True)
         index.write_text(render_index(actions, archive_stamp), encoding="utf-8", newline="\n")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Copy approved legacy files into the Agent Office archive.")
+    parser = argparse.ArgumentParser(description="Copy or explicitly move approved legacy files into the Agent Office archive.")
     parser.add_argument("--project-root", default=".", help="Project root containing docs/agent-office/migration-report.md")
     parser.add_argument("--report", default="", help="Optional migration report path inside the project root")
     parser.add_argument("--archive-stamp", default=date.today().isoformat(), help="Archive subfolder name")
+    parser.add_argument("--move-originals", action="store_true", help="Move approved originals into the archive; requires explicit move approval in the report")
     parser.add_argument("--dry-run", action="store_true", help="Plan actions without copying files")
     parser.add_argument("--json", action="store_true", help="Print JSON output")
     args = parser.parse_args()
@@ -260,11 +272,17 @@ def main() -> int:
     if not report.is_file():
         raise SystemExit(f"Migration report does not exist: {report}")
 
-    sources = load_archive_sources(report)
-    actions = plan_archive(root, sources, args.archive_stamp)
+    sources = load_archive_sources(report, move_originals=args.move_originals)
+    actions = plan_archive(root, sources, args.archive_stamp, move_originals=args.move_originals)
     write_archive(root, actions, args.archive_stamp, args.dry_run)
 
-    payload = {"project_name": root.name, "archive_stamp": args.archive_stamp, "dry_run": args.dry_run, "actions": [asdict(action) for action in actions]}
+    payload = {
+        "project_name": root.name,
+        "archive_stamp": args.archive_stamp,
+        "move_originals": args.move_originals,
+        "dry_run": args.dry_run,
+        "actions": [asdict(action) for action in actions],
+    }
     if args.json:
         print(json.dumps(payload, indent=2))
     else:

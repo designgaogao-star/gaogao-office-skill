@@ -53,6 +53,7 @@ EXACT_NAMES = {
     "AGENTS.override.md",
     "CLAUDE.md",
     "GEMINI.md",
+    "VIBE.md",
     ".cursorrules",
     "PLANS.md",
 }
@@ -75,6 +76,7 @@ KEYWORDS = {
     "meeting",
     "requirements",
     "spec",
+    "vibe",
 }
 
 KEYWORD_ORDER = [
@@ -92,6 +94,7 @@ KEYWORD_ORDER = [
     "architecture",
     "requirements",
     "spec",
+    "vibe",
     "sprint",
     "meeting",
 ]
@@ -170,7 +173,7 @@ def classify(path: Path, text: str) -> tuple[str, int, list[str]]:
         kind = "task-tracking"
     elif "roadmap" in lower_path or "plan" in lower_path or "milestone" in lower_path:
         kind = "planning"
-    elif "status" in lower_path or "handoff" in lower_path or "context" in lower_path:
+    elif "status" in lower_path or "handoff" in lower_path or "context" in lower_path or "vibe" in lower_path:
         kind = "project-memory"
     elif ".github" in lower_path or ".codex" in lower_path or ".agents" in lower_path:
         kind = "tooling-config"
@@ -309,6 +312,41 @@ def render_path_table(candidates: list[Candidate], archive_stamp: str | None = N
     return lines
 
 
+def absorption_destination(kind: str) -> tuple[str, str]:
+    if kind == "agent-instructions":
+        return (
+            "build/test/safety rules and office entrypoint",
+            "docs/agent-office/proposals/AGENTS.proposed.md; roles/; communication.md",
+        )
+    if kind == "task-tracking":
+        return ("active or historical work items", "docs/agent-office/tasks/active/; tasks/done/; status.md")
+    if kind == "decision-record":
+        return ("accepted decisions and tradeoffs", "docs/agent-office/decisions/")
+    if kind == "planning":
+        return ("goals, milestones, and roadmap constraints", "docs/agent-office/status.md; context-packs/project-brief.md")
+    if kind == "project-memory":
+        return ("durable project context, vibe, blockers, and open questions", "context-packs/project-brief.md; messages/open/; handoffs/")
+    if kind == "tooling-config":
+        return ("tooling rules that still affect agent work", "docs/agent-office/proposals/AGENTS.proposed.md; operating-model.md")
+    return ("possible durable project-management facts", "migration-report.md user questions; project-brief.md if confirmed")
+
+
+def render_absorption_table(candidates: list[Candidate]) -> list[str]:
+    if not candidates:
+        return ["No migratable items found."]
+    lines = [
+        "| Source | Durable Facts To Absorb | New Office Destination | Status |",
+        "|---|---|---|---|",
+    ]
+    for item in candidates:
+        facts, destination = absorption_destination(item.kind)
+        lines.append(
+            f"| {markdown_table_cell(markdown_code(item.path))} | {markdown_table_cell(facts)} | "
+            f"{markdown_table_cell(markdown_code(destination))} | proposed |"
+        )
+    return lines
+
+
 def render_role_hints(
     *,
     active_tasks: list[Candidate],
@@ -368,7 +406,8 @@ def render_markdown(root: Path, candidates: list[Candidate]) -> str:
         f"- Migratable candidates: {len(migratable)}",
         f"- Sensitive files skipped without reading: {len(sensitive)}",
         f"- Linked paths skipped without reading: {len(linked)}",
-        "- This report is discovery only. Do not delete legacy files until the user approves an exact list.",
+        "- This report is discovery only. Absorb durable facts before archiving or moving old framework files.",
+        "- Do not delete legacy files until the user approves an exact list.",
         "",
         "## Candidates",
         "",
@@ -409,6 +448,23 @@ def render_markdown(root: Path, candidates: list[Candidate]) -> str:
     lines.extend(
         [
             "",
+            "## Absorption Map",
+            "",
+            "Use this as the migration checklist. Summarize durable facts into the listed new office destinations before archive or move actions.",
+            "",
+        ]
+    )
+    lines.extend(render_absorption_table(migratable))
+    lines.extend(
+        [
+            "",
+            "## Proposed AGENTS Replacement",
+            "",
+            "Draft path: `docs/agent-office/proposals/AGENTS.proposed.md`",
+            "",
+            "Keep root `AGENTS.md` unchanged until the user manually copies this draft or explicitly approves replacing the root file with this exact proposal. Preserve valid build, test, safety, and review rules from old agent instructions.",
+            "",
+            "",
             "## Recommended Roles",
             "",
         ]
@@ -426,13 +482,20 @@ def render_markdown(root: Path, candidates: list[Candidate]) -> str:
             "",
             "## Proposed Archive List",
             "",
-            "Archive only after the user approves this exact list.",
+            "Archive only after durable facts have been absorbed and the user approves this exact list.",
             "",
         ]
     )
     lines.extend(render_path_table(migratable, archive_stamp=archive_stamp))
     lines.extend(
         [
+            "",
+            "## Proposed Move List",
+            "",
+            "Move originals only after absorption, archive approval, and explicit move approval. Default to copy-only archiving.",
+            "",
+            "No files are proposed for moving yet.",
+            "",
             "",
             "## Proposed Delete List",
             "",
@@ -460,13 +523,17 @@ def render_markdown(root: Path, candidates: list[Candidate]) -> str:
             "",
             "- Which listed files are authoritative project truth?",
             "- Should any old agent rules be merged into the new short `AGENTS.md` entrypoint?",
+            "- Should a proposed replacement be written to `docs/agent-office/proposals/AGENTS.proposed.md`?",
             "- Is the proposed archive list approved exactly as shown?",
+            "- After absorption, should any old framework originals be moved into the legacy archive?",
             "- Are there files the user wants deleted after archive verification?",
             "- Which roles should become long-running agent employee threads?",
             "",
             "## User Approval Record",
             "",
             "Approved archive list: NO",
+            "Approved AGENTS replacement: NO",
+            "Approved legacy move list: NO",
             "Approved deletion list: NO",
             "Approved by: <pending>",
             "Approval date: <pending>",
@@ -475,9 +542,11 @@ def render_markdown(root: Path, candidates: list[Candidate]) -> str:
             "",
             "1. Confirm which candidate files are authoritative.",
             "2. Scaffold `docs/agent-office/` if missing.",
-            "3. Summarize durable facts into `status.md`, task packets, role cards, and ADRs.",
-            "4. Copy approved legacy framework files under `docs/agent-office/archive/legacy-management/`.",
-            "5. Delete old files only after explicit user confirmation.",
+            "3. Summarize durable facts into `status.md`, `project-brief.md`, task packets, role cards, messages, handoffs, and ADRs.",
+            "4. Write `docs/agent-office/proposals/AGENTS.proposed.md` if root `AGENTS.md` already exists.",
+            "5. Copy approved legacy framework files under `docs/agent-office/archive/legacy-management/` for human review.",
+            "6. Move absorbed old framework originals only after explicit move approval.",
+            "7. Delete old files only after explicit user confirmation.",
         ]
     )
     return "\n".join(lines) + "\n"

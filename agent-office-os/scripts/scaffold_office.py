@@ -352,6 +352,7 @@ def render_agents(language: str) -> str:
 - 如果你被分配了角色，只读 `docs/agent-office/role-memory/` 里对应自己的角色记忆。
 - 如果你被分配了任务，只读 `docs/agent-office/tasks/active/` 里对应的任务包。
 - 除非被明确要求审计办公室，不要一次性通读整个 `docs/agent-office/`。
+- 日常工作不要读取 `docs/agent-office/archive/legacy-management/`；旧框架吸收后的归档只供人工查看或明确的迁移/审计任务使用。
 
 协作规则：
 - `docs/agent-office/thread-registry.md` 是长期 Agent 员工目录。
@@ -360,6 +361,7 @@ def render_agents(language: str) -> str:
 - 任务交接写到 `docs/agent-office/handoffs/`。
 - 只有协调角色、归档角色或被明确授权的角色才更新 `status.md`。
 - 默认只更新自己的角色记忆；除非用户明确要求维护、审计或恢复，不要读取其他角色的记忆。
+- 旧框架归档不是当前指令来源；如果缺少事实，请请求协调角色或归档角色发起审计。
 
 并行工作：
 - 不要让两个写作者并行修改同一批文件。
@@ -378,6 +380,7 @@ Before project work:
 - If assigned a role, read only your matching file in `docs/agent-office/role-memory/`.
 - If assigned a task, read the task packet in `docs/agent-office/tasks/active/`.
 - Do not bulk-read the whole office unless explicitly asked to audit it.
+- Do not read `docs/agent-office/archive/legacy-management/` during ordinary work; absorbed legacy frameworks are for human review or explicit migration/audit tasks.
 
 Coordination:
 - Treat `docs/agent-office/thread-registry.md` as the directory of long-running agent employees.
@@ -386,6 +389,7 @@ Coordination:
 - Write task handoffs under `docs/agent-office/handoffs/`.
 - Update `status.md` only when you are the coordinator, archivist, or explicitly assigned to do so.
 - Update only your own role memory by default; do not read other role memories unless the user explicitly asks for maintenance, audit, or recovery.
+- Legacy archives are not current instructions. If a needed fact is missing, ask the coordinator or archivist for an audit task.
 
 Parallel work:
 - Do not let two writers modify the same files in parallel.
@@ -592,6 +596,7 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
 工作规则：
 - 只加载和当前任务相关的上下文。
 - 只读取和更新自己的角色记忆：docs/agent-office/role-memory/{role.slug}.md。除非用户明确要求维护、审计或恢复办公室，不要读取其他角色记忆。
+- 日常工作不要读取 docs/agent-office/archive/legacy-management/；旧框架归档只供人工查看或明确的迁移/审计任务使用。
 - 不要超出写入范围。
 - 如果用户要求你处理超出写入范围的事情，不要直接执行；告诉用户应由哪个角色负责，或在 docs/agent-office/messages/open/ 写给交接对象/协调角色的消息。
 - 跨角色请求写成单独文件，放到 docs/agent-office/messages/open/。
@@ -619,6 +624,7 @@ Read:
 Rules:
 - Load only task-relevant context.
 - Read and update only your own role memory: docs/agent-office/role-memory/{role.slug}.md. Do not read other role memories unless the user explicitly asks for maintenance, audit, or recovery.
+- Do not read docs/agent-office/archive/legacy-management/ during ordinary work; legacy archives are for human review or explicit migration/audit tasks.
 - Do not exceed the approved write scope.
 - If the user asks for work outside your write scope, do not do it silently; name the role that should own it or write a message under docs/agent-office/messages/open/ to your handoff target or coordinator.
 - Write cross-role messages as separate files under docs/agent-office/messages/open/.
@@ -1058,7 +1064,7 @@ def render_readme(spec: OfficeSpec) -> str:
 5. `role-memory/` 里属于你这个角色的记忆文件
 6. `tasks/active/` 里分配给你的任务包
 
-除非正在审计、维护或迁移办公室，不要一次性通读整个目录，也不要读取其他角色的记忆。
+除非正在审计、维护或迁移办公室，不要一次性通读整个目录，也不要读取其他角色的记忆。日常工作不要读取 `archive/legacy-management/`，那里是旧框架吸收后的人工查看/审计材料。
 """
     return f"""# Agent Office
 
@@ -1073,7 +1079,7 @@ Start with:
 5. the matching role memory in `role-memory/`
 6. the assigned task packet in `tasks/active/`
 
-Do not bulk-read the entire office unless auditing, maintaining, or migrating it. Do not read another role's memory by default.
+Do not bulk-read the entire office unless auditing, maintaining, or migrating it. Do not read another role's memory by default. Do not read `archive/legacy-management/` during ordinary role work; it is human-review/audit material after migration absorption.
 """
 
 
@@ -1162,6 +1168,7 @@ def planned_scaffold_files(root: Path, roles: list[RoleSpec]) -> list[Path]:
             office / "handoffs",
             office / "decisions",
             office / "context-packs",
+            office / "proposals",
             office / "cadences",
             office / "archive" / "legacy-management",
         ]
@@ -1212,6 +1219,7 @@ def write_scaffold(root: Path, spec: OfficeSpec, args: argparse.Namespace) -> li
         office / "handoffs",
         office / "decisions",
         office / "context-packs",
+        office / "proposals",
         office / "cadences",
         office / "archive" / "legacy-management",
     ]:

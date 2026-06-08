@@ -72,24 +72,28 @@ git push -u origin main
 ## 6. Tag a Release
 
 ```bash
-git tag v0.1.2
-git push origin v0.1.2
+git tag v0.1.3
+git push origin v0.1.3
 ```
 
-In GitHub, create a release for `v0.1.2`.
+In GitHub, create a release for `v0.1.3`.
 
 Suggested release notes:
 
 ```md
-# Agent Office OS v0.1.2
+# Agent Office OS v0.1.3
 
-First-use experience update for Agent Office OS.
+Migration takeover hardening for Agent Office OS.
 
 Includes:
 - lightweight chat consultation before scaffolding
 - read-only project inference before asking questions
 - explicit approval gate before file creation
 - dynamic role generation from the actual project context
+- existing `AGENTS.md` preservation with `docs/agent-office/proposals/AGENTS.proposed.md`
+- absorption maps for old planning, rule, task, and `vibe/` project-memory files
+- human-review-only legacy archive boundary for ordinary role workers
+- optional `--move-originals` with separate explicit move approval
 - Chinese document and role prompt generation
 - prompt blocks that are ready to paste into new agent windows
 - project office scaffolding

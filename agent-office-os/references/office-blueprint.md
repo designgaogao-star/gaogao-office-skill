@@ -59,6 +59,7 @@ docs/agent-office/
   context-packs/
     project-brief.md
     thread-launch-prompts.md
+  proposals/
   cadences/
   archive/
     legacy-management/
@@ -95,6 +96,8 @@ Tell agent workers to load:
 7. files named by the task packet
 
 Do not read the whole office unless doing an audit. Do not read another role's memory unless the user explicitly asks for office maintenance, audit, or recovery.
+
+Do not read `docs/agent-office/archive/legacy-management/` during ordinary role work. That folder is for human review and explicit migration/audit tasks after old frameworks have been absorbed into current office docs.
 
 ## Role Memory
 

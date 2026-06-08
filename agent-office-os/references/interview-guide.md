@@ -35,7 +35,7 @@ Ask after inspecting the project:
 5. Are any docs sensitive and unsuitable for migration summaries?
 6. Who should be the first long-running agent roles after migration?
 
-Recommended default: copy old framework files under `docs/agent-office/archive/legacy-management/` and delete originals only after explicit confirmation.
+Recommended default: absorb durable facts into the new office, copy old framework files under `docs/agent-office/archive/legacy-management/`, move originals only after separate explicit approval, and delete originals only after an exact deletion confirmation.
 
 ## Maintenance Questions
 

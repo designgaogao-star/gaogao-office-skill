@@ -26,7 +26,7 @@ Say, in the user's language:
 3. The next step is a read-only look at the project folder.
 4. It will ask a few short numbered questions if needed.
 5. It will show an office configuration plan before creating files.
-6. It will write files only after explicit approval. Existing files are skipped by default; confirmed overwrites create backups; migration archives copy files before any separate deletion approval. If the user is unhappy with a change, they can ask for a restore plan based on those backups or archive copies.
+6. It will write files only after explicit approval. Existing files are skipped by default; existing `AGENTS.md` gets a proposed replacement first; confirmed overwrites create backups; migration archives copy files before any separate move or deletion approval. If the user is unhappy with a change, they can ask for a restore plan based on those backups or archive copies.
 7. Each approved role gets its own small role memory file so a replacement chat window can continue the same role without rereading old chats.
 
 Do not require Plan Mode. If the user asks for a highly formal planning pass, say Plan Mode is optional.
@@ -152,6 +152,8 @@ Keep human instructions outside fenced code blocks:
 The fenced `text` block must contain only the message to send to the new role thread. It must not contain labels such as "new window", "suggested title", "copy this", or "paste below".
 
 Each role prompt should tell the role to read its own `docs/agent-office/role-memory/{role-slug}.md`, avoid other role memory files by default, and update its own memory after significant work.
+
+Each role prompt should also tell ordinary worker roles not to read `docs/agent-office/archive/legacy-management/` unless the user explicitly assigns migration, audit, or recovery work.
 
 ## Optional Codex Threads
 

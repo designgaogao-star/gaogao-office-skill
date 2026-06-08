@@ -12,6 +12,8 @@ These are document-shape templates, not a fixed staffing plan. Replace role plac
 - `communication.md`
 - `context-packs/project-brief.md`
 - `context-packs/thread-launch-prompts.md`
+- `proposals/AGENTS.proposed.md`
+- `migration-report.md`
 - role card
 - role memory
 - task packet
@@ -34,6 +36,7 @@ Before project work:
 - If assigned a role, read only that role's memory file in `docs/agent-office/role-memory/`.
 - If assigned a task, read the task packet in `docs/agent-office/tasks/active/`.
 - Do not bulk-read the whole office unless explicitly asked to audit it.
+- Do not read `docs/agent-office/archive/legacy-management/` during ordinary work; it is human-review/audit material after migration.
 
 Coordination:
 - Treat `docs/agent-office/thread-registry.md` as the directory of long-running agent employees.
@@ -42,6 +45,7 @@ Coordination:
 - Write task handoffs under `docs/agent-office/handoffs/`.
 - Update `status.md` only when you are the coordinator, archivist, owner, or explicitly assigned to do so.
 - Update only your own role memory file unless explicitly asked to maintain or audit the office.
+- Do not use archived legacy frameworks as live instructions after they have been absorbed into the office.
 
 Parallel work:
 - Do not let two writers modify the same files in parallel.
@@ -182,6 +186,7 @@ Rules:
 - Current assignment: {task}
 - Write scope: {write_scope}
 - Read and update only docs/agent-office/role-memory/{role}.md; do not read other role memory files unless the user explicitly asks for maintenance, audit, or recovery.
+- Do not read docs/agent-office/archive/legacy-management/ during ordinary work; ask for a migration/audit task if a missing fact seems to require the old framework.
 - If the user asks for work outside your write scope, do not do it silently; name the role that should own it or write a message under docs/agent-office/messages/open/ to your handoff target or coordinator.
 - Write cross-role messages as separate files under docs/agent-office/messages/open/.
 - End significant work with a handoff under docs/agent-office/handoffs/.
@@ -189,6 +194,123 @@ Rules:
 - Do not silently modify unrelated project-management files.
 ```
 ````
+
+## proposals/AGENTS.proposed.md
+
+Use this during migration when root `AGENTS.md` already exists. Do not overwrite the root file until the user approves the exact replacement.
+
+```md
+# AGENTS.md
+
+## Agent Office Protocol
+
+This repository uses `docs/agent-office/` as the project office.
+
+Before project work:
+- Read `docs/agent-office/status.md`.
+- If assigned a role, read only the matching role card in `docs/agent-office/roles/`.
+- If assigned a role, read only that role's memory in `docs/agent-office/role-memory/`.
+- If assigned a task, read the task packet in `docs/agent-office/tasks/active/`.
+- Do not bulk-read the whole office unless explicitly asked to audit it.
+- Do not read `docs/agent-office/archive/legacy-management/` during ordinary work.
+
+Preserved project rules:
+- {build_test_or_safety_rule}
+
+Coordination:
+- Cross-role messages go under `docs/agent-office/messages/open/`.
+- Handoffs go under `docs/agent-office/handoffs/`.
+- Only the coordinator, archivist, owner, or explicitly assigned role updates `status.md`.
+- A role updates only its own role memory by default.
+
+Parallel work:
+- Do not let two writers modify the same files in parallel.
+- Worktree changes are isolated proposals until integrated.
+- End every task with what changed, what was verified, what remains, and who should pick it up next.
+```
+
+## migration-report.md
+
+```md
+# Agent Office Migration Report
+
+Project: `{project_name}`
+Status: discovery-only until approved
+
+## Candidates
+
+| Path | Kind | Score | Reasons |
+|---|---|---:|---|
+| `{source_path}` | {kind} | {score} | {reason} |
+
+## Likely Authoritative Files
+
+| Path | Kind | Score | Reasons |
+|---|---|---:|---|
+| `{source_path}` | {kind} | {score} | {reason} |
+
+## Stale Or Conflicting Files
+
+No confirmed stale files yet.
+
+## Active Tasks Found
+
+No active tasks confirmed yet.
+
+## Decisions Found
+
+No decisions confirmed yet.
+
+## Absorption Map
+
+| Source | Durable facts to absorb | New office destination | Status |
+|---|---|---|---|
+| `{source_path}` | {summary} | `docs/agent-office/status.md` | proposed |
+
+## Proposed AGENTS Replacement
+
+Draft path: `docs/agent-office/proposals/AGENTS.proposed.md`
+Root `AGENTS.md` stays unchanged until the user manually copies the draft or explicitly approves replacement.
+
+## Recommended Roles
+
+- Role-design hints only. Final roles must come from the approved project plan.
+
+## Proposed Archive List
+
+Archive only after the user approves this exact list.
+
+| Source | Proposed Archive Destination | Reason |
+|---|---|---|
+| `{source_path}` | `docs/agent-office/archive/legacy-management/{date}/{source_path}` | content absorbed |
+
+## Proposed Move List
+
+Move originals only after absorption and explicit move approval.
+
+No files are proposed for moving yet.
+
+## Proposed Delete List
+
+Deletion is not the default.
+
+No files are proposed for deletion yet.
+
+## User Questions
+
+- Which files are authoritative project truth?
+- Should `docs/agent-office/proposals/AGENTS.proposed.md` replace root `AGENTS.md`?
+- Should absorbed old framework files be copied only, or moved into the legacy archive after approval?
+
+## User Approval Record
+
+Approved archive list: NO
+Approved AGENTS replacement: NO
+Approved legacy move list: NO
+Approved deletion list: NO
+Approved by: <pending>
+Approval date: <pending>
+```
 
 ## role card
 
