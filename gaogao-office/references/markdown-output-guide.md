@@ -130,7 +130,7 @@ What is this project mainly trying to do? One casual sentence is enough; I’ll 
 
 ## Organization Proposal Shape
 
-Use a short explanation plus a table:
+Use a short explanation plus a table. Keep the first proposal to four blocks at most: project judgment, recommended mode, team/boundaries, and A/B/C/D.
 
 ````md
 **接管方案**
@@ -145,10 +145,19 @@ Use a short explanation plus a table:
 ```
 
 A. 按推荐团队正式接管
-创建 Agent Office、应用 AGENTS.md、邀请员工入职。
+创建 `Agent Office/`，按方案应用 `AGENTS.md`；如需覆盖，会先备份。员工随后入职。
+
+B. 单窗口接管
+只让当前项目总管窗口负责，不邀请其他员工。
+
+C. 调整团队
+你指定员工数量或岗位，我来分配职责、边界和入职提示。
+
+D. 暂不接管
+不创建文件，不修改项目。
 ````
 
-English option shape:
+English:
 
 ````md
 **Takeover Proposal**
@@ -164,6 +173,15 @@ Reply with one letter: A / B / C / D
 
 A. Take over with the recommended team
 Create `Agent Office/`, apply `AGENTS.md` with the agreed backup behavior, and onboard employees.
+
+B. Single-window takeover
+Use only the current project-manager chat; do not invite employee chats.
+
+C. Adjust the team
+You specify employee count or job titles; I will assign responsibilities, boundaries, and onboarding prompts.
+
+D. Do not take over yet
+Do not create files or modify the project.
 ````
 
 ## Completion Shapes
