@@ -72,16 +72,16 @@ git push -u origin main
 ## 6. Tag a Release
 
 ```bash
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
-In GitHub, create a release for `v0.1.1`.
+In GitHub, create a release for `v0.1.2`.
 
 Suggested release notes:
 
 ```md
-# Agent Office OS v0.1.1
+# Agent Office OS v0.1.2
 
 First-use experience update for Agent Office OS.
 
@@ -107,6 +107,8 @@ After publishing, users can paste this into Codex chat:
 ```text
 $skill-installer https://github.com/<owner>/agent-office-os-skill/tree/main/agent-office-os
 ```
+
+After installation or update, restart Codex so the skill is reloaded.
 
 ## 8. Maintenance
 

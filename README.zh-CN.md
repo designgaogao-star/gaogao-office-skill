@@ -2,9 +2,15 @@
 
 `agent-office-os` 是一个 agent-readable skill，用来给大型项目建立长期、可持续的 Agent 项目办公室。
 
-它的目标不是制造一堆重文档，而是让 Agent 每次只读最小上下文，同时知道项目状态在哪里、谁负责、该改哪些文件、做完交给谁。
+它的目标不是制造一堆重文档，而是让 Agent 每次只读最小上下文，同时知道项目状态在哪里、谁负责、该改哪些文件、做完交给谁，以及这个角色自己跨窗口应该记住什么。
 
 这个包针对 Codex 安装做了适配，但核心流程是普通 Markdown 加 Python 辅助脚本。其他编码 Agent 只要能读取 `agent-office-os/SKILL.md` 和生成的 `docs/agent-office/`，也可以按同一套办公室流程使用。
+
+## 什么时候适合用
+
+适合用在有一个固定项目文件夹、会持续推进很久的工作：产品从 0 到 1、品牌长期策划、软件项目、研究型项目、旧项目接管整理等。
+
+不适合用在一次性小问题、互不相关的多任务聊天、没有共同项目文件夹的临时工作。它启动时会比普通聊天多消耗一些 token，省的是长期项目在上下文整理、多个角色窗口、隔一段时间回来继续做时反复重新理解项目的成本。
 
 ## 它能做什么
 
@@ -14,6 +20,7 @@
 - 创建短小的 `AGENTS.md`，作为 Agent 自动加载入口。
 - 把项目类型、风险等级、第一里程碑和动态角色决策写入 `context-packs/project-brief.md`。
 - 按真实项目情况创建角色卡，不套固定岗位模板。
+- 给每个已确认角色创建一份协议私有的 `role-memory/{role}.md`，用于角色换对话框后的长期接续。
 - 创建 task、message、handoff、ADR 模板。
 - 创建 `communication.md`，让不同角色线程知道如何开消息、回复、关闭和交接工作。
 - 审计旧项目里已有的计划、规则、任务、架构和上下文文档。
@@ -86,7 +93,7 @@ python agent-office-os/scripts/validate_office.py --project-root ./demo-project 
 python agent-office-os/scripts/scaffold_office.py --project-root ./demo-project --config ./office-plan.json
 ```
 
-脚手架生成后，先看 `demo-project/docs/agent-office/context-packs/project-brief.md` 和 `demo-project/docs/agent-office/communication.md`，再使用当前聊天框输出的提示词，或打开 `demo-project/docs/agent-office/context-packs/thread-launch-prompts.md`，按里面的提示创建长期 Agent 对话框。每创建一个，就把返回的 thread ID 记录到 `docs/agent-office/thread-registry.md`。
+脚手架生成后，先看 `demo-project/docs/agent-office/context-packs/project-brief.md` 和 `demo-project/docs/agent-office/communication.md`，再使用当前聊天框输出的提示词，或打开 `demo-project/docs/agent-office/context-packs/thread-launch-prompts.md`，按里面的提示创建长期 Agent 对话框。每个角色提示词只读取自己的 `docs/agent-office/role-memory/{role}.md`；每创建一个对话框，就把返回的 thread ID 记录到 `docs/agent-office/thread-registry.md`。
 
 旧项目迁移报告审查完成，并且在 `User Approval Record` 里写入 `Approved archive list: YES` 后，可以这样复制已批准的旧框架文件：
 
@@ -98,7 +105,7 @@ python agent-office-os/scripts/archive_legacy.py --project-root ./old-project
 安全默认值：
 
 - `scaffold_office.py` 不删除文件，默认不覆盖已有文件。
-- `scaffold_office.py` 只有加 `--create-root` 才会创建不存在的项目根目录，覆盖已有文件时必须同时使用 `--force` 和 `--confirm-overwrite`。
+- `scaffold_office.py` 只有加 `--create-root` 才会创建不存在的项目根目录，覆盖已有文件时必须同时使用 `--force` 和 `--confirm-overwrite`；确认覆盖会先创建 `.bak` 备份。
 - `scaffold_office.py` 会拒绝通过符号链接或 junction 解析到项目根目录之外的路径。
 - `inspect_office.py` 默认只读扫描；如果指定 `--output`，输出路径必须在项目根目录内；链接路径会被跳过，不读取外部内容。
 - `archive_legacy.py` 只复制已经明确批准的归档清单，会拒绝链接路径或疑似敏感路径，并且永远不删除原文件。

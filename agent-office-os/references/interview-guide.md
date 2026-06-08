@@ -15,11 +15,11 @@ Ask these when the project is new, empty, or unclear. Use at most 3-5 numbered q
 When project clues are visible, start by confirming the inference instead of asking from zero:
 
 ```text
-I think this is a portfolio site for showcasing AIGC projects and services. Is that right?
+I think this is a {project kind} for {likely goal}. Is that right?
 If yes, answer these:
-1. Who is the intended audience?
+1. Who is the intended audience or primary user?
 2. What is the first milestone?
-3. Which work matters most next: content, visual design, implementation, review, or release?
+3. Which work matters most next?
 ```
 
 Do not ask the user to pick from a fixed role list. The model should infer the smallest useful role roster from the project and explain it.

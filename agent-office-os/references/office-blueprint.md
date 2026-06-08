@@ -8,6 +8,7 @@ Use this reference when creating or maintaining the project office.
 - Default Directory
 - Context Budgets
 - Loading Order
+- Role Memory
 - Object States
 - Parallel Work Rules
 - Completion Gate
@@ -19,6 +20,7 @@ Agent Office OS is a thin-kernel project management system for large agent proje
 - `AGENTS.md` is the automatic entrypoint and must stay short.
 - `docs/agent-office/` is the canonical project office.
 - Long-running agent threads act as role-based employees.
+- Role memory files keep per-role continuity when a chat window is replaced.
 - Subagents are temporary investigators, not permanent employees.
 - Worktrees isolate parallel implementation but are not realtime shared offices.
 - Skills contain reusable workflows; project docs contain project truth.
@@ -31,6 +33,7 @@ The office must help an agent answer these questions quickly:
 4. What files may be changed?
 5. Who receives the handoff?
 6. Where should another role leave an answer, blocker, or follow-up?
+7. What should this role remember next time without rereading old chats?
 
 ## Default Directory
 
@@ -43,6 +46,7 @@ docs/agent-office/
   communication.md
   operating-model.md
   roles/
+  role-memory/
   tasks/
     active/
     done/
@@ -70,6 +74,7 @@ Use these targets to keep the office sustainable:
 | `status.md` | 800 words | 1,200 words |
 | `communication.md` | 500 words | 900 words |
 | role card | 400 words | 600 words |
+| role memory | 450 words | 800 words |
 | task packet | 700 words | 1,000 words |
 | handoff | 500 words | 700 words |
 | message | 250 words | 400 words |
@@ -85,10 +90,22 @@ Tell agent workers to load:
 2. `docs/agent-office/status.md`
 3. `docs/agent-office/communication.md` when writing messages or handoffs
 4. matching role card
-5. current task packet
-6. files named by the task packet
+5. matching `docs/agent-office/role-memory/{role-slug}.md`
+6. current task packet
+7. files named by the task packet
 
-Do not read the whole office unless doing an audit.
+Do not read the whole office unless doing an audit. Do not read another role's memory unless the user explicitly asks for office maintenance, audit, or recovery.
+
+## Role Memory
+
+Role memory is private by protocol, not cryptographic security. Use it to preserve short durable continuity for one role across chat windows:
+
+- current assumptions the role should keep
+- user preferences relevant to that role
+- unresolved role-specific risks or next checks
+- links to task ids, handoffs, messages, or ADRs
+
+Do not paste transcripts, large summaries, secrets, or facts that belong in shared status, task packets, messages, handoffs, or ADRs.
 
 ## Object States
 
@@ -122,5 +139,6 @@ Before a task is done, verify:
 - requested checks were run or explicitly skipped with reason
 - risks are documented
 - handoff exists
+- the role's own memory is updated when significant continuity changed
 - ADR exists when a durable decision was made
-- `status.md` is updated when PM/Archivist owns the update
+- `status.md` is updated when the owner, coordinator, or archivist owns the update

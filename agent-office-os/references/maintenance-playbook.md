@@ -17,6 +17,7 @@ Include:
 - done tasks that should move to `tasks/archived/`
 - missing handoffs for completed work
 - thread registry entries that are idle, waiting, retired, or missing thread IDs
+- role memory files that are missing, over budget, stale, or referenced by the wrong role
 - ADRs that appear superseded but are not marked
 - recommended cleanup actions requiring approval
 
@@ -27,6 +28,7 @@ Include:
 - Retire a thread only after writing or locating a retirement handoff.
 - Mark an ADR `superseded` only when a newer ADR or explicit decision replaces it.
 - Summarize long files before moving detail into archive.
+- Treat role memory as protocol-private. For ordinary maintenance, check existence, size, owner path, and freshness; read another role's memory only when the user explicitly asks for office maintenance, audit, or recovery.
 - Do not delete office history unless the user approves an exact deletion list.
 
 ## Suggested Maintenance States
@@ -73,5 +75,6 @@ Decisions:
 5. Move done tasks to `tasks/done/`.
 6. Move old done tasks to `tasks/archived/`.
 7. Update thread registry states.
-8. Mark superseded ADRs.
-9. Produce a handoff describing cleanup and remaining risks.
+8. Report missing or oversized role memory files to the owning role, or update them only when explicitly authorized.
+9. Mark superseded ADRs.
+10. Produce a handoff describing cleanup and remaining risks.

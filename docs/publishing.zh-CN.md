@@ -72,16 +72,16 @@ git push -u origin main
 ## 6. 打版本标签
 
 ```bash
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
-然后在 GitHub 页面创建 release，选择 `v0.1.1`。
+然后在 GitHub 页面创建 release，选择 `v0.1.2`。
 
 建议 release notes：
 
 ```md
-# Agent Office OS v0.1.1
+# Agent Office OS v0.1.2
 
 Agent Office OS 首次使用体验更新。
 
@@ -107,6 +107,8 @@ Agent Office OS 首次使用体验更新。
 ```text
 $skill-installer https://github.com/<owner>/agent-office-os-skill/tree/main/agent-office-os
 ```
+
+安装或更新后，重启 Codex，让新版本 skill 重新加载。
 
 ## 8. 以后怎么更新
 

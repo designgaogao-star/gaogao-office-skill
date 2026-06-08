@@ -33,6 +33,7 @@ REQUIRED_DIRS = [
     "docs/agent-office/context-packs",
     "docs/agent-office/cadences",
     "docs/agent-office/archive/legacy-management",
+    "docs/agent-office/role-memory",
 ]
 
 BUDGETS = {
@@ -49,6 +50,7 @@ GLOB_BUDGETS = {
     "docs/agent-office/messages/closed/*.md": 400,
     "docs/agent-office/handoffs/*.md": 700,
     "docs/agent-office/decisions/*.md": 1200,
+    "docs/agent-office/role-memory/*.md": 800,
 }
 
 
@@ -269,6 +271,7 @@ def validate(root: Path, stale_days: int) -> list[Finding]:
             ["project-brief.md"],
             ["thread-registry.md"],
             ["communication.md"],
+            ["role-memory"],
             ["messages/open"],
             ["handoffs"],
         ]
@@ -360,6 +363,30 @@ def validate(root: Path, stale_days: int) -> list[Finding]:
         roles = [p for p in roles_dir.glob("*.md") if p.is_file()]
         if not roles:
             findings.append(Finding("error", "docs/agent-office/roles", "no role cards found"))
+        memory_dir = root / "docs/agent-office/role-memory"
+        launch_text = read_text(launch_prompts) if launch_prompts.exists() and not has_link_in_path(root, launch_prompts) else ""
+        for role in roles:
+            role_rel = str(role.relative_to(root)).replace("\\", "/")
+            if has_link_in_path(root, role):
+                findings.append(Finding("warning", role_rel, "skipped linked role card during role memory check"))
+                continue
+            memory = memory_dir / role.name
+            memory_rel = f"docs/agent-office/role-memory/{role.name}"
+            if memory.exists() and has_link_in_path(root, memory):
+                findings.append(Finding("error", memory_rel, "role memory path contains a symlink or junction"))
+            elif not memory.is_file():
+                findings.append(Finding("error", memory_rel, "matching role memory file is missing"))
+            role_text = read_text(role)
+            if "role-memory" not in role_text:
+                findings.append(Finding("warning", role_rel, "role card should mention the role's own memory file"))
+            if launch_text and memory_rel not in launch_text:
+                findings.append(
+                    Finding(
+                        "warning",
+                        "docs/agent-office/context-packs/thread-launch-prompts.md",
+                        f"thread launch prompts should mention `{memory_rel}`",
+                    )
+                )
 
     active_dir = root / "docs/agent-office/tasks/active"
     if active_dir.is_dir() and not has_link_in_path(root, active_dir):

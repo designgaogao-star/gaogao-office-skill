@@ -2,9 +2,15 @@
 
 `agent-office-os` is an agent-readable skill for creating, migrating, and maintaining a durable project office for large agent-assisted projects.
 
-It helps a project keep agent context small while still supporting long-running work, role-based threads, task packets, handoffs, messages, ADRs, and safe migration from older planning frameworks.
+It helps a project keep agent context small while still supporting long-running work, role-based threads, per-role memory, task packets, handoffs, messages, ADRs, and safe migration from older planning frameworks.
 
 The package is optimized for Codex installation, but the core workflow is plain Markdown plus Python helper scripts. Other coding agents can use it by reading `agent-office-os/SKILL.md` and following the generated `docs/agent-office/` office.
+
+## When To Use It
+
+Use Agent Office OS for long-running work anchored in one durable project folder: product planning, brand strategy, software builds, research-heavy projects, or old projects that need cleanup and continuity.
+
+Do not use it for a quick standalone question or unrelated one-off tasks in separate chats. The setup has an upfront token cost; the payoff is lower repeated reorientation when a project runs for weeks or months, spans multiple role windows, or survives context compaction.
 
 ## What It Does
 
@@ -14,6 +20,7 @@ The package is optimized for Codex installation, but the core workflow is plain 
 - Writes a short `AGENTS.md` entrypoint.
 - Records project type, risk level, first milestone, and dynamic role decisions in `context-packs/project-brief.md`.
 - Creates role cards based on the actual project rather than a fixed template.
+- Creates one protocol-private `role-memory/{role}.md` file per approved role so replacement chat windows can continue the same role.
 - Creates task, message, handoff, and decision workflows.
 - Creates `communication.md` so role threads know how to open, answer, close, and hand off cross-role work.
 - Audits old project-management files before migration.
@@ -88,7 +95,7 @@ For dynamic roles, save an approved `office-plan.json` and run:
 python agent-office-os/scripts/scaffold_office.py --project-root ./demo-project --config ./office-plan.json
 ```
 
-After scaffolding, review `demo-project/docs/agent-office/context-packs/project-brief.md`, `demo-project/docs/agent-office/communication.md`, then use the prompts printed in chat or saved in `demo-project/docs/agent-office/context-packs/thread-launch-prompts.md` to create the approved long-running agent threads. Record each returned thread ID in `docs/agent-office/thread-registry.md`.
+After scaffolding, review `demo-project/docs/agent-office/context-packs/project-brief.md`, `demo-project/docs/agent-office/communication.md`, then use the prompts printed in chat or saved in `demo-project/docs/agent-office/context-packs/thread-launch-prompts.md` to create the approved long-running agent threads. Each role prompt reads only its own `docs/agent-office/role-memory/{role}.md`; record each returned thread ID in `docs/agent-office/thread-registry.md`.
 
 After a migration report is reviewed and `Approved archive list: YES` is recorded in `User Approval Record`, copy approved legacy files with:
 
@@ -100,7 +107,7 @@ python agent-office-os/scripts/archive_legacy.py --project-root ./old-project
 Safety defaults:
 
 - `scaffold_office.py` never deletes files and skips existing files unless `--force` is provided.
-- `scaffold_office.py` requires `--create-root` to create a missing project root and requires `--confirm-overwrite` with `--force`.
+- `scaffold_office.py` requires `--create-root` to create a missing project root and requires `--confirm-overwrite` with `--force`; confirmed overwrites create `.bak` backups.
 - `scaffold_office.py` refuses linked paths that would resolve outside the selected project root.
 - `inspect_office.py` is read-only unless you pass `--output`, output must stay inside the project root, and linked paths are skipped without reading external content.
 - `archive_legacy.py` copies only an explicitly approved archive list, refuses linked or sensitive-looking paths, and never deletes originals.

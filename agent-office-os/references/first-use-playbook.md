@@ -5,9 +5,11 @@ Use this playbook when Agent Office OS is invoked in a project that does not alr
 ## Contents
 
 - [Opening Move](#opening-move)
+- [Suitability Check](#suitability-check)
 - [Read-Only Project Guess](#read-only-project-guess)
 - [Lightweight Interview](#lightweight-interview)
 - [Dynamic Role Design](#dynamic-role-design)
+- [Feedback Adaptation](#feedback-adaptation)
 - [Approval Gate](#approval-gate)
 - [Role Prompt Output](#role-prompt-output)
 - [Optional Codex Threads](#optional-codex-threads)
@@ -20,12 +22,30 @@ Start in chat. Do not scaffold yet.
 Say, in the user's language:
 
 1. Agent Office OS will help design a durable project office for long-running agent work.
-2. The next step is a read-only look at the project folder.
-3. It will ask a few short numbered questions if needed.
-4. It will show an office configuration plan before creating files.
-5. It will write files only after explicit approval.
+2. It is best for a real project folder that will be used over time; a short one-off task is cheaper as a normal chat.
+3. The next step is a read-only look at the project folder.
+4. It will ask a few short numbered questions if needed.
+5. It will show an office configuration plan before creating files.
+6. It will write files only after explicit approval. Existing files are skipped by default; confirmed overwrites create backups; migration archives copy files before any separate deletion approval. If the user is unhappy with a change, they can ask for a restore plan based on those backups or archive copies.
+7. Each approved role gets its own small role memory file so a replacement chat window can continue the same role without rereading old chats.
 
 Do not require Plan Mode. If the user asks for a highly formal planning pass, say Plan Mode is optional.
+
+## Suitability Check
+
+Before a full interview, decide from the user's request and lightweight folder clues whether Agent Office OS fits the job.
+
+Likely overkill:
+
+- a quick standalone question
+- an isolated file edit
+- unrelated tasks that do not share one project memory
+- no durable project folder
+- a user who wants the cheapest possible short chat
+
+If it looks like overkill, say in one or two sentences that ordinary chat is likely cheaper and Agent Office OS is only worth it if the user wants a durable project office. Do not scaffold unless the user chooses the durable office path.
+
+If the work appears long-running, folder-anchored, migration-heavy, or likely to involve multiple role windows over time, continue to the read-only project guess.
 
 ## Read-Only Project Guess
 
@@ -40,8 +60,10 @@ Inspect only lightweight clues:
 
 Then either:
 
-- confirm the guess: "I think this is a portfolio website for showcasing AIGC work and services. Is that right?"
+- confirm the guess using the actual evidence: "I think this is a {project kind} for {likely goal}. Is that right?"
 - or ask: "I could not infer enough from the folder. What does this project do, and what is its main deliverable?"
+
+Do not write `migration-report.md` or run `inspect_office.py --output` during first-use consultation. Keep findings in chat until the user explicitly approves file creation.
 
 ## Lightweight Interview
 
@@ -69,8 +91,18 @@ Create roles by reasoning from the actual project, not from a fixed project-type
 - Do not let multiple writer roles own the same file scope by default.
 - Defer roles that are plausible later but not needed for the first milestone.
 - Every active role must have a current assignment, default reading material, write boundary, and handoff target.
+- Every active role gets one private-by-protocol memory file under `docs/agent-office/role-memory/`.
 - Prefer one coordinating role when more than one role can write office docs.
 - Prefer one implementation owner per active task.
+
+Before proposing the roster, run a role compression check:
+
+- Could one role handle this first milestone without confusion?
+- Do any proposed roles share the same write scope or output?
+- Is a role useful now, or merely plausible later?
+- Would the user understand why each separate window exists?
+
+Merge or defer roles that fail this check.
 
 The plan should include:
 
@@ -79,8 +111,15 @@ The plan should include:
 - why each role exists now
 - why likely-but-not-now roles are deferred
 - each role's write scope
+- each role's memory file and read/write boundary
 - first task and reviewer
 - whether worktree mode is useful
+
+## Feedback Adaptation
+
+If the user says the roster is too large, too fixed, too generic, or uses the wrong names, revise the office plan before scaffolding.
+
+Use the user's correction as project evidence. Prefer renaming, merging, or deferring roles over defending the first plan. After revising, show the new role list, changed write scopes, and any tradeoff, then ask for approval again.
 
 ## Approval Gate
 
@@ -112,6 +151,8 @@ Keep human instructions outside fenced code blocks:
 
 The fenced `text` block must contain only the message to send to the new role thread. It must not contain labels such as "new window", "suggested title", "copy this", or "paste below".
 
+Each role prompt should tell the role to read its own `docs/agent-office/role-memory/{role-slug}.md`, avoid other role memory files by default, and update its own memory after significant work.
+
 ## Optional Codex Threads
 
 Manual prompt copy is the default.
@@ -128,7 +169,7 @@ After creating threads, write the returned thread IDs into `docs/agent-office/th
 
 Follow the user's language for chat, generated docs, and role prompts.
 
-For Chinese users, generate Chinese `AGENTS.md`, `status.md`, `communication.md`, `project-brief.md`, role cards, task packets, and launch prompts.
+For Chinese users, generate Chinese `AGENTS.md`, `status.md`, `communication.md`, `project-brief.md`, role cards, role memory, task packets, and launch prompts.
 
 Keep these machine-facing values stable:
 

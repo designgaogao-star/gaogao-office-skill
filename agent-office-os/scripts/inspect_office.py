@@ -309,6 +309,31 @@ def render_path_table(candidates: list[Candidate], archive_stamp: str | None = N
     return lines
 
 
+def render_role_hints(
+    *,
+    active_tasks: list[Candidate],
+    decisions: list[Candidate],
+    stale_or_conflicting: list[Candidate],
+    sensitive: list[Candidate],
+) -> list[str]:
+    lines = [
+        "These are role-design hints, not an approved standing roster. Choose final roles dynamically after the user confirms the current milestone, write scopes, and handoff targets.",
+        "",
+        "- Migration archivist: preserve provenance and archive only the exact legacy files the user approves.",
+        "- Office steward: reconcile old agent instructions into a short project entrypoint and office plan.",
+    ]
+    if active_tasks:
+        lines.append("- Task steward: convert confirmed active work into task packets without treating stale tasks as truth.")
+    if decisions:
+        lines.append("- Decision steward: migrate accepted decisions into ADRs or decision notes after user review.")
+    if stale_or_conflicting:
+        lines.append("- Conflict resolver: mark conflicting or stale management files as questions until the user chooses the source of truth.")
+    if sensitive:
+        lines.append("- Sensitive-file checker: keep skipped secret-like files out of office docs and archive plans.")
+    lines.append("- Domain owner roles: create only after the user confirms which current deliverables need separate long-running windows.")
+    return lines
+
+
 def render_markdown(root: Path, candidates: list[Candidate]) -> str:
     sensitive = [item for item in candidates if item.kind == "sensitive-skipped"]
     linked = [item for item in candidates if item.kind == "linked-skipped"]
@@ -328,11 +353,6 @@ def render_markdown(root: Path, candidates: list[Candidate]) -> str:
     ]
     active_tasks = [item for item in migratable if item.kind == "task-tracking"]
     decisions = [item for item in migratable if item.kind == "decision-record"]
-    roles = ["PM", "Architect", "Builder", "Reviewer", "Archivist"]
-    if active_tasks:
-        roles.append("QA")
-    if sensitive:
-        roles.append("Security")
     archive_stamp = date.today().isoformat()
 
     lines = [
@@ -393,8 +413,14 @@ def render_markdown(root: Path, candidates: list[Candidate]) -> str:
             "",
         ]
     )
-    for role in roles:
-        lines.append(f"- {role}")
+    lines.extend(
+        render_role_hints(
+            active_tasks=active_tasks,
+            decisions=decisions,
+            stale_or_conflicting=conflicts,
+            sensitive=sensitive,
+        )
+    )
     lines.extend(
         [
             "",

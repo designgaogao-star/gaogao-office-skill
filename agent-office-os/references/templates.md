@@ -2,6 +2,8 @@
 
 Use these templates when scaffolding the office. Keep generated files concise and project-specific.
 
+These are document-shape templates, not a fixed staffing plan. Replace role placeholders with the approved dynamic roles for the actual project.
+
 ## Table of Contents
 
 - `AGENTS.md`
@@ -11,6 +13,7 @@ Use these templates when scaffolding the office. Keep generated files concise an
 - `context-packs/project-brief.md`
 - `context-packs/thread-launch-prompts.md`
 - role card
+- role memory
 - task packet
 - message
 - handoff
@@ -28,6 +31,7 @@ This repository uses `docs/agent-office/` as the project office.
 Before project work:
 - Read `docs/agent-office/status.md`.
 - If assigned a role, read only the matching file in `docs/agent-office/roles/`.
+- If assigned a role, read only that role's memory file in `docs/agent-office/role-memory/`.
 - If assigned a task, read the task packet in `docs/agent-office/tasks/active/`.
 - Do not bulk-read the whole office unless explicitly asked to audit it.
 
@@ -36,11 +40,12 @@ Coordination:
 - For message and handoff format, read `docs/agent-office/communication.md`.
 - Write cross-role messages as separate files under `docs/agent-office/messages/open/`.
 - Write task handoffs under `docs/agent-office/handoffs/`.
-- Update `status.md` only when you are PM, Archivist, or explicitly assigned to do so.
+- Update `status.md` only when you are the coordinator, archivist, owner, or explicitly assigned to do so.
+- Update only your own role memory file unless explicitly asked to maintain or audit the office.
 
 Parallel work:
 - Do not let two writers modify the same files in parallel.
-- Worktree changes are isolated proposals until integrated by the owner or PM.
+- Worktree changes are isolated proposals until integrated by the owner or coordinator.
 - End every task with what changed, what was verified, what remains, and who should pick it up next.
 ```
 
@@ -61,7 +66,7 @@ Office profile: {profile}
 
 | Task | Owner | Status | Reviewer | Notes |
 |---|---|---|---|---|
-| T-000 | PM | proposed | Reviewer | Define first milestone |
+| T-000 | {coordinator_role} | proposed | {review_role} | Define first milestone |
 
 ## Current Risks
 
@@ -85,9 +90,9 @@ Last updated: {date}
 
 | Role | Thread Title | Thread ID | Mode | Authority | Current Assignment | Write Scope | Status |
 |---|---|---|---|---|---|---|---|
-| PM / Coordinator | {project_name} / PM / Coordinator | TBD | local | status, task assignment | T-000 | office docs | active |
-| Builder | {project_name} / Builder | TBD | worktree | implementation | TBD | task scope only | waiting |
-| Reviewer | {project_name} / Reviewer | TBD | local | review | TBD | read-heavy | waiting |
+| {coordinator_role} | {project_name} / {coordinator_role} | TBD | local | status, task assignment | T-000 | office docs | active |
+| {implementation_role} | {project_name} / {implementation_role} | TBD | worktree | implementation | TBD | task scope only | waiting |
+| {review_role} | {project_name} / {review_role} | TBD | local | review | TBD | read-heavy | waiting |
 ```
 
 ## communication.md
@@ -101,9 +106,10 @@ Use this file when agent employee threads need to ask, answer, escalate, close, 
 
 - Create one file per cross-role request in `messages/open/`.
 - Use a clear recipient, task id, requested response, and urgency.
+- Do not perform out-of-scope requests directly; address them to the handoff target or coordinator so the right role can take over.
 - The receiving role may answer in the same file or create a response message.
 - Move resolved or superseded messages to `messages/closed/` after the outcome is recorded.
-- PM or Archivist closes old messages when the owner is unclear.
+- The coordinator or archivist closes old messages when the owner is unclear.
 
 ## Message States
 
@@ -166,15 +172,20 @@ Read:
 2. docs/agent-office/status.md
 3. docs/agent-office/context-packs/project-brief.md
 4. docs/agent-office/roles/{role}.md
-5. docs/agent-office/communication.md
-6. the assigned task packet, if one exists
+5. docs/agent-office/role-memory/{role}.md
+6. docs/agent-office/thread-registry.md
+7. docs/agent-office/communication.md
+8. the assigned task packet, if one exists
 
 Rules:
 - Load only task-relevant context.
 - Current assignment: {task}
 - Write scope: {write_scope}
+- Read and update only docs/agent-office/role-memory/{role}.md; do not read other role memory files unless the user explicitly asks for maintenance, audit, or recovery.
+- If the user asks for work outside your write scope, do not do it silently; name the role that should own it or write a message under docs/agent-office/messages/open/ to your handoff target or coordinator.
 - Write cross-role messages as separate files under docs/agent-office/messages/open/.
 - End significant work with a handoff under docs/agent-office/handoffs/.
+- After significant work, update your own role memory with short durable continuity notes. Do not paste transcripts.
 - Do not silently modify unrelated project-management files.
 ```
 ````
@@ -198,6 +209,7 @@ Rules:
 - `docs/agent-office/status.md`
 - `docs/agent-office/context-packs/project-brief.md`
 - `docs/agent-office/communication.md`
+- `docs/agent-office/role-memory/{role}.md`
 - assigned task packet
 
 ## Default Outputs
@@ -205,13 +217,43 @@ Rules:
 - task updates
 - messages
 - handoffs
+- own role memory
 - decisions, when authorized
 
 ## Boundaries
 
 - Do not exceed assigned write scope.
-- Ask PM before changing ownership or acceptance criteria.
+- Read and update only your own role memory unless explicitly asked to maintain or audit the office.
+- If asked to do out-of-scope work, name the role that should own it or write a message to the handoff target/coordinator.
+- Ask the coordinator before changing ownership or acceptance criteria.
 - End significant work with a handoff.
+```
+
+## role memory
+
+```md
+# {Role} Role Memory
+
+Owner role: `{role}`
+Privacy: protocol-private. This file is for the owning role by default; other roles should not read it unless the user explicitly asks for office maintenance, audit, or recovery.
+Last updated: {date}
+
+## Durable Notes
+
+- Initial mission: {mission}
+- Current assignment: {task}
+- Write scope: {write_scope}
+- Handoff target: {handoff_target}
+
+## User Preferences
+
+- None recorded yet.
+
+## Continuity Notes
+
+- Keep this file short.
+- Record only facts that help this role continue after a chat window is replaced.
+- Put shared project truth in `status.md`, task packets, messages, handoffs, or ADRs instead.
 ```
 
 ## task packet
@@ -220,8 +262,8 @@ Rules:
 ---
 id: T-000
 status: proposed
-dri: PM
-reviewer: Reviewer
+dri: {coordinator_role}
+reviewer: {review_role}
 created: {date}
 ---
 
@@ -258,7 +300,7 @@ Forbidden unless approved:
 
 ## Verification
 
-- PM review.
+- {review_role} review.
 
 ## Handoff
 
@@ -271,8 +313,8 @@ Write a handoff if another role picks up implementation.
 ---
 id: MSG-{date}-001
 task: T-000
-from: PM
-to: Architect
+from: {coordinator_role}
+to: {decision_role}
 status: open
 urgency: normal
 ---
@@ -295,8 +337,8 @@ What the receiving role should answer.
 ```md
 ---
 task: T-000
-from: Builder
-to: Reviewer
+from: {implementation_role}
+to: {review_role}
 status: ready-for-review
 date: {date}
 ---
@@ -321,7 +363,7 @@ What changed.
 
 ## Next Owner
 
-Reviewer
+{review_role}
 ```
 
 ## ADR
@@ -331,7 +373,7 @@ Reviewer
 
 Status: proposed
 Date: {date}
-Owner: Architect
+Owner: {decision_role}
 
 ## Decision
 

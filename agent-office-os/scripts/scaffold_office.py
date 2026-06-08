@@ -106,7 +106,7 @@ class RoleSpec:
     write_scope: str
     current_assignment: str
     thread_mode: str = "local"
-    handoff_to: str = "PM / Coordinator"
+    handoff_to: str = ""
 
 
 @dataclass
@@ -236,9 +236,30 @@ def role_from_config(raw: dict[str, Any], index: int, default_handoff: str) -> R
     )
 
 
+def infer_default_handoff(roles: list[RoleSpec], language: str) -> str:
+    for role in roles:
+        haystack = f"{role.slug} {role.title}".lower()
+        if any(token in haystack for token in ["coordinator", "owner", "lead", "manager", "producer"]):
+            return role.title
+        if any(token in role.title for token in ["协调", "负责人", "主理", "策展", "主编"]):
+            return role.title
+    if roles:
+        return roles[0].title
+    return "项目负责人" if is_zh(language) else "Project owner"
+
+
+def fill_missing_handoffs(roles: list[RoleSpec], default_handoff: str, language: str) -> None:
+    fallback_owner = "项目负责人" if is_zh(language) else "Project owner"
+    inferred = default_handoff or infer_default_handoff(roles, language)
+    for role in roles:
+        if role.handoff_to:
+            continue
+        role.handoff_to = fallback_owner if role.title == inferred else inferred
+
+
 def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) -> OfficeSpec:
     try:
-        raw = json.loads(config_path.read_text(encoding="utf-8"))
+        raw = json.loads(config_path.read_text(encoding="utf-8-sig"))
     except json.JSONDecodeError as exc:
         raise SystemExit(f"Invalid JSON config: {config_path}: {exc}") from exc
     if not isinstance(raw, dict):
@@ -246,12 +267,14 @@ def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) ->
     role_items = raw.get("roles")
     if not isinstance(role_items, list) or not role_items:
         raise SystemExit("Office config must contain a non-empty `roles` list.")
-    default_handoff = coalesce(raw.get("default_handoff_to"), raw.get("handoff_to"), default="PM / Coordinator")
+    language = normalize_language(coalesce(raw.get("language"), args.language, default="en"))
+    default_handoff = coalesce(raw.get("default_handoff_to"), raw.get("handoff_to"), default="")
     roles = []
     for index, item in enumerate(role_items):
         if not isinstance(item, dict):
             raise SystemExit("Each role in config must be a JSON object.")
         roles.append(role_from_config(item, index, default_handoff))
+    fill_missing_handoffs(roles, default_handoff, language)
     validate_roles(roles)
     return OfficeSpec(
         project_name=coalesce(raw.get("project_name"), raw.get("name"), args.project_name, root.name, default="Project"),
@@ -265,7 +288,7 @@ def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) ->
             args.first_milestone,
             default="Define the first milestone.",
         ),
-        language=normalize_language(coalesce(raw.get("language"), args.language, default="en")),
+        language=language,
         roles=roles,
         role_decisions=coalesce(raw.get("role_decisions"), raw.get("role_strategy"), default=""),
         deferred_roles=as_string_list(raw.get("deferred_roles")),
@@ -304,7 +327,7 @@ def role_titles(roles: list[RoleSpec]) -> str:
 
 
 def first_role_title(spec: OfficeSpec) -> str:
-    return spec.roles[0].title if spec.roles else "PM"
+    return spec.roles[0].title if spec.roles else "Project owner"
 
 
 def reviewer_title(spec: OfficeSpec) -> str:
@@ -326,6 +349,7 @@ def render_agents(language: str) -> str:
 开始项目工作前：
 - 先读 `docs/agent-office/status.md`。
 - 如果你被分配了角色，只读 `docs/agent-office/roles/` 里对应的角色卡。
+- 如果你被分配了角色，只读 `docs/agent-office/role-memory/` 里对应自己的角色记忆。
 - 如果你被分配了任务，只读 `docs/agent-office/tasks/active/` 里对应的任务包。
 - 除非被明确要求审计办公室，不要一次性通读整个 `docs/agent-office/`。
 
@@ -335,6 +359,7 @@ def render_agents(language: str) -> str:
 - 跨角色请求写到 `docs/agent-office/messages/open/`。
 - 任务交接写到 `docs/agent-office/handoffs/`。
 - 只有协调角色、归档角色或被明确授权的角色才更新 `status.md`。
+- 默认只更新自己的角色记忆；除非用户明确要求维护、审计或恢复，不要读取其他角色的记忆。
 
 并行工作：
 - 不要让两个写作者并行修改同一批文件。
@@ -350,6 +375,7 @@ This repository uses `docs/agent-office/` as the project office.
 Before project work:
 - Read `docs/agent-office/status.md`.
 - If assigned a role, read only the matching file in `docs/agent-office/roles/`.
+- If assigned a role, read only your matching file in `docs/agent-office/role-memory/`.
 - If assigned a task, read the task packet in `docs/agent-office/tasks/active/`.
 - Do not bulk-read the whole office unless explicitly asked to audit it.
 
@@ -359,6 +385,7 @@ Coordination:
 - Write cross-role messages as separate files under `docs/agent-office/messages/open/`.
 - Write task handoffs under `docs/agent-office/handoffs/`.
 - Update `status.md` only when you are the coordinator, archivist, or explicitly assigned to do so.
+- Update only your own role memory by default; do not read other role memories unless the user explicitly asks for maintenance, audit, or recovery.
 
 Parallel work:
 - Do not let two writers modify the same files in parallel.
@@ -557,15 +584,19 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
 2. docs/agent-office/status.md
 3. docs/agent-office/context-packs/project-brief.md
 4. docs/agent-office/roles/{role.slug}.md
-5. docs/agent-office/thread-registry.md
-6. docs/agent-office/communication.md
-7. 如果已有分配任务，再读取对应的任务包
+5. docs/agent-office/role-memory/{role.slug}.md
+6. docs/agent-office/thread-registry.md
+7. docs/agent-office/communication.md
+8. 如果已有分配任务，再读取对应的任务包
 
 工作规则：
 - 只加载和当前任务相关的上下文。
+- 只读取和更新自己的角色记忆：docs/agent-office/role-memory/{role.slug}.md。除非用户明确要求维护、审计或恢复办公室，不要读取其他角色记忆。
 - 不要超出写入范围。
+- 如果用户要求你处理超出写入范围的事情，不要直接执行；告诉用户应由哪个角色负责，或在 docs/agent-office/messages/open/ 写给交接对象/协调角色的消息。
 - 跨角色请求写成单独文件，放到 docs/agent-office/messages/open/。
 - 重要工作结束后，在 docs/agent-office/handoffs/ 写交接。
+- 重要工作结束后，用简短要点更新自己的角色记忆，记录下次接续需要的事实；不要粘贴完整聊天记录。
 - 不要静默修改无关的项目管理文件。
 """
     return f"""You are the {role.title} agent employee for this project.
@@ -580,15 +611,19 @@ Read:
 2. docs/agent-office/status.md
 3. docs/agent-office/context-packs/project-brief.md
 4. docs/agent-office/roles/{role.slug}.md
-5. docs/agent-office/thread-registry.md
-6. docs/agent-office/communication.md
-7. the assigned task packet, if one exists
+5. docs/agent-office/role-memory/{role.slug}.md
+6. docs/agent-office/thread-registry.md
+7. docs/agent-office/communication.md
+8. the assigned task packet, if one exists
 
 Rules:
 - Load only task-relevant context.
+- Read and update only your own role memory: docs/agent-office/role-memory/{role.slug}.md. Do not read other role memories unless the user explicitly asks for maintenance, audit, or recovery.
 - Do not exceed the approved write scope.
+- If the user asks for work outside your write scope, do not do it silently; name the role that should own it or write a message under docs/agent-office/messages/open/ to your handoff target or coordinator.
 - Write cross-role messages as separate files under docs/agent-office/messages/open/.
 - End significant work with a handoff under docs/agent-office/handoffs/.
+- After significant work, update your own role memory with short durable continuity notes. Do not paste full chat transcripts.
 - Do not silently modify unrelated project-management files.
 """
 
@@ -662,6 +697,7 @@ def render_role(role: RoleSpec, language: str) -> str:
 
 - `AGENTS.md`
 - `docs/agent-office/status.md`
+- `docs/agent-office/role-memory/{role.slug}.md`
 - `docs/agent-office/communication.md`
 - 分配给自己的任务包
 
@@ -670,6 +706,7 @@ def render_role(role: RoleSpec, language: str) -> str:
 - 任务更新
 - messages
 - handoffs
+- 自己的角色记忆
 - 被授权时写 decisions
 
 ## 写入范围
@@ -687,6 +724,8 @@ def render_role(role: RoleSpec, language: str) -> str:
 ## 边界
 
 - 不要超出分配的写入范围。
+- 默认只读取和更新自己的角色记忆；除非用户明确要求维护、审计或恢复，不要读取其他角色记忆。
+- 如果被要求处理职责外工作，先说明应由哪个角色负责，或写一条 message 给交接对象/协调角色。
 - 改变负责人、验收标准或文件归属前先询问协调角色。
 - 重要工作结束后写交接。
 """
@@ -704,6 +743,7 @@ def render_role(role: RoleSpec, language: str) -> str:
 
 - `AGENTS.md`
 - `docs/agent-office/status.md`
+- `docs/agent-office/role-memory/{role.slug}.md`
 - `docs/agent-office/communication.md`
 - assigned task packet
 
@@ -712,6 +752,7 @@ def render_role(role: RoleSpec, language: str) -> str:
 - task updates
 - messages
 - handoffs
+- own role memory
 - decisions, when authorized
 
 ## Write Scope
@@ -729,8 +770,61 @@ def render_role(role: RoleSpec, language: str) -> str:
 ## Boundaries
 
 - Do not exceed assigned write scope.
+- Read and update only your own role memory by default; do not read other role memories unless the user explicitly asks for maintenance, audit, or recovery.
+- If asked to do out-of-scope work, name the role that should own it or write a message to the handoff target/coordinator.
 - Ask the coordinator before changing ownership or acceptance criteria.
 - End significant work with a handoff.
+"""
+
+
+def render_role_memory(role: RoleSpec, language: str) -> str:
+    today = date.today().isoformat()
+    if is_zh(language):
+        return f"""# {role.title} Role Memory
+
+Owner role: `{role.slug}`
+Privacy: protocol-private. 默认只有 `{role.title}` 读取和更新；除非用户明确要求维护、审计或恢复办公室，其他角色不要读取。
+Last updated: {today}
+
+## 长期要点
+
+- 初始使命：{role.mission}
+- 当前任务：{role.current_assignment}
+- 写入范围：{role.write_scope}
+- 交接对象：{role.handoff_to}
+
+## 用户偏好
+
+- 暂无。
+
+## 接续记录
+
+- 保持简短，只记录这个角色下次接续真正需要的事实。
+- 共享项目事实写到 `status.md`、任务包、messages、handoffs 或 ADR，不要塞进这里。
+- 不要粘贴完整聊天记录、密钥、隐私信息或大段材料。
+"""
+    return f"""# {role.title} Role Memory
+
+Owner role: `{role.slug}`
+Privacy: protocol-private. By default only the `{role.title}` role reads and updates this file; other roles should not read it unless the user explicitly asks for maintenance, audit, or recovery.
+Last updated: {today}
+
+## Durable Notes
+
+- Initial mission: {role.mission}
+- Current assignment: {role.current_assignment}
+- Write scope: {role.write_scope}
+- Handoff target: {role.handoff_to}
+
+## User Preferences
+
+- None recorded yet.
+
+## Continuity Notes
+
+- Keep this file short and record only facts this role needs next time.
+- Put shared project truth in `status.md`, task packets, messages, handoffs, or ADRs instead.
+- Do not paste full chat transcripts, secrets, private data, or large source excerpts here.
 """
 
 
@@ -844,6 +938,7 @@ def render_operating_model(language: str) -> str:
 - 保持 `AGENTS.md` 短小，像目录一样工作。
 - `status.md` 只放当前事实。
 - 任务细节放进任务包。
+- 角色接续事实放进自己的 `role-memory/{role}.md`，不要放进共享状态。
 - 过期细节归档，不要塞进常驻文件。
 
 ## 并行工作
@@ -863,6 +958,7 @@ def render_operating_model(language: str) -> str:
 - Keep `AGENTS.md` short and index-like.
 - Keep `status.md` focused on current facts.
 - Put task-specific details into task packets.
+- Put role continuity facts into that role's own `role-memory/{role}.md`, not shared status.
 - Archive stale detail instead of extending always-loaded files.
 
 ## Parallel Work
@@ -887,6 +983,7 @@ def render_communication(language: str) -> str:
 
 - 每个跨角色请求创建一个独立文件，放到 `messages/open/`。
 - 写清楚接收者、task id、期望回复、紧急程度和下一负责人。
+- 职责外请求不要直接执行；写给交接对象或协调角色，让对应角色接手。
 - 接收者可以在同一文件中回答，也可以创建回复消息。
 - 结论记录后，把已解决或已被取代的消息移动到 `messages/closed/`。
 - owner 不清楚时，由协调角色或归档角色关闭旧消息。
@@ -919,6 +1016,7 @@ Use this file when agent employee threads need to ask, answer, escalate, close, 
 
 - Create one file per cross-role request in `messages/open/`.
 - Use a clear recipient, task id, requested response, urgency, and next owner.
+- Do not perform out-of-scope requests directly; address them to the handoff target or coordinator so the right role can take over.
 - The receiving role may answer in the same file or create a response message.
 - Move resolved or superseded messages to `messages/closed/` after the outcome is recorded.
 - The coordinator or archivist closes old messages when the owner is unclear.
@@ -957,9 +1055,10 @@ def render_readme(spec: OfficeSpec) -> str:
 2. `context-packs/project-brief.md`，了解项目形态和访谈决策
 3. `communication.md`，了解消息和交接规则
 4. `roles/` 里和你匹配的角色卡
-5. `tasks/active/` 里分配给你的任务包
+5. `role-memory/` 里属于你这个角色的记忆文件
+6. `tasks/active/` 里分配给你的任务包
 
-除非正在审计或迁移办公室，不要一次性通读整个目录。
+除非正在审计、维护或迁移办公室，不要一次性通读整个目录，也不要读取其他角色的记忆。
 """
     return f"""# Agent Office
 
@@ -971,9 +1070,10 @@ Start with:
 2. `context-packs/project-brief.md` for project shape and interview decisions
 3. `communication.md` for messages and handoffs
 4. the relevant role card in `roles/`
-5. the assigned task packet in `tasks/active/`
+5. the matching role memory in `role-memory/`
+6. the assigned task packet in `tasks/active/`
 
-Do not bulk-read the entire office unless auditing or migrating it.
+Do not bulk-read the entire office unless auditing, maintaining, or migrating it. Do not read another role's memory by default.
 """
 
 
@@ -1051,6 +1151,7 @@ def planned_scaffold_files(root: Path, roles: list[RoleSpec]) -> list[Path]:
         office / "tasks" / "active" / "T-000-define-first-milestone.md",
     ]
     files.extend(office / "roles" / f"{role.slug}.md" for role in roles)
+    files.extend(office / "role-memory" / f"{role.slug}.md" for role in roles)
     files.extend(
         directory / ".gitkeep"
         for directory in [
@@ -1102,6 +1203,7 @@ def write_scaffold(root: Path, spec: OfficeSpec, args: argparse.Namespace) -> li
     safe_write(office / "tasks" / "active" / "T-000-define-first-milestone.md", render_task(spec), **write_kwargs)
     for role in spec.roles:
         safe_write(office / "roles" / f"{role.slug}.md", render_role(role, spec.language), **write_kwargs)
+        safe_write(office / "role-memory" / f"{role.slug}.md", render_role_memory(role, spec.language), **write_kwargs)
     for directory in [
         office / "tasks" / "done",
         office / "tasks" / "archived",

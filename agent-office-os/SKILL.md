@@ -5,7 +5,13 @@ description: Set up, migrate, or maintain a durable Agent Office OS project offi
 
 # Agent Office OS
 
-Create and maintain a lightweight project office for AI coding agents: a small `AGENTS.md`, a structured `docs/agent-office/` workspace, role cards, task packets, handoffs, messages, ADRs, and thread instructions.
+Create and maintain a lightweight project office for AI coding agents: a small `AGENTS.md`, a structured `docs/agent-office/` workspace, role cards, role memory, task packets, handoffs, messages, ADRs, and thread instructions.
+
+## Fit
+
+Use this for long-running work anchored in a real project folder. It costs more upfront than a plain one-off chat, but should reduce repeated reorientation after context compaction, handoffs, or multi-window work.
+
+Do not use it for lightweight standalone questions, isolated file edits, or unrelated multi-task chats that do not share one durable project folder.
 
 ## Workflow Decision
 
@@ -33,7 +39,10 @@ For first-time setup requests, read `references/first-use-playbook.md` before sc
 On initial invocation:
 
 - Introduce Agent Office OS briefly: it designs a durable agent project office, first performs a read-only project check, and will not create files until the user explicitly approves.
+- Explain fit and safety briefly: best for long-running project folders, not short one-off chats; first pass is read-only; existing files are skipped by default, confirmed overwrites create backups, migration archives copy files before any separate deletion approval, and the user can ask for a restore plan from those backups/archives.
 - Inspect project clues read-only: directory name, README, package/config files, `docs/`, existing agent instructions, and Git status.
+- During first-use consultation, do not run `inspect_office.py --output` or write a report before approval; keep findings in chat until the user approves file creation.
+- Run a lightweight suitability check before continuing. If the request or folder looks like a one-off task, isolated edit, no durable project folder, or unrelated multi-task chat, say Agent Office OS may be overkill and ordinary chat is likely cheaper unless the user wants a durable project office.
 - If the project purpose is inferable, confirm it: "I think this is X, likely aiming at Y. Is that right?"
 - If it is not inferable, ask what the project does and what the main deliverable is.
 - Ask at most 3-5 numbered questions per round. Accept numbered answers.
@@ -57,10 +66,13 @@ Do not use a fixed role set just because a project resembles a known type. Creat
 
 ## New Project Flow
 
-1. Read `references/first-use-playbook.md`, `references/office-blueprint.md`, `references/role-catalog.md`, and `references/templates.md`.
-2. Run the first-use consultation gate and interview the user for missing project facts.
-3. Propose a dynamic office plan. If using the scaffold script, save the approved plan as `office-plan.json` and run `scripts/scaffold_office.py` with `--config office-plan.json`.
-4. Create the approved office:
+1. Read `references/first-use-playbook.md` and run the consultation gate.
+2. If project details are unclear, read `references/interview-guide.md`.
+3. Draft a dynamic office plan. Read `references/role-catalog.md` only if role boundaries need help.
+4. Before writing, wait for an explicit approval phrase.
+5. After approval, save the approved plan as `office-plan.json` and run `scripts/scaffold_office.py` with `--config office-plan.json`.
+6. Read `references/office-blueprint.md` or `references/templates.md` only when manually writing or auditing generated files.
+7. Create the approved office:
    - `AGENTS.md`
    - `docs/agent-office/README.md`
    - `docs/agent-office/status.md`
@@ -68,6 +80,7 @@ Do not use a fixed role set just because a project resembles a known type. Creat
    - `docs/agent-office/communication.md`
    - `docs/agent-office/operating-model.md`
    - `docs/agent-office/roles/`
+   - `docs/agent-office/role-memory/`
    - `docs/agent-office/tasks/active/`
    - `docs/agent-office/tasks/done/`
    - `docs/agent-office/tasks/archived/`
@@ -80,8 +93,8 @@ Do not use a fixed role set just because a project resembles a known type. Creat
    - `docs/agent-office/context-packs/thread-launch-prompts.md`
    - `docs/agent-office/cadences/`
    - `docs/agent-office/archive/legacy-management/`
-5. In the current chat, output the approved role launch prompts so the user can copy them directly. Put "new window" and suggested title instructions outside the fenced code block; put only the message to send in the code block.
-6. Run `scripts/validate_office.py` or perform the same checks manually.
+8. In the current chat, output the approved role launch prompts so the user can copy them directly. Put "new window" and suggested title instructions outside the fenced code block; put only the message to send in the code block.
+9. Run `scripts/validate_office.py` or perform the same checks manually.
 
 Use `scripts/scaffold_office.py` for deterministic scaffolding when the target project root is clear.
 
@@ -95,7 +108,7 @@ Use `scripts/scaffold_office.py` for deterministic scaffolding when the target p
 3. Produce `docs/agent-office/migration-report.md` or a proposed report before changing legacy files.
 4. Present an exact archive/overwrite/delete plan and ask for approval. Do not copy, overwrite, archive, or delete legacy management files until the user approves the exact list.
 5. Scaffold the new office if it does not exist. If `AGENTS.md` already exists, preserve it by default and propose a merged replacement instead of using `--force`.
-6. Migrate durable facts into `status.md`, role cards, task packets, decisions, and archive notes.
+6. Migrate durable shared facts into `status.md`, role cards, task packets, decisions, and archive notes. Create role memory files for approved roles, but do not copy broad legacy history into a role's private memory unless the user explicitly approves that role-specific summary.
 7. Copy approved old framework files under `docs/agent-office/archive/legacy-management/`; use `scripts/archive_legacy.py` when the approved report is clear. Leave originals in place until separate deletion approval.
 8. Delete old framework files only after a separate explicit user confirmation and a reviewed deletion list.
 
@@ -120,6 +133,7 @@ Read `references/office-blueprint.md` and `references/maintenance-playbook.md`, 
 - stale open messages
 - missing handoffs for completed tasks
 - retired or idle thread registry entries
+- missing, oversized, or stale role memory files
 - superseded ADRs
 
 Use `scripts/validate_office.py` for a deterministic report. Produce a read-only maintenance report first unless the user explicitly asked for cleanup edits. Ask before archiving, retiring, superseding, or deleting large legacy areas.
@@ -133,8 +147,10 @@ Default to manual thread creation with copyable prompts. If the user explicitly 
 - Treat context as a budget. Do not load the entire office unless auditing it.
 - Keep `AGENTS.md` short and index-like.
 - Do not allow multiple writer threads to own the same file scope.
+- If a role is asked to work outside its scope, it should route the request to the right role or write a message under `docs/agent-office/messages/open/` instead of doing the work silently.
+- Each role may read and update only its own `docs/agent-office/role-memory/{role-slug}.md` by default. Do not read another role's memory unless the user explicitly asks for office maintenance, audit, or recovery.
 - Do not create files during first-use consultation before explicit approval.
-- Treat worktree offices as isolated proposals until PM/Archivist integrates them.
+- Treat worktree offices as isolated proposals until the owner, coordinator, or archivist integrates them.
 - Do not edit `.git`, secrets, home directory files, or external configuration while scaffolding.
 - Refuse project-office paths that resolve outside the project root through symlinks or junctions.
 - Do not delete legacy files without explicit confirmation after showing the exact list.
