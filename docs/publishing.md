@@ -17,15 +17,15 @@ From the package repository:
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v0.2.6"
+git commit -m "Release gaogao office v0.2.8"
 ```
 
 ## 3. Tag
 
 ```bash
-git tag v0.2.6
+git tag v0.2.8
 git push origin main
-git push origin v0.2.6
+git push origin v0.2.8
 ```
 
 ## 4. Zip Asset
@@ -35,27 +35,22 @@ The release asset should be `outputs/gaogao-office-skill.zip` from the parent wo
 ## 5. Release Notes
 
 ```md
-# GaoGao Office v0.2.6
+# GaoGao Office v0.2.8
 
-Polished takeover choices, neutral user addressing, and safer legacy archiving.
+Release-readiness safety update for project scanning, path handling, and office writes.
 
 Highlights:
-- current chat becomes the founding project manager
-- users choose dynamic A/B/C/D takeover style: A is recommended, B is the other formal mode
-- Chinese output respects the user's preferred address and no longer forces `BOSS`
-- first-use roadmap is shorter and easier to scan
-- legacy archive paths reject active office, dependency, build, cache, and root paths
-- publishing and install docs now match the current workflow
-- direction planning moves to post-takeover direction-advisor mode
-- employees use human job titles and onboarding language
-- Codex Desktop can create employee threads automatically after approval
-- project managers throttle employee dispatch based on local capacity
-- absorbed old knowledge archives to `Agent Office/Archive/Old Project Memory/`
+- office writes now refuse symlink or junction targets
+- project inspection prunes skipped directories before traversal
+- relative report paths resolve inside the selected project root
+- inspect, archive, and validate scripts reject unsafe project roots
+- Chinese and English budget checks now use mixed budget units
+- no change to the lightweight `Agent Office/` structure
 ```
 
 ## 6. GitHub Release
 
-Upload `outputs/gaogao-office-skill.zip` as the release asset for `v0.2.6`.
+Upload `outputs/gaogao-office-skill.zip` as the release asset for `v0.2.8`.
 
 ## 7. Install Prompt
 

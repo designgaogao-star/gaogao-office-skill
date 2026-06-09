@@ -192,6 +192,14 @@ When the user sends work to the project manager:
 8. resume when the user asks to continue, or when the user explicitly asks the project manager to wait or take over
 9. if the user opts into watch mode, check progress at an adaptive 30-60 second interval and report only meaningful progress, blockers, handoffs, completion, or timeout
 
+The project manager may write handoff framing, inputs, constraints, and acceptance criteria. It must not write the employee-owned final output unless the user explicitly asks the project manager to take over that employee's work.
+
+Task-routing read budget: read `office-plan.json`, `task-board.md`, `thread-registry.md`, `project-brief.md`, optional root `AGENTS.md`, and only the likely owner's `current-task.md`. Do not read every employee file or run full validation before ordinary dispatch.
+
+Dispatch transaction budget: update only `task-board.md`, `communication.md`, and the assigned employee's `current-task.md`; send at most one employee-thread message; then report to the user and stop. If writes or thread sends are unavailable, show a manual dispatch packet and stop.
+
+If the employee thread ID is `TBD`, missing, or not clearly tied to this project, do not mark the task `active`. Show the manual dispatch packet and stop; record the task after the user confirms it was sent or after the employee result returns.
+
 ## Employee Result Reply Shape
 
 Employees reply to the project manager in this shape after real work:
@@ -222,6 +230,7 @@ Chinese:
 已派工给：`{员工职位}`
 任务：`{任务编号}` {一句话任务}
 路由判断：{为什么这件事归这个员工；若有下一棒，写下一棒是谁}
+交接框架：{目标、约束、输入材料、验收标准；不要替员工写最终产物}
 当前状态：等待 `{员工职位}` 完成。
 
 接下来你可以这样推进：
@@ -236,12 +245,26 @@ Chinese:
 ```
 ````
 
+Manual dispatch packet fallback:
+
+````md
+员工线程还没有登记，所以我先不给办公室写孤儿任务。请把下面这段发给 `{员工职位}` 窗口：
+
+```text
+本次派工：{任务编号或一句话任务}
+路由判断：{为什么这件事归这个员工}
+交接框架：{目标、约束、输入材料、验收标准；不要替员工写最终产物}
+完成后请更新你的 memory.md 和 current-task.md，然后把结果回复给项目总管。
+```
+````
+
 English:
 
 ````md
 Assigned to: `{employee job title}`
 Task: `{task id}` {one-sentence task}
 Routing decision: {why this belongs to this employee; name the likely next owner if any}
+Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}
 Current status: waiting for `{employee job title}`.
 
 You can continue in three ways:
@@ -253,6 +276,19 @@ If you want me to watch progress for you, reply:
 
 ```text
 Watch {task id}
+```
+````
+
+Manual dispatch packet fallback:
+
+````md
+The employee thread is not registered yet, so I will not create an orphan active task. Send this to the `{employee job title}` chat:
+
+```text
+Dispatch task: {task id or one-sentence task}
+Routing decision: {why this belongs to this employee}
+Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}
+After completion, update your memory.md and current-task.md, then reply to the project manager with the result.
 ```
 ````
 

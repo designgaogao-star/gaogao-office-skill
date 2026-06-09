@@ -12,6 +12,18 @@ This file is the single reference for command routing, lifecycle state, and auth
 4. **Routing before doing**: after employees exist, every project task starts with task routing. If a suitable employee owns the next step, dispatch it instead of doing that employee's work in the project-manager chat.
 5. **Stop after dispatch**: project-manager dispatch is non-blocking by default. Watch progress only after explicit watch intent.
 
+## One-Pass Checkup Budget
+
+First-use and read-only checkup must be quick enough to answer in the current turn. Do one focused pass:
+
+1. filename map, excluding dependency/build/cache/temp folders and `.git`
+2. existing `Agent Office/` or root rule files such as `AGENTS.md`
+3. README and top-level docs that clearly describe the project
+4. likely old-memory text files, by filename first and content only when clearly relevant
+5. Git status only when it is cheap and available
+
+Stop inspecting as soon as the project purpose and office state are reasonably clear. If the quick pass is enough, produce a judgment and proposal. If it is not enough, ask one light question. If an optional check is slow, unclear, or noisy, skip it and reply with visible uncertainty instead of stalling.
+
 ## Command Menu
 
 Chinese:
@@ -85,7 +97,33 @@ Hard rules:
 - A stale letter is not approval. If the next reply after options is not A/B/C/D, those options expire.
 - Do not merge office takeover with project work.
 - Do not let the project manager do clear employee-owned work just because it can.
+- The project manager may frame a handoff, define acceptance criteria, and preserve the user's constraints, but must not create the creative, technical, design, prompt, research, QA, or release output that belongs to an employee unless the user explicitly asks the project manager to take over that work.
+- Dispatch messages preserve inputs and boundaries. If the project manager adds direction, label it as handoff framing that the employee should judge, not as the final employee deliverable.
 - Thread operations are conditional capabilities, not universal promises.
+
+## Dispatch Transaction Budget
+
+Before dispatch, use a small task-routing read budget for existing offices:
+
+1. read `office-plan.json`, `task-board.md`, `thread-registry.md`, and `project-brief.md`
+2. read `AGENTS.md` only if it is present and cheap
+3. read the `current-task.md` for the likely employee owner only after the owner is reasonably clear
+4. do not read all employee `README.md` or `memory.md` files just to choose an owner
+5. do not run full validation before ordinary dispatch
+6. if ownership is still unclear after this small read, ask one short question or assign a judgment task to the most suitable planning role
+
+After the project manager chooses an employee owner, finish dispatch in one small transaction and then stop:
+
+1. update only the minimal active records: `task-board.md`, `communication.md`, and the assigned employee's `current-task.md`
+2. send one concise employee task message only when a registered thread ID and thread tool are available
+3. do not inspect unrelated employee folders, old memory archives, or downstream roles
+4. do not wait for the employee reply
+5. do not create downstream tasks until the first employee output exists
+6. if file writes or thread sends are unavailable, show a manual dispatch packet and stop
+
+If the target employee's thread ID is `TBD`, missing, or not clearly tied to this project, do not mark the task `active` yet and do not create orphan task records. Show a manual dispatch packet for that employee and stop. The project manager can record the task after the user confirms the packet was sent, after the employee thread is registered, or after an employee result returns.
+
+The dispatch result to the user must be immediate and non-blocking: assigned owner, task id, handoff frame, numbered `1/2/3` continuation paths, and a separate fenced watch command.
 
 ## Project-Manager Self-Check
 

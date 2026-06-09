@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 from dataclasses import asdict, dataclass
 from datetime import date
@@ -153,6 +154,32 @@ def has_link_in_path(root: Path, path: Path) -> bool:
     return False
 
 
+def is_unsafe_root(root: Path) -> bool:
+    home = Path.home().resolve()
+    if root.parent == root or root == home:
+        return True
+    return any(part.lower() == ".git" for part in root.parts)
+
+
+def resolve_inside_root(root: Path, raw: str) -> Path:
+    candidate = Path(raw)
+    if candidate.is_absolute():
+        return candidate.resolve()
+    return (root / candidate).resolve()
+
+
+def should_prune_dir(root: Path, path: Path) -> bool:
+    if path.name.lower() in SKIP_DIRS:
+        return True
+    try:
+        rel = path.relative_to(root)
+    except ValueError:
+        return True
+    if len(rel.parts) >= 1 and rel.parts[:1] == OFFICE_PREFIX:
+        return True
+    return has_link_in_path(root, path)
+
+
 def is_sensitive_path(rel_path: Path) -> bool:
     lower_parts = {part.lower() for part in rel_path.parts}
     lower_name = rel_path.name.lower()
@@ -221,28 +248,39 @@ def read_policy(path: Path, rel: Path, root: Path) -> str:
 
 def iter_inventory(root: Path) -> list[FileEntry]:
     entries: list[FileEntry] = []
-    for path in root.rglob("*"):
-        try:
-            rel = path.relative_to(root)
-        except ValueError:
+    for dirpath, dirnames, filenames in os.walk(root):
+        current_dir = Path(dirpath)
+        if has_link_in_path(root, current_dir):
+            dirnames[:] = []
             continue
-        reason = skip_reason(rel.parts)
-        if reason:
-            continue
-        if not path.is_file():
-            continue
-        try:
-            size = path.stat().st_size
-        except OSError:
-            size = 0
-        entries.append(
-            FileEntry(
-                str(rel).replace("\\", "/"),
-                file_kind(path),
-                read_policy(path, rel, root),
-                size,
+        dirnames[:] = [
+            dirname
+            for dirname in dirnames
+            if not should_prune_dir(root, current_dir / dirname)
+        ]
+        for filename in filenames:
+            path = current_dir / filename
+            try:
+                rel = path.relative_to(root)
+            except ValueError:
+                continue
+            reason = skip_reason(rel.parts)
+            if reason:
+                continue
+            if not path.is_file():
+                continue
+            try:
+                size = path.stat().st_size
+            except OSError:
+                size = 0
+            entries.append(
+                FileEntry(
+                    str(rel).replace("\\", "/"),
+                    file_kind(path),
+                    read_policy(path, rel, root),
+                    size,
+                )
             )
-        )
     entries.sort(key=lambda item: item.path.lower())
     return entries
 
@@ -523,6 +561,8 @@ def main() -> int:
     args = parser.parse_args()
 
     root = Path(args.project_root).resolve()
+    if is_unsafe_root(root):
+        raise SystemExit(f"Refusing to inspect unsafe project root: {root}")
     if not root.exists():
         raise SystemExit(f"Project root does not exist: {root}")
     inventory = iter_inventory(root)
@@ -540,9 +580,11 @@ def main() -> int:
         report = render_markdown(root, inventory, candidates)
 
     if args.output:
-        output = Path(args.output).resolve()
+        output = resolve_inside_root(root, args.output)
         if not is_relative_to(output, root):
             raise SystemExit("--output must be inside --project-root")
+        if (output.exists() or output.is_symlink()) and is_link(output):
+            raise SystemExit("Refusing to write output through symlink or junction target")
         if has_link_in_path(root, output.parent if output.parent.exists() else output):
             raise SystemExit("Refusing to write output through symlink or junction")
         if output.exists() and not args.force_output:

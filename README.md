@@ -4,7 +4,7 @@
 
 It treats the current chat as the founding project manager/controller, renames that chat to its job title when Codex Desktop allows it, proposes an organization, and invites employees only after formal takeover. In multi-employee mode, the user can keep talking to that one project-manager chat while it judges each request, routes employee-owned work to the right thread according to local capacity, records handoffs, and waits for the user to continue.
 
-v0.2.6 adds a stateful operation router: the project manager classifies lifecycle state, authorization level, and task ownership before scanning, writing, dispatching, watching progress, or maintaining an office.
+v0.2.8 is a release-readiness safety update: office writes refuse symlink/junction targets, project inspection prunes large skipped directories before traversal, relative report paths resolve inside the project root, unsafe roots are rejected, and Chinese context budgets are counted reliably.
 
 ## When To Use It
 

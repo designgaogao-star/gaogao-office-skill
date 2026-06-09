@@ -11,7 +11,7 @@ from pathlib import Path, PureWindowsPath
 
 
 OFFICE_DIR = "Agent Office"
-OFFICE_SCHEMA_VERSION = "0.2.6"
+OFFICE_SCHEMA_VERSION = "0.2.8"
 
 REQUIRED_FILES = [
     "Agent Office/README.md",
@@ -102,8 +102,11 @@ def read_text(path: Path) -> str:
         return ""
 
 
-def word_count(path: Path) -> int:
-    return len(re.findall(r"\S+", read_text(path)))
+def budget_units(path: Path) -> int:
+    text = read_text(path)
+    cjk_chars = len(re.findall(r"[\u4e00-\u9fff]", text))
+    latin_tokens = len(re.findall(r"[A-Za-z0-9_]+", text))
+    return cjk_chars + latin_tokens
 
 
 def is_link(path: Path) -> bool:
@@ -122,6 +125,13 @@ def has_link_in_path(root: Path, path: Path) -> bool:
         if current.exists() and is_link(current):
             return True
     return False
+
+
+def is_unsafe_root(root: Path) -> bool:
+    home = Path.home().resolve()
+    if root.parent == root or root == home:
+        return True
+    return any(part.lower() == ".git" for part in root.parts)
 
 
 def contains_any(text: str, options: list[str]) -> bool:
@@ -306,6 +316,11 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 ["1/2/3", "Continue", "继续推进"],
                 ["不反复轮询", "non-blocking", "stops by default"],
                 ["盯进度", "Watch", "30-60"],
+                ["交接框架", "Handoff frame", "handoff framing"],
+                ["不要替员工写最终产物", "employee-owned output", "不得替员工完成"],
+                ["任务路由读取范围", "task-routing reads", "Task-routing read budget"],
+                ["派工事务", "dispatch transaction", "manual dispatch packet"],
+                ["孤儿任务", "orphan task"],
                 ["生命周期", "lifecycle state", "operation-router"],
                 ["授权等级", "authorization level", "current valid approval"],
                 ["用户", "user", "project manager"],
@@ -425,9 +440,9 @@ def validate_employees(root: Path, findings: list[Finding]) -> None:
             if has_link_in_path(root, path):
                 findings.append(Finding("error", rel, "employee file path contains a symlink or junction"))
             limit = EMPLOYEE_BUDGETS[filename]
-            count = word_count(path)
+            count = budget_units(path)
             if count > limit:
-                findings.append(Finding("warning", rel, f"word count {count} exceeds hard limit {limit}"))
+                findings.append(Finding("warning", rel, f"budget units {count} exceeds hard limit {limit}"))
         for rel in [f"{rel_employee}/README.md", f"{rel_employee}/memory.md", f"{rel_employee}/current-task.md"]:
             if registry_text and not current_window_employee and rel not in registry_text:
                 findings.append(Finding("warning", "Agent Office/thread-registry.md", f"thread launch prompts should mention `{rel}`"))
@@ -449,9 +464,9 @@ def validate_budgets(root: Path, findings: list[Finding]) -> None:
         if has_link_in_path(root, path):
             findings.append(Finding("warning", rel, "skipped linked path during word budget check"))
             continue
-        count = word_count(path)
+        count = budget_units(path)
         if count > limit:
-            findings.append(Finding("warning", rel, f"word count {count} exceeds hard limit {limit}"))
+            findings.append(Finding("warning", rel, f"budget units {count} exceeds hard limit {limit}"))
 
 
 def validate_migration_report(root: Path, findings: list[Finding]) -> None:
@@ -564,6 +579,8 @@ def main() -> int:
     args = parser.parse_args()
 
     root = Path(args.project_root).resolve()
+    if is_unsafe_root(root):
+        raise SystemExit(f"Refusing to validate unsafe project root: {root}")
     findings = validate(root)
     if not findings:
         print("GaoGao Office validation passed.")

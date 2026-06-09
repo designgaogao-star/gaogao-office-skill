@@ -149,7 +149,7 @@ Do not silently copy, move, delete, or overwrite old project management files.
 Use this when `Agent Office/` already exists and the user wants to use the latest skill behavior, repair an older office, or "run the skill again" in the same project.
 
 1. Read `references/maintenance-playbook.md`, then inspect existing `Agent Office/`, root `AGENTS.md`, and active project clues read-only.
-2. Run `scripts/validate_office.py --warn-only` to find missing files, stale layout, missing controller-dispatch, old archive names, missing employee memories, or oversized public files.
+2. Run `scripts/validate_office.py --project-root <project> --warn-only` to find missing files, stale layout, missing controller-dispatch, old archive names, missing employee memories, or oversized public files.
 3. Preserve continuity: read public office files and employee memory only as needed to summarize current truth. Do not delete employee memory.
 4. Produce an upgrade proposal before writing:
    - what existing office version or missing fields were detected
@@ -233,7 +233,6 @@ If thread tools are unavailable, fall back to manual copy prompts and task messa
 - `references/migration-playbook.md`: old-knowledge audit, absorption, archive, and move process.
 - `references/maintenance-playbook.md`: office health audit and cleanup workflow.
 - `references/role-catalog.md`: standing and optional employee role strategies.
-- `references/github-publishing.md`: GitHub release and installation guide.
 - `scripts/scaffold_office.py`: create a safe lightweight office scaffold.
 - `scripts/inspect_capacity.py`: read-only local capacity check for employee dispatch concurrency.
 - `scripts/inspect_office.py`: read-only filename map and migration discovery.

@@ -12,6 +12,14 @@ For user-visible maintenance, follow `references/markdown-output-guide.md`: use 
 
 Start read-only. Produce a maintenance report before cleanup edits unless the user explicitly requested safe cleanup.
 
+Use a quick maintenance pass first. If `Agent Office/` exists, do not restart the first-use flow. Read public office files, `office-plan.json`, `thread-registry.md`, and only employee metadata needed to preserve memory. Optional validation should use:
+
+```text
+validate_office.py --project-root <project> --warn-only
+```
+
+If validation is unavailable, noisy, or slow, do not stall. Report the useful findings already collected and mark validation as skipped or inconclusive.
+
 ## Check
 
 - public files that are too long or stale
@@ -69,7 +77,7 @@ Good closing style:
 
 ## Safe Cleanup Order
 
-1. Run `validate_office.py`.
+1. Run `validate_office.py --project-root <project> --warn-only` when available.
 2. Read only files named by findings.
 3. Update `status.md` and `task-board.md` with current truth if needed.
 4. Resolve stale entries in `communication.md`.

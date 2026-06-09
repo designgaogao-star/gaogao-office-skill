@@ -34,6 +34,18 @@ Progress updates should speak in user outcomes, not implementation internals. Do
 
 Use the safety blockquote from `references/markdown-output-guide.md`. It must say that no files are written until the user has reviewed the proposal and replied A/B/C/D.
 
+## One-Pass Checkup Budget
+
+The first checkup is not a deep audit. It must finish in the current turn whenever possible:
+
+1. collect the filename map, skipping dependency/build/cache/temp folders, `.git`, and existing `Agent Office/`
+2. read README, top-level docs, root rule files, and only clearly relevant old-memory text candidates
+3. inspect cheap project signals such as package/config files and Git status when available
+4. stop as soon as the project purpose and office state are reasonably clear
+5. if optional checks are slow, noisy, or inconclusive, skip them and state the uncertainty
+
+If the quick pass is enough, show the project judgment and organization proposal immediately. If it is not enough, ask only the one-question prompt from `references/markdown-output-guide.md`. Do not keep reading just to feel more certain.
+
 ## Read-Only Project Guess
 
 Inspect:
@@ -192,7 +204,11 @@ Every request after onboarding starts with a task routing gate. The project mana
 - Is this small office-maintenance work the project manager should simply do?
 - Is ownership unclear enough that one short question or a judgment task is needed?
 
+For existing offices, the routing read budget is intentionally small: `office-plan.json`, `task-board.md`, `thread-registry.md`, `project-brief.md`, optional root `AGENTS.md`, and only the likely owner's `current-task.md`. Do not read every employee profile or memory before choosing an owner. Do not run full validation before ordinary task routing.
+
 If an employee clearly owns the next stage, dispatch it. Do not let the project manager do that employee's work just because it can. If the work has no clear employee owner, is tiny coordination, or is office maintenance, the project manager may handle it directly and record the outcome. If the request spans multiple stages, dispatch only the first unblocked stage and record the likely next owner in `communication.md`.
+
+The project manager may write routing rationale, handoff framing, inputs, constraints, and acceptance criteria. It must not write the employee-owned output itself: not the final prompt set, visual concept, copy draft, code patch, QA verdict, research conclusion, or release checklist unless the user explicitly asks the project manager to take over that employee's work. If the project manager includes a suggestion, label it as "交接框架，待员工判断" / "handoff framing for the employee to judge."
 
 When the user gives a request after employees are onboarded:
 
@@ -204,10 +220,15 @@ When the user gives a request after employees are onboarded:
 6. ask the employee to update its own `memory.md` and `current-task.md` before replying.
 7. report the assignment to the user and stop. Do not poll, wait, or read the employee thread unless the user asks the project manager to wait and continue.
 
+Keep the dispatch transaction small. The project manager should update at most the active task board, one handoff in `communication.md`, and the assigned employee's `current-task.md`; then send at most one employee-thread message and immediately report back. Do not inspect unrelated employee folders, old archives, or downstream roles during dispatch. If any write or thread action is unavailable, output a manual dispatch packet and stop instead of trying to recover inside the same turn.
+
+If the chosen employee has no registered thread ID, has `TBD`, or the thread cannot be tied to this project, do not create orphan active records. Output the employee's manual dispatch packet in a fenced `text` block and stop. Record the task only after the user confirms the packet was sent, the thread is registered, or the employee returns a result.
+
 Do not make the user manually visit employee threads unless the user asks for that control.
 
 After dispatch, show informational continuation paths as numbered items, not A/B/C/D choices. A/B/C/D are only for user choices that authorize different actions.
 Also offer an opt-in watch command after the numbered continuation paths. Watching is not a fourth default path; it is an explicit command the user may send when they want the project manager to keep checking progress.
+The watch command must be outside the numbered list and inside its own fenced `text` block.
 
 Watch mode rules:
 

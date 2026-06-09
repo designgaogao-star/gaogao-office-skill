@@ -25,7 +25,7 @@ EMPLOYEES_DIR = "Employees"
 PROPOSALS_DIR = "Proposals"
 ARCHIVE_DIR = "Archive"
 LEGACY_ARCHIVE_DIR = "Old Project Memory"
-OFFICE_SCHEMA_VERSION = "0.2.6"
+OFFICE_SCHEMA_VERSION = "0.2.8"
 
 
 ROLE_DEFINITIONS = {
@@ -507,6 +507,7 @@ def render_agents_proposal(language: str) -> str:
 - 会写文件、改 `AGENTS.md`、移动旧资料或操作线程的动作，必须有当前有效选项或明确授权。
 - 多员工模式默认由项目总管做单入口总控：用户主要和项目总管对话，项目总管拆任务、派给员工窗口、记录交接，然后停止等待用户继续推进。
 - 项目总管每次收到需求都先做任务路由判断：员工职责明确就派给员工；没有合适员工或只是办公室小事时自己处理；归属会影响方向时只补问一句。
+- 项目总管可以写交接框架、输入约束和验收标准，但不得替员工完成创意、提示词、设计、代码、研究、检查或发布产物，除非用户明确要求项目总管接手。
 - 员工数量不等于并发数量；项目总管按办公室派工策略控制同时派工数量。
 - `Agent Office/thread-registry.md` 是长期 Agent 员工名册和入职提示记录。
 - 跨角色请求、答复和交接写入 `Agent Office/communication.md`。
@@ -535,6 +536,7 @@ Coordination:
 - Any action that writes files, changes `AGENTS.md`, moves old memory, or operates threads requires the current valid option or explicit approval.
 - In multi-employee mode, the project manager is the single user-facing controller by default: it splits requests, dispatches work to employee threads, records the handoff, and stops until the user asks it to continue.
 - The project manager runs a task routing judgment for every request: dispatch clear employee-owned work, handle unowned or small office-maintenance work directly, and ask one brief question when ownership affects direction.
+- The project manager may write handoff framing, input constraints, and acceptance criteria, but must not create employee-owned creative, prompt, design, code, research, QA, or release output unless the user explicitly asks the project manager to take over.
 - Employee roster size is not active concurrency; the project manager follows the office dispatch policy when dispatching employee work.
 - `Agent Office/thread-registry.md` is the staff directory and onboarding prompt record for long-running agent employees.
 - Cross-role requests, answers, and handoffs go in `Agent Office/communication.md`.
@@ -1272,21 +1274,27 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "行动前先做运行中枢自检：当前生命周期状态、用户意图、动作授权等级、是否已有当前有效授权、员工归属、执行后该停止还是盯进度。",
             "",
             "用户默认只需要和项目总管窗口对话。项目总管每次先做任务路由判断：最终交付物、当前阶段、候选负责人、是否派工、是否自办、是否需要补问一句。员工职责明确时必须派给员工；没有合适员工或只是办公室小事时，项目总管可以自己处理并记录结果。",
+            "任务路由读取范围要小：读取 `office-plan.json`、`task-board.md`、`thread-registry.md`、`project-brief.md`、可选根 `AGENTS.md`，以及候选负责人的 `current-task.md`；不要为了选负责人而通读所有员工档案或记忆，也不要在普通派工前跑完整校验。",
+            "",
+            "项目总管可以写路由理由、交接框架、输入材料、约束和验收标准；不得替员工完成最终创意、提示词、设计、代码、研究、检查或发布产物，除非用户明确要求项目总管接手。若给出建议，必须标注为“交接框架，待员工判断”。",
             "",
             "会写文件、改 AGENTS.md、移动旧资料或操作线程的动作，必须有当前有效选项或明确授权。A/B/C/D 只用于授权动作；过期字母不能当作批准。",
             "",
             "需要员工时，先更新任务板、communication.md 和员工 current-task，再把下面这种派工消息发给员工窗口。",
+            "派工事务要小：最多更新 `task-board.md`、一条 `communication.md` 交接、被派员工的 `current-task.md`；最多发送一条员工线程消息；然后立刻向用户汇报并停止。写入或线程发送不可用时，输出手动派工包并停止。",
+            "如果目标员工 Thread ID 是 `TBD`、缺失或不能确认属于本项目，不要把任务标成 active，也不要写孤儿任务；直接输出手动派工包并停止。等用户确认已发给员工、线程登记完成或员工结果返回后，再记录任务。",
             "",
             "```text",
             "本次派工：{任务编号或一句话任务}",
             "路由判断：{为什么这件事归这个员工；如果有下一棒，写下一棒是谁}",
+            "交接框架：{目标、约束、输入材料、验收标准；不要替员工写最终产物}",
             "请先读取 AGENTS.md、Agent Office 公共文件，以及你自己的员工文件夹。",
             "写入范围：{明确路径或范围}",
             "交付内容：{期望输出}",
             "完成后请更新你的 memory.md 和 current-task.md，然后把结果回复给项目总管。",
             "```",
             "",
-            "派工发出后，项目总管默认停止，不反复轮询员工窗口，也不抢员工职责。给用户的说明使用 `1/2/3` 编号：1. 员工完成后回到项目总管发 `继续推进 {任务编号}`；2. 直接去员工窗口推进并让它写交接；3. 手动把员工产物复制给下一位合适员工。`A/B/C/D` 只用于会触发不同动作的授权选择。",
+            "派工发出后，项目总管默认停止，不反复轮询员工窗口，也不抢员工职责。给用户的说明使用 `1/2/3` 编号：1. 员工完成后回到项目总管发 `继续推进 {任务编号}`；2. 直接去员工窗口推进并让它写交接；3. 手动把员工产物复制给下一位合适员工。`A/B/C/D` 只用于会触发不同动作的授权选择。盯进度命令必须单独放在 `text` 代码框里，不能混成第 4 个选项。",
             "",
             "如果用户希望项目总管替他盯进度，让用户回复 `盯进度 {任务编号}`。盯进度模式每 30-60 秒动态检查一次员工状态；任务复杂或员工明显还在拆解时靠近 60 秒，快完成或读取成本很低时可更短。只汇报有意义进展、阻塞、交接或完成，不要每次安静轮询都打扰用户。",
             "",
@@ -1338,21 +1346,27 @@ def render_thread_registry(spec: OfficeSpec) -> str:
         "Before acting, run the operation-router self-check: lifecycle state, user intent, authorization level, current valid approval, employee owner, and whether to stop or watch afterward.",
         "",
         "The user only needs to talk to the project-manager chat by default. The project manager runs task routing judgment first: final deliverable, current stage, candidate owner, whether to dispatch, whether to handle directly, or whether to ask one clarification. Clear employee-owned work must be dispatched; unowned or small office-maintenance work may be handled by the project manager and recorded.",
+        "Keep task-routing reads small: read `office-plan.json`, `task-board.md`, `thread-registry.md`, `project-brief.md`, optional root `AGENTS.md`, and only the likely owner's `current-task.md`; do not read every employee profile or memory, and do not run full validation before ordinary dispatch.",
+        "",
+        "The project manager may write routing rationale, handoff framing, inputs, constraints, and acceptance criteria. It must not create final creative, prompt, design, code, research, QA, or release output for an employee-owned task unless the user explicitly asks the project manager to take over. Any suggestion must be labeled as handoff framing for the employee to judge.",
         "",
         "Actions that write files, change AGENTS.md, move old memory, or operate threads require a current valid option or explicit approval. A/B/C/D are only for authorization choices; stale letters are not approval.",
         "",
         "When an employee is needed, update the task board, communication.md, and employee current-task before sending a concise task message like this.",
+        "Keep the dispatch transaction small: update at most `task-board.md`, one `communication.md` handoff, and the assigned employee's `current-task.md`; send at most one employee-thread message; then report to the user and stop. If writes or thread sends are unavailable, show a manual dispatch packet and stop.",
+        "If the target employee Thread ID is `TBD`, missing, or not clearly tied to this project, do not mark the task active or create orphan task records. Show the manual dispatch packet and stop. Record the task after the user confirms it was sent, the thread is registered, or the employee result returns.",
         "",
         "```text",
         "Dispatch task: {task id or one-sentence task}",
         "Routing decision: {why this belongs to this employee; name the likely next owner if any}",
+        "Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}",
         "First read AGENTS.md, Agent Office public files, and your own employee folder.",
         "Write scope: {explicit paths or scope}",
         "Deliverable: {expected output}",
         "After completion, update your memory.md and current-task.md, then reply to the project manager with the result.",
         "```",
         "",
-        "After dispatch, the project manager stops by default. Do not repeatedly poll employee chats or take over employee responsibilities. Use numbered `1/2/3` continuation guidance for the user: 1. return to the project manager with `Continue {task id}` after the employee finishes; 2. continue directly in the employee chat and have it write the handoff; 3. manually pass the employee output to the next suitable employee. Reserve A/B/C/D for choices that authorize different actions.",
+        "After dispatch, the project manager stops by default. Do not repeatedly poll employee chats or take over employee responsibilities. Use numbered `1/2/3` continuation guidance for the user: 1. return to the project manager with `Continue {task id}` after the employee finishes; 2. continue directly in the employee chat and have it write the handoff; 3. manually pass the employee output to the next suitable employee. Reserve A/B/C/D for choices that authorize different actions. The watch command must be separate in a fenced `text` block, never a fourth numbered path.",
         "",
         "If the user wants the project manager to watch progress, ask them to reply `Watch {task id}`. In watch mode, check employee status every 30-60 seconds based on task complexity and token cost: closer to 60 seconds for complex or clearly ongoing tasks, shorter only when completion looks near or reads are cheap. Report only meaningful progress, blockers, handoffs, or completion; do not disturb the user after every quiet poll.",
         "",
@@ -1421,6 +1435,8 @@ def assert_safe_target(root: Path, path: Path) -> None:
         resolved_target.relative_to(resolved_root)
     except ValueError:
         raise SystemExit(f"Refusing to write outside project root via symlink or resolved path: {path}")
+    if (path.exists() or path.is_symlink()) and is_link(path):
+        raise SystemExit(f"Refusing to write through symlink or junction target: {path}")
     if has_link_in_path(root, path.parent if path.parent.exists() else path):
         raise SystemExit(f"Refusing to write through symlink or junction: {path}")
 
@@ -1568,6 +1584,12 @@ def main() -> int:
     root = Path(args.project_root).resolve()
     if is_unsafe_root(root):
         raise SystemExit(f"Refusing to scaffold into unsafe root: {root}")
+    if not args.config:
+        print(
+            "Warning: no --config provided; using legacy fallback roles. "
+            "Formal GaoGao Office takeover should pass an approved dynamic office-plan config.",
+            file=sys.stderr,
+        )
     if not root.exists() and not args.create_root and not args.dry_run:
         raise SystemExit(f"Project root does not exist. Create it first or pass --create-root: {root}")
     spec = load_office_spec(args, root)

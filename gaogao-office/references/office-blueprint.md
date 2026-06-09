@@ -87,7 +87,15 @@ When the user gives work to the project manager after employees are onboarded:
 
 This loop should reduce the user's coordination burden. It should not create busywork or route tiny tasks to employees just because threads exist.
 
+Task routing must stay small. Read `office-plan.json`, `task-board.md`, `thread-registry.md`, `project-brief.md`, optional root `AGENTS.md`, and only the likely owner's `current-task.md`; do not read every employee file or run full validation before ordinary dispatch.
+
+Dispatch must stay small: update the active task board, one communication handoff, and the assigned employee's current task; send one employee-thread message when possible; then report and stop. If writes or thread sends are unavailable, provide a manual dispatch packet instead of expanding the turn.
+
+Do not create orphan active tasks. If the target employee thread ID is `TBD`, missing, or not tied to this project, show the manual dispatch packet and stop; record the task after the user confirms it was sent, the employee thread is registered, or a result returns.
+
 The project manager must not claim an employee's work as complete unless that employee completed it or the user explicitly authorized the project manager to take over. If the project manager uses a tool that supports another employee's task, record it as tool execution or handoff support, then route the judgment/result back to the responsible role.
+
+Handoff support is not employee output. The project manager may preserve the user's goal, constraints, source materials, and acceptance criteria, but it must not finish the creative, prompt, design, code, research, QA, or release deliverable that belongs to an employee unless takeover is explicitly authorized.
 
 ## Optional Watch Mode
 

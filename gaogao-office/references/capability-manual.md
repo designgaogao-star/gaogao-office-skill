@@ -4,6 +4,8 @@ Use this when the user asks what GaoGao Office can do, asks for a manual, says `
 
 Do not scan the project, write files, create threads, archive files, or change `AGENTS.md` when answering in manual mode. Explain capabilities only. Follow the user's language; output only Chinese or only English unless the user asks for both.
 
+Keep the manual compact, but do not omit core capabilities: project checkup, new project takeover, existing project migration, employee onboarding, task routing, watch progress, role memory, retire/replace roles, office cleanup, old-memory archive, and Codex thread enhancement.
+
 ## Chinese Manual Shape
 
 ````md

@@ -87,6 +87,20 @@ def is_relative_to(path: Path, root: Path) -> bool:
         return False
 
 
+def is_unsafe_root(root: Path) -> bool:
+    home = Path.home().resolve()
+    if root.parent == root or root == home:
+        return True
+    return any(part.lower() == ".git" for part in root.parts)
+
+
+def resolve_inside_root(root: Path, raw: str) -> Path:
+    candidate = Path(raw)
+    if candidate.is_absolute():
+        return candidate.resolve()
+    return (root / candidate).resolve()
+
+
 def markdown_section(text: str, heading: str) -> str:
     marker = f"## {heading}"
     start = text.find(marker)
@@ -278,6 +292,8 @@ def assert_safe_target(root: Path, path: Path) -> None:
         resolved_target.relative_to(resolved_root)
     except ValueError:
         raise SystemExit(f"Refusing destination outside project root: {path}")
+    if (path.exists() or path.is_symlink()) and is_link(path):
+        raise SystemExit(f"Refusing destination through symlink or junction target: {path}")
     if has_link_in_path(root, path.parent if path.parent.exists() else path):
         raise SystemExit(f"Refusing destination through symlink or junction: {path}")
 
@@ -406,6 +422,7 @@ def write_archive(root: Path, actions: list[ArchiveAction], archive_stamp: str, 
             continue
         source = root / (action.source_material or action.source)
         destination = root / action.destination
+        assert_safe_target(root, destination)
         destination.parent.mkdir(parents=True, exist_ok=True)
         if action.action == "move":
             shutil.move(str(root / action.source), str(destination))
@@ -428,10 +445,12 @@ def main() -> int:
     args = parser.parse_args()
 
     root = Path(args.project_root).resolve()
+    if is_unsafe_root(root):
+        raise SystemExit(f"Refusing to archive from unsafe project root: {root}")
     if not root.exists():
         raise SystemExit(f"Project root does not exist: {root}")
     validate_archive_stamp(args.archive_stamp)
-    report = Path(args.report).resolve() if args.report else root / OFFICE_DIR / "migration-report.md"
+    report = resolve_inside_root(root, args.report) if args.report else root / OFFICE_DIR / "migration-report.md"
     if not is_relative_to(report, root):
         raise SystemExit("--report must be inside --project-root")
     if has_link_in_path(root, report):
