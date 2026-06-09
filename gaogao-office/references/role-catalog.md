@@ -32,7 +32,7 @@ Put those process names in the responsibility domain inside the employee profile
 
 The current GaoGao Office chat is the founding project manager by default. Do not ask the user to create another project-manager window. In Codex Desktop, rename this current chat to the project-manager job title only, such as `项目经理`, `项目总管`, or `Project Manager`, before inviting other employees. If the current chat later becomes too long, it may write a successor prompt for a new project-manager chat.
 
-The project manager is the user-facing controller in multi-employee mode. The user can keep talking to that one chat; the manager decides what to do directly, what to dispatch, and how to merge employee results.
+The project manager is the user-facing controller in multi-employee mode. The user can keep talking to that one chat. For each request, the manager first judges the final outcome and next responsible role, dispatches clear employee-owned work, handles only project-manager or tiny office-maintenance work directly, and records handoffs for later continuation.
 
 ## Split Test
 

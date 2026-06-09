@@ -177,18 +177,80 @@ If the user has a direction, follow it and ask at most 1-2 targeted questions be
 
 ## Controller Dispatch
 
-In multi-employee mode, keep the user's main experience simple: they can keep talking to the project-manager chat, while the project manager splits, dispatches, verifies, merges, and reports employee work.
+In multi-employee mode, keep the user's main experience simple: they can keep talking to the project-manager chat, while the project manager routes work and records handoffs. Default dispatch is non-blocking: the project manager assigns work, tells the user who owns the next step, then stops until the user asks it to continue.
+
+Every request after onboarding starts with a task routing gate. The project manager first asks:
+
+- What final outcome does the user actually want?
+- What is the next unblocked workflow stage?
+- Does an existing employee clearly own that stage?
+- Is this small office-maintenance work the project manager should simply do?
+- Is ownership unclear enough that one short question or a judgment task is needed?
+
+If an employee clearly owns the next stage, dispatch it. Do not let the project manager do that employee's work just because it can. If the work has no clear employee owner, is tiny coordination, or is office maintenance, the project manager may handle it directly and record the outcome. If the request spans multiple stages, dispatch only the first unblocked stage and record the likely next owner in `communication.md`.
 
 When the user gives a request after employees are onboarded:
 
-1. decide whether the project manager can do it alone
-2. if employees are needed, split only the necessary subtask
-3. update `task-board.md`, `communication.md`, and each assigned employee's `current-task.md`
-4. send a concise task message to the employee thread when thread tools are available
-5. ask the employee to update its own `memory.md` and `current-task.md` before replying
-6. read the employee result, verify it, update public status if needed, and report one synthesized answer to the user
+1. classify the user's final desired result, not just the first artifact; if the user wants an image, release, article, or migration, treat prompts, drafts, and audits as middle steps.
+2. choose the first necessary employee by responsibility, using the actual office roster. Do not hard-code a specific role set; for direction, topic, strategy, or pipeline questions, route to the planning/operator employee before downstream production employees when that role exists.
+3. if employees are needed, split only the next necessary subtask. Do not assign downstream employees until the upstream handoff is available unless the user explicitly approves parallel work.
+4. update `task-board.md`, `communication.md`, and each assigned employee's `current-task.md`.
+5. send a concise task message to the employee thread when thread tools are available.
+6. ask the employee to update its own `memory.md` and `current-task.md` before replying.
+7. report the assignment to the user and stop. Do not poll, wait, or read the employee thread unless the user asks the project manager to wait and continue.
 
 Do not make the user manually visit employee threads unless the user asks for that control.
+
+After dispatch, show informational continuation paths as numbered items, not A/B/C/D choices. A/B/C/D are only for user choices that authorize different actions.
+Also offer an opt-in watch command after the numbered continuation paths. Watching is not a fourth default path; it is an explicit command the user may send when they want the project manager to keep checking progress.
+
+Watch mode rules:
+
+- Start only after a clear request such as `盯进度 T-xxx`, `帮我盯 T-xxx`, `Watch T-xxx`, or "please watch this task."
+- Use thread reads sparingly. Pick an initial interval from 30-60 seconds based on expected complexity and token cost.
+- If the employee is clearly in a long multi-step task, use the longer side of the interval. If the employee seems near completion and reads are cheap, use a shorter interval.
+- Do not exceed 60 seconds between checks while actively watching.
+- Do not narrate every quiet check. Report meaningful progress, blocker, handoff, completion, or timeout only.
+- Stop when the employee finishes, blocks, asks for user input, hands off to another role, the user interrupts, or repeated checks show no meaningful progress.
+- The project manager may advance to the next employee only when the previous employee's output exists and the office plan makes the next owner clear. It must not do another employee's work unless the user explicitly authorizes takeover.
+
+Chinese example:
+
+````md
+已派工给：`{员工职位}`
+任务：`{任务编号}` {一句话任务}
+当前状态：等待 `{员工职位}` 完成。
+
+接下来你可以这样推进：
+1. 员工完成后，回到项目总管这里发 `继续推进 {任务编号}`。
+2. 直接去 `{员工职位}` 窗口继续聊，让它完成后按办公室规则写交接。
+3. 如果你想手动接力，把员工产物复制给下一位合适员工。
+
+需要我替你盯进度的话，回复：
+
+```text
+盯进度 {任务编号}
+```
+````
+
+English example:
+
+````md
+Assigned to: `{employee job title}`
+Task: `{task id}` {one-sentence task}
+Current status: waiting for `{employee job title}`.
+
+You can continue in three ways:
+1. After the employee finishes, return here and send `Continue {task id}`.
+2. Continue directly in the `{employee job title}` chat and let it write the handoff.
+3. Manually copy the employee output to the next suitable employee.
+
+If you want me to watch progress for you, reply:
+
+```text
+Watch {task id}
+```
+````
 
 ## Language Rules
 

@@ -2,7 +2,7 @@
 
 `gaogao-office` is a Codex skill for creating, migrating, and maintaining a lightweight `Agent Office/` inside long-running agent-assisted projects.
 
-It treats the current chat as the founding project manager/controller, renames that chat to its job title when Codex Desktop allows it, proposes an organization, and invites employees only after formal takeover. In multi-employee mode, the user can keep talking to that one project-manager chat while it dispatches work to employee threads according to local capacity and reports back.
+It treats the current chat as the founding project manager/controller, renames that chat to its job title when Codex Desktop allows it, proposes an organization, and invites employees only after formal takeover. In multi-employee mode, the user can keep talking to that one project-manager chat while it judges each request, routes employee-owned work to the right thread according to local capacity, records handoffs, and waits for the user to continue.
 
 ## When To Use It
 
@@ -60,7 +60,7 @@ If `agent-office-os` is still installed, back it up or remove it so both skills 
 New project:
 
 ```text
-Use $gaogao-office to inspect this project read-only and propose an Agent Office organization. Start immediately; if you cannot infer the project purpose, ask one short question. Wait for my A/B/C/D choice before creating files. A should be the recommended formal takeover mode, B the other formal takeover mode, C custom team, and D later without writing. After takeover, ask whether I want direction-advisor mode.
+Use $gaogao-office to inspect this project read-only and propose an Agent Office organization. Start immediately; if you cannot infer the project purpose, ask one short question. Wait for my A/B/C/D choice before creating files. A should be the recommended formal takeover mode, B the other formal takeover mode, C custom team, and D later without writing. After takeover, ask whether I want direction-advisor mode. After dispatching employee work, stop and give numbered continuation paths instead of polling.
 ```
 
 Existing project migration:
@@ -75,7 +75,7 @@ Upgrade an existing office after updating the skill:
 Use $gaogao-office to inspect the existing Agent Office in this project. Do not delete or rebuild blindly. Tell me what will be kept, what stale entrances will be archived, and what needs to be upgraded. Wait for my current reply option before updating it to the current GaoGao Office workflow.
 ```
 
-In Codex Desktop, approved employees can be created automatically. After onboarding, the project manager dispatches work according to local capacity, reads employee replies, and synthesizes the result for the user. If thread tools are unavailable, the skill falls back to copyable onboarding prompts and manual dispatch messages.
+In Codex Desktop, approved employees can be created automatically. After onboarding, the project manager first judges who should own each request: clear employee-owned work is dispatched, small office work is handled directly, and ambiguous direction gets one brief clarification. By default it stops after dispatch and gives numbered continuation paths; it does not repeatedly poll employee chats or take over employee responsibilities. You can opt into `Watch T-xxx` when you want the project manager to monitor progress at an adaptive 30-60 second interval. If thread tools are unavailable, the skill falls back to copyable onboarding prompts and manual dispatch messages.
 
 ## Helper Scripts
 

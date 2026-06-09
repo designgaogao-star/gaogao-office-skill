@@ -29,7 +29,7 @@ Before work:
 - Do not read `Agent Office/Archive/Old Project Memory/` during ordinary work.
 - The current chat is the founding project manager unless the user changes that.
 - In Codex Desktop, title the current project-manager chat with the job title only.
-- In multi-employee mode, the user talks to the project manager by default. The project manager dispatches work to employee threads and reports back.
+- In multi-employee mode, the user talks to the project manager by default. The project manager dispatches work to employee threads, records the handoff, and stops until the user asks it to continue.
 - Employee dispatch follows `dispatch_policy`; unknown or low-capacity machines dispatch one employee task at a time.
 
 Coordination:
@@ -37,6 +37,7 @@ Coordination:
 - Current tasks and owners go in `task-board.md`.
 - Significant work updates the employee's `memory.md` and `current-task.md`.
 - Employees finish meaningful work by updating their own `memory.md` and `current-task.md` before reporting back.
+- The project manager runs a task routing judgment before doing work: if a current employee clearly owns the next stage, dispatch it; if no employee owns it or it is tiny office maintenance, handle it directly and record the result.
 ```
 
 ## Employee Profile
@@ -173,7 +174,7 @@ Use automatic Codex Desktop thread creation when available. Manual prompts are f
 User-facing wording:
 - "The office is open, and the project manager is on duty."
 - "Employees are onboarded" after thread creation or manual prompts are ready.
-- "You can keep talking to this project-manager chat; I will dispatch work to employees and bring the result back."
+- "You can keep talking to this project-manager chat; I will dispatch work to employees and tell you how to continue."
 - "No task is assigned yet; the office is ready when you want to start" after formal takeover.
 - "I can enter direction-advisor mode next; first tell me whether you already have a direction" after takeover.
 
@@ -181,12 +182,15 @@ User-facing wording:
 
 When the user sends work to the project manager:
 
-1. decide whether to handle it directly or dispatch it
-2. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
-3. follow `dispatch_policy.max_parallel_employee_tasks`; do not dispatch all employees in parallel unless the user explicitly approves it
-4. send the employee a concise task message when thread tools are available
-5. ask the employee to update `memory.md` and `current-task.md`
-6. read the reply, verify it, and report one synthesized answer to the user
+1. run a task routing judgment: final outcome, next workflow stage, candidate owner, and whether to dispatch, handle directly, or ask one clarification
+2. if one employee clearly owns the next stage, dispatch to that employee; if no employee owns it or it is small office maintenance, the project manager may handle it
+3. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
+4. follow `dispatch_policy.max_parallel_employee_tasks`; do not dispatch all employees in parallel unless the user explicitly approves it
+5. send the employee a concise task message when thread tools are available
+6. ask the employee to update `memory.md` and `current-task.md`
+7. report the assignment to the user with numbered continuation paths, then stop
+8. resume when the user asks to continue, or when the user explicitly asks the project manager to wait or take over
+9. if the user opts into watch mode, check progress at an adaptive 30-60 second interval and report only meaningful progress, blockers, handoffs, completion, or timeout
 
 ## Employee Result Reply Shape
 
@@ -207,6 +211,50 @@ Output path: ...
 Status update: ...
 Recommended next step: ...
 ```
+
+## Non-Blocking Dispatch Reply Shape
+
+Use numbered `1/2/3` for continuation guidance because this is informational. Reserve A/B/C/D for choices that authorize different actions.
+
+Chinese:
+
+````md
+已派工给：`{员工职位}`
+任务：`{任务编号}` {一句话任务}
+路由判断：{为什么这件事归这个员工；若有下一棒，写下一棒是谁}
+当前状态：等待 `{员工职位}` 完成。
+
+接下来你可以这样推进：
+1. 员工完成后，回到项目总管这里发 `继续推进 {任务编号}`。
+2. 直接去 `{员工职位}` 窗口继续聊，让它完成后按办公室规则写交接。
+3. 如果你想手动接力，把员工产物复制给下一位合适员工。
+
+需要我替你盯进度的话，回复：
+
+```text
+盯进度 {任务编号}
+```
+````
+
+English:
+
+````md
+Assigned to: `{employee job title}`
+Task: `{task id}` {one-sentence task}
+Routing decision: {why this belongs to this employee; name the likely next owner if any}
+Current status: waiting for `{employee job title}`.
+
+You can continue in three ways:
+1. After the employee finishes, return here and send `Continue {task id}`.
+2. Continue directly in the `{employee job title}` chat and let it write the handoff.
+3. Manually copy the employee output to the next suitable employee.
+
+If you want me to watch progress for you, reply:
+
+```text
+Watch {task id}
+```
+````
 
 Chinese employee launch prompt shape:
 

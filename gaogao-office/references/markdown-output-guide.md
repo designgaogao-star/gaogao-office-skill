@@ -10,6 +10,7 @@ The goal is readability, not decoration. Use the smallest Markdown structure tha
 - Use at most 2-4 formatting types in one ordinary reply. Avoid turning every paragraph into a callout.
 - Keep headings short and practical: `项目体检`, `我的判断`, `接管方案`, `下一步`.
 - Keep takeover choice options as plain A/B/C/D text lists, not tables or card-like layouts.
+- Use A/B/C/D only for real user choices that authorize different actions. Use numbered `1/2/3` lists for informational continuation paths or "you can proceed this way" guidance.
 - Put exact user replies, employee prompts, commands, and reusable messages in fenced `text` blocks.
 
 ## Format Selection
@@ -247,6 +248,52 @@ English:
 
 ```text
 Do you already have a clear direction for this project? If yes, tell me your idea; if not, I’ll help judge 2-3 possible directions.
+```
+````
+
+## Non-Blocking Dispatch Shape
+
+Use this after the project manager assigns work to any employee and should stop instead of waiting. Adapt the employee title and next role to the actual office roster; do not hard-code prompt/design/visual roles.
+
+````md
+已派工给：`{员工职位}`
+任务：`{任务编号}` {一句话任务}
+路由判断：{为什么这件事归这个员工；如果有下一棒，写下一棒是谁}
+当前状态：等待 `{员工职位}` 完成。
+
+> 我不会在这里反复轮询员工窗口。等你需要继续时，再叫我推进即可。
+
+接下来你可以这样推进：
+1. 员工完成后，回到项目总管这里发 `继续推进 {任务编号}`。
+2. 直接去 `{员工职位}` 窗口继续聊，让它完成后按办公室规则写交接。
+3. 如果你想手动接力，把员工产物复制给下一位合适员工。
+
+需要我替你盯进度的话，回复：
+
+```text
+盯进度 {任务编号}
+```
+````
+
+English:
+
+````md
+Assigned to: `{employee job title}`
+Task: `{task id}` {one-sentence task}
+Routing decision: {why this belongs to this employee; name the likely next owner if any}
+Current status: waiting for `{employee job title}`.
+
+> I will not repeatedly poll the employee chat here. When you want to continue, come back and ask me to advance the task.
+
+You can continue in three ways:
+1. After the employee finishes, return here and send `Continue {task id}`.
+2. Continue directly in the `{employee job title}` chat and let it write the handoff.
+3. Manually copy the employee output to the next suitable employee.
+
+If you want me to watch progress for you, reply:
+
+```text
+Watch {task id}
 ```
 ````
 

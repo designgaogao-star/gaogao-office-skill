@@ -1,6 +1,6 @@
 ---
 name: gaogao-office
-description: 搭建、迁移或维护 GaoGao Office，用一个项目总管窗口接管长期 AI Agent 项目，并按需调度员工对话。适用于 Agent Office、多窗口员工角色、角色记忆、项目清理、旧 planning/vibe 框架 migrate/migration、AGENTS.md 审批和长期项目管理；不适合一次性 AGENTS.md 编辑、普通任务清单或没有项目文件夹的短聊天。
+description: 搭建、迁移或维护 GaoGao Office，用一个项目总管窗口接管长期 AI Agent 项目，先判断任务归属，再按需自办或调度员工对话。适用于 Agent Office、多窗口员工角色、角色记忆、项目清理、旧 planning/vibe 框架 migrate/migration、AGENTS.md 审批和长期项目管理；不适合一次性 AGENTS.md 编辑、普通任务清单或没有项目文件夹的短聊天。
 ---
 
 # GaoGao Office
@@ -40,7 +40,7 @@ Before changing files:
 - On first invocation or takeover restart, show one compact Mermaid roadmap so the user understands the sequence before approval. Do not use Mermaid in routine progress updates.
 - Before any final answer, run a public-output preflight: remove internal notes, tentative link syntax, tool implementation details, temporary config names, and analysis-like wording. If a file link format is uncertain, show a plain absolute path instead of exposing the uncertainty.
 - State that the current chat will become the founding project manager unless the user only wants a proposal.
-- In multi-employee mode, make the current project manager the user-facing controller by default: the user talks to this chat, this chat decomposes requests, dispatches work to employee threads, gathers results, updates office files, and reports back. Do not make the user manage several employee windows unless they explicitly want direct access.
+- In multi-employee mode, make the current project manager the user-facing controller by default: the user talks to this chat, this chat decomposes requests, dispatches work to employee threads, records the handoff, then stops. Do not poll employee threads, wait in-chat, or take over employee work unless the user explicitly asks for that mode.
 - In Codex Desktop, after formal takeover, rename the current chat to the founding project-manager job title only, such as `项目经理`, `项目总管`, or `Project Manager`. Do this before creating other employee threads when the thread title tool is available; if it is unavailable or the current thread cannot be confidently identified, tell the user the exact manual title to use.
 - Inspect project clues read-only: directory name, full filename map excluding skip directories, README, config files, existing `AGENTS.md`, `vibe/`, top-level docs, and Git status when available.
 - Before dispatching multiple employee threads, run or emulate `scripts/inspect_capacity.py`. Employees may all be onboarded, but active task dispatch must follow `dispatch_policy`; unknown or low-capacity machines dispatch one employee at a time.
@@ -88,13 +88,21 @@ On initial invocation:
 7. Rename or clearly label the current chat as the project manager before onboarding other employees.
 8. Inspect local capacity with `scripts/inspect_capacity.py` when available, record the resulting `dispatch_policy`, and default to serial dispatch if capacity is unknown.
 9. Invite employees only after formal takeover is complete. Do not output role prompts before `Agent Office/`, root `AGENTS.md`, and old-knowledge disposition are in a clear state.
-10. When employees are available, operate through controller-dispatch by default:
+10. When employees are available, operate through non-blocking controller-dispatch by default:
    - understand the user's request in the current project-manager chat
-   - split only the necessary parts into employee tasks
+   - run the task routing gate before doing any substantive work: identify whether the request belongs to an existing employee, a workflow stage, the project manager, or a brief clarification
+   - identify the final deliverable first; do not treat a middle artifact as the final answer when the user asked for a downstream result
+   - select the first appropriate employee in the workflow; for direction, topic, strategy, or content pipeline requests, use the planning/operator role before downstream production roles when such a role exists
+   - if one employee clearly owns the next stage, dispatch to that employee instead of doing the employee's work in the project-manager chat
+   - if no employee clearly owns the work, or the work is tiny office maintenance, the project manager may handle it directly and record the result
+   - if ownership is ambiguous and the answer affects project direction or scope, ask one short question or assign a judgment task to the closest employee
+   - split only the necessary parts into employee tasks, using job responsibilities from the actual office plan rather than fixed role names
    - respect `dispatch_policy.max_parallel_employee_tasks`; do not dispatch all employees in parallel unless the user explicitly approves it
    - update `Agent Office/task-board.md`, `Agent Office/communication.md`, and each assigned employee's `current-task.md`
    - send the employee prompt or task through Codex thread tools when available
-   - read employee replies, verify/summarize results, update office memory, then report one clear answer to the user
+   - report that the task has been assigned, name the next owner, and list numbered continuation paths (`1/2/3`) because they are informational, not authorization choices
+   - stop after dispatch. Resume only when the user returns with a continuation request such as `继续推进 T-xxx`, directly asks the project manager to wait, or explicitly authorizes the project manager to take over the employee's work
+   - after reporting dispatch, offer an opt-in watch command such as `盯进度 T-xxx` / `Watch T-xxx`. Watching is not default.
 11. In Codex Desktop, prefer automatic employee thread creation after explicit approval. If thread tools are unavailable, output fallback launch prompts from `Agent Office/thread-registry.md`.
 12. Run `scripts/validate_office.py` or equivalent checks.
 
@@ -162,6 +170,7 @@ Employee model:
 - Do not use process names such as visual asset pipeline, frontend runtime, or QA and release as employee titles; put those in responsibility domains.
 - The current chat is the project manager by default. Do not ask the user to create a second project-manager window.
 - The project manager is the default user-facing controller. In multi-employee offices, ordinary employees primarily receive tasks from the project manager and return results to it; direct user-to-employee work is optional, not the default.
+- The project manager must run a task routing judgment before working: if the office already has a suitable employee for the next step, route the task there; if not, handle it as project-manager work or ask one clarifying question.
 - Each employee maintains `README.md`, `memory.md`, and `current-task.md`; meaningful work must update memory and the next action.
 - When retiring employees, preserve completed work as completed. Cancel only proposed, waiting, or active future tasks. Mark employee roles as archived/withdrawn, update their memory/current-task with a retirement note, and record that archived employees must not receive new dispatches unless the user approves reactivation.
 
@@ -169,7 +178,9 @@ Employee model:
 
 In Codex Desktop, automatic employee thread creation is the preferred path after the user approves employee onboarding and thread tools are available. First rename the current conversation to the project-manager job title only. Then create one conversation per employee except the current project manager, set each employee thread title to the job title only, and record returned thread IDs in `Agent Office/thread-registry.md`.
 
-After employee threads exist, the project manager may dispatch work with thread tools when the user approves or when the office rules already authorize that employee to handle the task. Use the smallest useful task message, include required files and write scope, and ask the employee to update its own `memory.md` and `current-task.md` before replying. Dispatch according to `dispatch_policy`; if capacity is low or unknown, send the next employee task only after the previous employee is idle or done. After reading the employee reply, the project manager synthesizes and reports to the user; it should not dump raw multi-thread chatter unless the user asks.
+After employee threads exist, the project manager may dispatch work with thread tools when the user approves or when the office rules already authorize that employee to handle the task. Use the smallest useful task message, include required files and write scope, and ask the employee to update its own `memory.md` and `current-task.md` before replying. Dispatch according to `dispatch_policy`; if capacity is low or unknown, send the next employee task only after the previous employee is idle or done. By default, dispatch is non-blocking: after sending work, record the handoff and tell the user how to continue. Do not repeatedly check the employee thread, wait in the conversation, or finish another employee's assignment yourself unless the user explicitly asks for project-manager takeover.
+
+Optional watch mode: if the user explicitly asks the project manager to watch progress, check assigned employee threads at an adaptive interval. Start with 30-60 seconds based on expected complexity and token cost; use up to 60 seconds for complex tasks or when the employee is clearly still reasoning, and shorter intervals only when status reads are cheap or completion looks near. Do not exceed one minute between checks while actively watching. Report only meaningful changes or completion, not every quiet poll. Stop watching when the employee finishes, blocks, needs user input, hands off to the next role, the user interrupts, or repeated checks show no meaningful progress.
 
 If thread tools are unavailable, fall back to manual copy prompts and task messages from `Agent Office/thread-registry.md`, and explicitly tell the user the current project-manager window title to set manually. The Markdown office must remain usable by other agents.
 
@@ -181,6 +192,8 @@ If thread tools are unavailable, fall back to manual copy prompts and task messa
 - In first-use setup, formal takeover and project work are separate stages. After creating the office, applying `AGENTS.md`, and onboarding employees, stop and report the ready state, then ask whether the user wants a direction-advisor conversation. Do not draft a plan, dispatch work, search the web, or create task-result files until the user approves that separate direction flow.
 - Do not let multiple writer roles own the same file scope.
 - If a role is asked to work outside scope, route the request to the right role or record it in `Agent Office/communication.md`.
+- Do not make the project manager impatient. Once a task is dispatched to an employee, stop and let the user decide how to continue; use `A/B/C/D` only for action choices, and use `1/2/3` for informational continuation paths.
+- Watch mode is opt-in. When watching, the project manager observes status and advances handoffs; it still must not do another employee's work unless the user explicitly authorizes takeover.
 - Do not edit `.git`, secrets, home directory files, external configuration, or linked external paths while scaffolding.
 - Refuse project-office paths that resolve outside the project root through symlinks or junctions.
 - Follow the user's language by default. Keep machine identifiers such as paths, role slugs, `status: proposed`, and `T-000` stable.

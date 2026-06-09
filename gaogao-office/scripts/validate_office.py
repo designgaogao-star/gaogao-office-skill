@@ -11,7 +11,7 @@ from pathlib import Path, PureWindowsPath
 
 
 OFFICE_DIR = "Agent Office"
-OFFICE_SCHEMA_VERSION = "0.2.3"
+OFFICE_SCHEMA_VERSION = "0.2.4"
 
 REQUIRED_FILES = [
     "Agent Office/README.md",
@@ -299,8 +299,21 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
     prompt_file = root / "Agent Office/thread-registry.md"
     if prompt_file.exists() and not has_link_in_path(root, prompt_file):
         text = read_text(prompt_file)
-        if "```text" in text:
-            prompt_requirements = [
+        if text:
+            general_registry_requirements = [
+                ["项目总管派工协议", "Project-Manager Dispatch Protocol"],
+                ["任务路由判断", "task routing judgment", "Routing decision"],
+                ["1/2/3", "Continue", "继续推进"],
+                ["不反复轮询", "non-blocking", "stops by default"],
+                ["盯进度", "Watch", "30-60"],
+                ["用户", "user", "project manager"],
+            ]
+            for options in general_registry_requirements:
+                if not contains_any(text, options):
+                    findings.append(Finding("warning", "Agent Office/thread-registry.md", f"thread registry should mention `{label(options)}`"))
+        has_employee_launch_prompt = contains_any(text, ["本对话角色", "Conversation role"])
+        if has_employee_launch_prompt:
+            launch_prompt_requirements = [
                 ["AGENTS.md"],
                 ["Agent Office/README.md"],
                 ["Agent Office/status.md"],
@@ -309,11 +322,8 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 ["Agent Office/Employees/"],
                 ["memory.md"],
                 ["current-task.md"],
-                ["本对话角色", "Conversation role"],
-                ["项目总管派工协议", "Project-Manager Dispatch Protocol"],
-                ["用户", "user", "project manager"],
             ]
-            for options in prompt_requirements:
+            for options in launch_prompt_requirements:
                 if not contains_any(text, options):
                     findings.append(Finding("warning", "Agent Office/thread-registry.md", f"thread launch prompts should mention `{label(options)}`"))
 
@@ -325,6 +335,12 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 findings.append(Finding("warning", "Agent Office/communication.md", f"communication protocol should mention `{label(options)}`"))
         if not contains_any(text, ["project manager by default", "默认先进入项目总管"]):
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain controller-dispatch entry through the project manager"))
+        if not contains_any(text, ["任务路由判断", "task routing judgment", "routing decision"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain task routing before dispatch or direct work"))
+        if not contains_any(text, ["继续推进", "Continue T-", "non-blocking", "不轮询"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain non-blocking dispatch continuation"))
+        if not contains_any(text, ["盯进度", "Watch T-", "30-60"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain opt-in watch mode"))
 
     brief = root / "Agent Office/project-brief.md"
     if brief.exists() and not has_link_in_path(root, brief):
