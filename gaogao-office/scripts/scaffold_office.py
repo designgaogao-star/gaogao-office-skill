@@ -256,7 +256,7 @@ def role_from_legacy_key(role: str, language: str) -> RoleSpec:
         current_assignment="T-000" if role == "pm" else "waiting",
         domain=mission,
         quality_standard="保持范围清楚、结果可验证、下一位 Agent 容易接上。" if zh else "Keep work scoped, verified, and easy for the next agent to resume.",
-        inputs="BOSS 的请求、AGENTS.md、Agent Office 公共文件，以及本员工私有文件。" if zh else "Project owner requests, AGENTS.md, Agent Office public files, and this employee's private files.",
+        inputs="用户的请求、AGENTS.md、Agent Office 公共文件，以及本员工私有文件。" if zh else "Project owner requests, AGENTS.md, Agent Office public files, and this employee's private files.",
         outputs="完成的工作、简短状态记录，以及需要别人继续时的交接。" if zh else "Updated work, concise status notes, and handoffs when another employee should continue.",
         forbidden="不要超出批准的写入范围；默认不读取其他员工文件夹。" if zh else "Do not work outside the approved write scope or read other employee folders by default.",
         current_window=is_manager,
@@ -264,7 +264,7 @@ def role_from_legacy_key(role: str, language: str) -> RoleSpec:
         thread_title=title,
         status=("项目总管" if zh else "founding-steward") if is_manager else "waiting",
         thread_mode="worktree" if role == "builder" else "local",
-        handoff_to=("项目总管" if role != "pm" else "BOSS") if zh else ("Project Manager" if role != "pm" else "Project owner"),
+        handoff_to=("项目总管" if role != "pm" else "用户") if zh else ("Project Manager" if role != "pm" else "Project owner"),
     )
 
 
@@ -337,11 +337,11 @@ def infer_default_handoff(roles: list[RoleSpec], language: str) -> str:
             return role.title
     if roles:
         return roles[0].title
-    return "BOSS" if is_zh(language) else "Project owner"
+    return "用户" if is_zh(language) else "Project owner"
 
 
 def fill_missing_handoffs(roles: list[RoleSpec], default_handoff: str, language: str) -> None:
-    fallback_owner = "BOSS" if is_zh(language) else "Project owner"
+    fallback_owner = "用户" if is_zh(language) else "Project owner"
     inferred = default_handoff or infer_default_handoff(roles, language)
     for role in roles:
         if not role.handoff_to:
@@ -500,13 +500,13 @@ def render_agents_proposal(language: str) -> str:
 
 协作规则：
 - 当前窗口默认是第一任项目总管，负责给办公室挂牌、路由任务、更新公共区和处理迁移收尾。
-- 多员工模式默认由项目总管做单入口总控：BOSS 主要和项目总管对话，项目总管拆任务、派给员工窗口、回收结果并统一汇报。
+- 多员工模式默认由项目总管做单入口总控：用户主要和项目总管对话，项目总管拆任务、派给员工窗口、回收结果并统一汇报。
 - 员工数量不等于并发数量；项目总管按 `Agent Office/office-plan.json` 的 `dispatch_policy` 控制同时派工数量。
 - `Agent Office/thread-registry.md` 是长期 Agent 员工名册和入职提示记录。
 - 跨角色请求、答复和交接写入 `Agent Office/communication.md`。
 - 当前任务和责任人写入 `Agent Office/task-board.md`。
 - 员工完成有意义工作后，先更新自己的 `memory.md` 和 `current-task.md`，再向项目总管汇报。
-- 只有项目总管、BOSS 或被明确授权的员工才更新公共状态。
+- 只有项目总管、用户或被明确授权的员工才更新公共状态。
 - 结束任务时说明改了什么、验证了什么、还剩什么、下一个负责人是谁。
 """
     return """# AGENTS.md
@@ -566,7 +566,7 @@ def render_readme(spec: OfficeSpec) -> str:
 
 当前调用 GaoGao Office 的窗口默认接任第一任项目总管。它负责给办公室挂牌、保持公共区干净、把任务分给合适员工，并在正式接管完成后邀请其他员工入职。
 
-多员工模式下，BOSS 可以继续主要和这个项目总管窗口对话。项目总管负责拆解需求、派工给员工窗口、读取员工回复、更新办公室记录，再把整合后的结果汇报给 BOSS。
+多员工模式下，用户可以继续主要和这个项目总管窗口对话。项目总管负责拆解需求、派工给员工窗口、读取员工回复、更新办公室记录，再把整合后的结果汇报给用户。
 
 派工策略：{dispatch_policy_summary(spec)}
 """
@@ -632,7 +632,7 @@ def render_status(spec: OfficeSpec) -> str:
 
 ## 下一步
 
-BOSS 拍板后，项目总管先确认 `task-board.md` 的第一项任务是否仍然准确。若需要多人协作，项目总管先拆任务并派给必要员工，再把结果统一汇报给 BOSS。
+用户拍板后，项目总管先确认 `task-board.md` 的第一项任务是否仍然准确。若需要多人协作，项目总管先拆任务并派给必要员工，再把结果统一汇报给用户。
 """
     return f"""# Project Status
 
@@ -700,7 +700,7 @@ def render_project_brief(spec: OfficeSpec) -> str:
 
 {notes}
 
-默认协作方式：BOSS 主要和当前项目总管窗口沟通；项目总管按需派工给员工窗口，并把结果整合后汇报。
+默认协作方式：用户主要和当前项目总管窗口沟通；项目总管按需派工给员工窗口，并把结果整合后汇报。
 默认派工策略：员工可以全部入职，但项目总管按本机容量控制并发；配置未知或偏低时一次只派一个员工。
 
 {role_lines}
@@ -805,7 +805,7 @@ def render_task_board(spec: OfficeSpec) -> str:
 ## 任务规则
 
 - 每项任务必须有 owner、reviewer、写入范围和验收方式。
-- 多员工任务默认由项目总管拆分和派工；员工完成后回给项目总管，由项目总管统一汇报 BOSS。
+- 多员工任务默认由项目总管拆分和派工；员工完成后回给项目总管，由项目总管统一汇报用户。
 - 派工并发按 `office-plan.json` 的 `dispatch_policy` 执行；本机容量未知或偏低时，一次只派一个员工。
 - 如果任务变复杂，再拆出单独任务文件或归档记录。
 """
@@ -849,7 +849,7 @@ def render_communication(language: str) -> str:
 ## 消息规则
 
 - 职责外请求不要直接抢活；先说明应该由哪个员工负责。
-- BOSS 的需求默认先进入项目总管；项目总管判断是否自己处理，或拆给员工窗口。
+- 用户的需求默认先进入项目总管；项目总管判断是否自己处理，或拆给员工窗口。
 - 需要跨角色处理时，在本文件追加一条消息记录，写清楚 from、to、task、requested response、next owner。
 - 任务完成、阻塞、换 owner 或进入 review 时，在本文件追加交接记录。
 
@@ -931,7 +931,7 @@ def render_employee_readme(spec: OfficeSpec, role: RoleSpec) -> str:
 - 默认读取公共区和本员工文件夹。
 - 不读取其他员工文件夹，除非用户明确要求维护、审计或恢复办公室。
 - 日常工作不要读取 `Agent Office/Archive/Old Project Memory/`。
-- 默认接收项目总管派工，完成后把结果回给项目总管；BOSS 直接点名时再直接回应。
+- 默认接收项目总管派工，完成后把结果回给项目总管；用户直接点名时再直接回应。
 - 职责外请求先路由给合适员工或项目总管。
 - 正经完成任务后，更新 `memory.md` 的 `Next Action` 和 `Work Log`，必要时更新 `current-task.md`。
 """
@@ -1163,7 +1163,7 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
 4. 当前等待什么派工
 5. 如需开工，你需要项目总管给什么输入
 
-之后等待项目总管派工；只有 BOSS 明确点名找你时，才直接回应 BOSS。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再按“完成了什么 / 写到哪里 / 状态更新 / 建议下一步”回复项目总管。
+之后等待项目总管派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再按“完成了什么 / 写到哪里 / 状态更新 / 建议下一步”回复项目总管。
 """
     return f"""Conversation role: {role.title}
 
@@ -1230,7 +1230,7 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "",
             "> 这些提示词用于员工入职、换窗口续任或角色恢复。办公室挂牌、AGENTS.md 应用和旧资料入库完成前，不要发送这些提示词。",
             "",
-            "BOSS 授权正式接管后，项目总管会先确认自己已经挂牌，再安排需要独立窗口的员工入职。员工已入职后，本区也可作为以后重建窗口时的启动材料。",
+            "用户授权正式接管后，项目总管会先确认自己已经挂牌，再安排需要独立窗口的员工入职。员工已入职后，本区也可作为以后重建窗口时的启动材料。",
             "",
             "项目总管先给当前窗口挂牌，再邀请员工入职。Codex 桌面有线程工具时优先自动创建员工对话；工具不可用时，才手动复制下面的 `text` 代码框。",
             "",
@@ -1244,7 +1244,7 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "",
             "## 项目总管派工协议",
             "",
-            "BOSS 默认只需要和项目总管窗口对话。项目总管判断任务是否需要员工；需要时，先更新任务板和员工 current-task，再把下面这种派工消息发给员工窗口。",
+            "用户默认只需要和项目总管窗口对话。项目总管判断任务是否需要员工；需要时，先更新任务板和员工 current-task，再把下面这种派工消息发给员工窗口。",
             "",
             "```text",
             "本次派工：{任务编号或一句话任务}",

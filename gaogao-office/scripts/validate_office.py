@@ -285,7 +285,7 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 ["current-task.md"],
                 ["本对话角色", "Conversation role"],
                 ["项目总管派工协议", "Project-Manager Dispatch Protocol"],
-                ["BOSS", "user", "project manager"],
+                ["用户", "user", "project manager"],
             ]
             for options in prompt_requirements:
                 if not contains_any(text, options):

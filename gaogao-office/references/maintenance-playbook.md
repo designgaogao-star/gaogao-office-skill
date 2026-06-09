@@ -59,7 +59,7 @@ Good closing style:
 - [x] 员工资料没有删除
 - [x] 当前只保留项目总管窗口待命
 
-> 已归档员工不会再收到派工；如果以后要恢复，需要 BOSS 明确重新启用。
+> 已归档员工不会再收到派工；如果以后要恢复，需要用户明确重新启用。
 ```
 
 ## Safe Cleanup Order
@@ -86,7 +86,7 @@ When upgrading an existing office:
 Use this wording when helpful:
 
 ```text
-BOSS，这里已经有一个 Agent Office。
+这里已经有一个 Agent Office。
 我不会直接删掉重来；我会先把旧办公室里有用的记忆吸收进新版结构，再把过期入口归档。
 你拍板后，我再更新 active office。
 ```
@@ -95,5 +95,5 @@ Use a warning block before any deletion or original-file move:
 
 ```md
 > [!WARNING]
-> 这一步会移动或删除文件。执行前必须列出精确清单；没有 BOSS 明确批准时，只能归档，不能删除。
+> 这一步会移动或删除文件。执行前必须列出精确清单；没有用户明确批准时，只能归档，不能删除。
 ```

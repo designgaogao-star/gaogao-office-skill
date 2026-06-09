@@ -89,7 +89,7 @@ def classify(logical_cpus: int | None, memory_gb: float | None, load_ratio: floa
     elif (logical_cpus is not None and logical_cpus <= 8) or (memory_gb is not None and memory_gb < 16):
         tier, max_parallel, reason = "medium", 2, "本机配置中等，建议最多同时派两个员工，避免多个窗口一起重负载。"
     else:
-        tier, max_parallel, reason = "high", 3, "本机配置较充足，默认最多同时派三个员工；除非 BOSS 明确要求，不全员并发。"
+        tier, max_parallel, reason = "high", 3, "本机配置较充足，默认最多同时派三个员工；除非用户明确要求，不全员并发。"
 
     if load_ratio is not None and load_ratio >= 0.75:
         return "busy", 1, "adaptive-serial", "当前系统负载较高，临时降级为一次只派一个员工。"

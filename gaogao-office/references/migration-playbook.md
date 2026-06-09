@@ -62,25 +62,32 @@ For user-facing migration reports, use this table shape:
 
 ## User Choice
 
-After the migration proposal, use plain A/B/C/D reply options. Do not use tables or card-like choice layouts. Put the "reply one letter" instruction in a fenced `text` block. For most old projects:
+After the migration proposal, use plain A/B/C/D reply options. Do not use tables or card-like choice layouts. Put the "reply one letter" instruction in a fenced `text` block. The options choose the office organization, not whether the takeover is half-applied:
 
 ```text
 回一个字母即可：A / B / C / D
 ```
 
-A. 正式接管：办公室挂牌、应用 AGENTS、旧资料入库，再邀请员工入职
-B. 先挂牌办公室和 AGENTS，旧资料暂时不动
-C. 我想自己指定员工数量或岗位
-D. 先暂停，我只看方案
+A. 推荐组织方式
+创建 `Agent Office/`、应用 `AGENTS.md`、归档已吸收旧资料，并按推荐的单员工或多员工方式完成接管。
 
-Make clear that A includes creating `Agent Office/`, applying `AGENTS.md` with backup, archiving absorbed old knowledge, and only then onboarding employees.
-If A invites employees, also make clear that the user can keep using the current project-manager chat as the single entry point; the manager will dispatch work to employee threads.
+B. 另一种组织方式
+如果 A 推荐单员工，这里就是多员工；如果 A 推荐多员工，这里就是单员工。仍然是正式接管，不是半接管。
+
+C. 自定义
+用户指定员工数量或岗位；项目总管重新分配职责、边界和入职方案。
+
+D. 以后再说
+不创建文件，不修改项目。
+
+Make clear that A and B both include creating `Agent Office/`, applying `AGENTS.md` with backup, archiving absorbed old knowledge, and only then onboarding employees if that organization mode uses employees.
+If the selected organization invites employees, also make clear that the user can keep using the current project-manager chat as the single entry point; the manager will dispatch work to employee threads.
 
 Use a blockquote or warning callout for the risk boundary:
 
 ```md
 > [!WARNING]
-> `A` 会改动项目入口：创建 `Agent Office/`、备份并应用根 `AGENTS.md`、归档已吸收旧资料。
+> `A` 或 `B` 会改动项目入口：创建 `Agent Office/`、备份并应用根 `AGENTS.md`、归档已吸收旧资料。
 > 在你回复前，我不会移动或覆盖旧资料。
 ```
 

@@ -4,7 +4,7 @@ GaoGao Office creates a lightweight `Agent Office/` with a public area, employee
 
 ## Operating Model
 
-- The user is the final decision-maker. In Chinese chat, address them as `BOSS`; in English chat, use `you` for user-facing copy and `user` or `project owner` for internal descriptions.
+- The user is the final decision-maker. Respect the user's preferred form of address. In Chinese chat, default to natural `你` wording when no preference is visible; use `BOSS` only if the user has already chosen or accepted it. In English chat, use `you` for user-facing copy and `user` or `project owner` for internal descriptions.
 - The current GaoGao Office chat becomes the founding project manager by default.
 - In Codex Desktop, the founding project manager chat should be titled with its job title only, not the project name or skill invocation.
 - The project manager maintains public files, routes work, keeps the office clean, and invites employees only after formal takeover.

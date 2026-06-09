@@ -2,7 +2,7 @@
 
 Use this when GaoGao Office writes user-visible chat output for onboarding, proposals, migration reports, maintenance reports, retirement summaries, or employee launch prompts.
 
-The goal is readability, not decoration. Use the smallest Markdown structure that helps the user scan, decide, copy, or verify. In Chinese chat, `BOSS` is the preferred address; in English chat, use natural `you` wording.
+The goal is readability, not decoration. Use the smallest Markdown structure that helps the user scan, decide, copy, or verify. Respect the user's preferred form of address. In Chinese, default to natural `你` wording when no preference is visible; use `BOSS` only if the user already chose it. In English chat, use natural `you` wording.
 
 ## Default Rules
 
@@ -55,19 +55,17 @@ Use `text` blocks for copyable replies. When an example contains a fenced code b
 Use this structure for a Chinese first invocation:
 
 ````md
-BOSS，我先给这个项目做一次只读体检：看目录、README、旧规则和项目线索，先不写文件。
+我先给这个项目做一次只读体检：看目录、README、旧规则和项目线索，先不写文件。
 体检后我会给你一份接管方案；你确认前，我不会创建 `Agent Office/`、改 `AGENTS.md` 或邀请员工。
 
 > 现在只读，不写文件。等你看到方案并回复 A/B/C/D 后，我再执行对应动作。
 
 ```mermaid
 flowchart LR
-  A["只读体检"] --> B["接管方案"]
-  B --> C["BOSS 选 A/B/C/D"]
-  C -->|接管| D["创建办公室/应用规则"]
-  C -->|暂不| X["停止，不写文件"]
-  D --> E["员工入职或单窗口就位"]
-  E --> F["询问是否进入方向顾问模式"]
+  A["只读体检"] --> B["接管方案"] --> C["你选 A/B/C/D"]
+  C -->|A/B| D["正式接管"]
+  C -->|C| E["调整团队"]
+  C -->|D| F["以后再说"]
 ```
 
 **项目体检**
@@ -91,12 +89,10 @@ After the checkup, I’ll bring you a takeover proposal; before you confirm, I w
 
 ```mermaid
 flowchart LR
-  A["Read-only checkup"] --> B["Takeover proposal"]
-  B --> C["You choose A/B/C/D"]
-  C -->|take over| D["Create office/apply rules"]
-  C -->|pause| X["Stop, no file changes"]
-  D --> E["Employees onboarded or single window ready"]
-  E --> F["Ask whether to enter direction-advisor mode"]
+  A["Read-only checkup"] --> B["Takeover proposal"] --> C["Choose A/B/C/D"]
+  C -->|A/B| D["Take over"]
+  C -->|C| E["Adjust team"]
+  C -->|D| F["Later"]
 ```
 
 **Project Checkup**
@@ -116,7 +112,7 @@ If the project purpose is unknown, ask one light question in a `text` block:
 
 ````md
 ```text
-BOSS，这个项目主要想做什么？随便说一句就行，我先按你的描述判断该怎么组团队。
+这个项目主要想做什么？随便说一句就行，我先按你的描述判断该怎么组团队。
 ```
 ````
 
@@ -137,25 +133,35 @@ Use a short explanation plus a table. Keep the first proposal to four blocks at 
 
 | 员工 | 为什么需要 | 职责边界 | 是否入职 |
 |---|---|---|---|
-| 项目总管 | 统一接收 BOSS 需求 | 公共区、任务路由、验收 | 当前窗口 |
+| 项目总管 | 统一接收你的需求 | 公共区、任务路由、验收 | 当前窗口 |
 | 设计师 | 稳定视觉判断 | 设计相关文件和自己的员工区 | 建议 |
 
 ```text
 回一个字母即可：A / B / C / D
 ```
 
-A. 按推荐团队正式接管
-创建 `Agent Office/`，按方案应用 `AGENTS.md`；如需覆盖，会先备份。员工随后入职。
+A. 单员工（推荐）
+创建 `Agent Office/`，应用 `AGENTS.md`；当前项目总管窗口正式接管，不邀请额外员工。
 
-B. 单窗口接管
-只让当前项目总管窗口负责，不邀请其他员工。
+B. 多员工
+创建 `Agent Office/`，应用 `AGENTS.md`；邀请合适员工入职，由项目总管统一调度。
 
 C. 调整团队
 你指定员工数量或岗位，我来分配职责、边界和入职提示。
 
-D. 暂不接管
+D. 以后再说
 不创建文件，不修改项目。
 ````
+
+If multi-employee is recommended, swap A and B:
+
+```md
+A. 多员工（推荐）
+创建 `Agent Office/`，应用 `AGENTS.md`；按推荐团队邀请员工入职，由项目总管统一调度。
+
+B. 单员工
+创建 `Agent Office/`，应用 `AGENTS.md`；只让当前项目总管窗口正式接管，不邀请额外员工。
+```
 
 English:
 
@@ -171,18 +177,28 @@ English:
 Reply with one letter: A / B / C / D
 ```
 
-A. Take over with the recommended team
-Create `Agent Office/`, apply `AGENTS.md` with the agreed backup behavior, and onboard employees.
+A. One-person office (recommended)
+Create `Agent Office/`, apply `AGENTS.md`, and let the current project-manager chat take over without employee chats.
 
-B. Single-window takeover
-Use only the current project-manager chat; do not invite employee chats.
+B. Multi-employee office
+Create `Agent Office/`, apply `AGENTS.md`, and onboard suitable employees under the project manager.
 
 C. Adjust the team
 You specify employee count or job titles; I will assign responsibilities, boundaries, and onboarding prompts.
 
-D. Do not take over yet
+D. Later
 Do not create files or modify the project.
 ````
+
+If multi-employee is recommended, swap A and B:
+
+```md
+A. Multi-employee office (recommended)
+Create `Agent Office/`, apply `AGENTS.md`, and onboard the recommended employees under the project manager.
+
+B. One-person office
+Create `Agent Office/`, apply `AGENTS.md`, and let the current project-manager chat take over without employee chats.
+```
 
 ## Completion Shapes
 
@@ -220,7 +236,7 @@ After takeover, ask whether the user wants direction-advisor mode:
 > 办公室已经就位，但我还没有安排项目任务。
 
 ```text
-BOSS，你现在对这个项目有没有明确方向？有的话直接说你的想法；没有的话我来帮你判断 2-3 个方向。
+你现在对这个项目有没有明确方向？有的话直接说你的想法；没有的话我来帮你判断 2-3 个方向。
 ```
 ````
 
