@@ -17,45 +17,45 @@ python work/run_gaogao_office_gate.py --workspace .
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v0.2.8"
+git commit -m "Release gaogao office v0.2.9"
 ```
 
 ## 3. 打 tag
 
 ```bash
-git tag v0.2.8
+git tag v0.2.9
 git push origin main
-git push origin v0.2.8
+git push origin v0.2.9
 ```
 
 ## 4. Zip 资产
 
-Release asset 使用父级工作区里的 `outputs/gaogao-office-skill.zip`。发布前重新生成，并确认完整 gate 输出 `zip content matches package`。
+发布附件使用父级工作区里的 `outputs/gaogao-office-skill.zip`。发布前重新生成，并确认完整 gate 输出 `zip content matches package`。
 
 ## 5. Release Notes
 
 ```md
-# GaoGao Office v0.2.8
+# GaoGao Office v0.2.9
 
-Release-readiness safety update for project scanning, path handling, and office writes.
+这版主要清理中文办公室措辞、运行时 metadata 和生成状态值。
 
-Highlights:
-- office writes now refuse symlink or junction targets
-- project inspection prunes skipped directories before traversal
-- relative report paths resolve inside the selected project root
-- inspect, archive, and validate scripts reject unsafe project roots
-- Chinese and English budget checks now use mixed budget units
-- no change to the lightweight `Agent Office/` structure
+重点：
+- 中文办公室默认使用 `项目总监` 作为当前窗口的管理岗位名
+- 当前窗口员工记录 `status: current-window`，不再把岗位名写成状态
+- `agents/openai.yaml` 默认提示更短、更少重复
+- 运行时参考文档不再包含发布专用说明
+- 项目扫描会大小写不敏感地跳过 `Agent Office/`
+- 不改变轻量化 `Agent Office/` 目录结构
 ```
 
 ## 6. GitHub Release
 
-把 `outputs/gaogao-office-skill.zip` 上传为 `v0.2.8` 的 release asset。
+把 `outputs/gaogao-office-skill.zip` 上传为 `v0.2.9` 的发布附件。
 
 ## 7. 安装提示
 
 发布后，用户可以让 Codex 执行：
 
 ```text
-Install the skill from https://github.com/designgaogao-star/gaogao-office-skill and restart Codex after installation.
+从 https://github.com/designgaogao-star/gaogao-office-skill 安装 GaoGao Office。安装完成后请重启 Codex。
 ```

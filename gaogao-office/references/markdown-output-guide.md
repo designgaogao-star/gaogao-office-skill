@@ -42,7 +42,7 @@ Chinese:
 | `说明书` | 看完整功能说明 |
 | `只读体检` | 只看项目状态，不写文件 |
 | `继续推进 T-xxx` | 员工完成后继续流转 |
-| `盯进度 T-xxx` | 临时让项目总管看进度 |
+| `盯进度 T-xxx` | 临时让项目总监看进度 |
 ```
 
 English:
@@ -175,21 +175,17 @@ English:
 If you want the capability manual first, reply `help`.
 ```
 
-If the project purpose is unknown, ask one light question in a `text` block:
+If the project purpose is unknown, ask one light question as normal prose, not in a fenced code block:
 
-````md
-```text
+```md
 这个项目主要想做什么？随便说一句就行，我先按你的描述判断该怎么组团队。
 ```
-````
 
 English:
 
-````md
-```text
+```md
 What is this project mainly trying to do? One casual sentence is enough; I’ll use it to decide how to shape the team.
 ```
-````
 
 ## Capability Manual Shape
 
@@ -200,7 +196,7 @@ Do not scan the project or write files in manual mode. Use a short introduction,
 Chinese shape:
 
 ````md
-我是 GaoGao Office。你可以把我当成一个长期项目的项目总管：先帮你看清项目，再决定要不要建立 `Agent Office/`、接管旧资料、邀请员工入职，以及后续怎么把任务派给合适的人。
+我是 GaoGao Office。你可以把我当成一个长期项目的项目总监：先帮你看清项目，再决定要不要建立 `Agent Office/`、接管旧资料、邀请员工入职，以及后续怎么把任务派给合适的人。
 
 > 说明书模式只介绍功能，不扫描项目、不写文件、不改 `AGENTS.md`、不创建或归档线程。
 
@@ -212,8 +208,8 @@ Chinese shape:
 | 新项目接管 | 刚开项目，想建立长期工作秩序 | 是 | 需要你选 A/B |
 | 旧项目迁移 | 有旧 planning、vibe、规则、任务或上下文散落 | 是 | 先给迁移方案，再等确认 |
 | 员工入职 | 想把长期项目拆给多个专业对话窗口 | 是 | 正式接管后再授权 |
-| 任务路由 | 你只跟项目总管说需求，由它判断谁来做 | 可能 | 派工前会记录任务 |
-| 盯进度 | 希望项目总管定时看员工进展 | 否或少量记录 | 需要明确说 `盯进度 T-xxx` |
+| 任务路由 | 你只跟项目总监说需求，由它判断谁来做 | 可能 | 派工前会记录任务 |
+| 盯进度 | 希望项目总监定时看员工进展 | 否或少量记录 | 需要明确说 `盯进度 T-xxx` |
 | 角色记忆 | 让每个岗位保留自己的长期记忆 | 是 | 员工完成正式任务后更新 |
 | 撤岗/换岗 | 减少员工、停掉方向、换新窗口接任 | 是 | 先给保留和归档方案 |
 | 办公室清理 | 把旧提示词、临时计划、重复入口移出工作区 | 是 | 先列清单，再确认 |
@@ -262,7 +258,7 @@ Use a short explanation plus a table. Keep the first proposal to four blocks at 
 
 | 员工 | 为什么需要 | 职责边界 | 是否入职 |
 |---|---|---|---|
-| 项目总管 | 统一接收你的需求 | 公共区、任务路由、验收 | 当前窗口 |
+| 项目总监 | 统一接收你的需求 | 公共区、任务路由、验收 | 当前窗口 |
 | 设计师 | 稳定视觉判断 | 设计相关文件和自己的员工区 | 建议 |
 
 ```text
@@ -270,10 +266,10 @@ Use a short explanation plus a table. Keep the first proposal to four blocks at 
 ```
 
 A. 单员工（推荐）
-创建 `Agent Office/`，应用 `AGENTS.md`；当前项目总管窗口正式接管，不邀请额外员工。
+创建 `Agent Office/`，应用 `AGENTS.md`；当前项目总监窗口正式接管，不邀请额外员工。
 
 B. 多员工
-创建 `Agent Office/`，应用 `AGENTS.md`；邀请合适员工入职，由项目总管统一调度。
+创建 `Agent Office/`，应用 `AGENTS.md`；邀请合适员工入职，由项目总监统一调度。
 
 C. 调整团队
 你指定员工数量或岗位，我来分配职责、边界和入职提示。
@@ -286,10 +282,10 @@ If multi-employee is recommended, swap A and B:
 
 ```md
 A. 多员工（推荐）
-创建 `Agent Office/`，应用 `AGENTS.md`；按推荐团队邀请员工入职，由项目总管统一调度。
+创建 `Agent Office/`，应用 `AGENTS.md`；按推荐团队邀请员工入职，由项目总监统一调度。
 
 B. 单员工
-创建 `Agent Office/`，应用 `AGENTS.md`；只让当前项目总管窗口正式接管，不邀请额外员工。
+创建 `Agent Office/`，应用 `AGENTS.md`；只让当前项目总监窗口正式接管，不邀请额外员工。
 ```
 
 English:
@@ -342,7 +338,7 @@ For A-style formal takeover, use a task list:
 - [x] 派工策略已记录
 - [ ] 安排项目任务
 
-> 当前还没有安排任务。你可以继续只和项目总管窗口说话。
+> 当前还没有安排任务。你可以继续只和项目总监窗口说话。
 ```
 
 English:
@@ -393,7 +389,7 @@ Use this after the project manager assigns work to any employee and should stop 
 > 我不会在这里反复轮询员工窗口。等你需要继续时，再叫我推进即可。
 
 接下来你可以这样推进：
-1. 员工完成后，回到项目总管这里发 `继续推进 {任务编号}`。
+1. 员工完成后，回到项目总监这里发 `继续推进 {任务编号}`。
 2. 直接去 `{员工职位}` 窗口继续聊，让它完成后按办公室规则写交接。
 3. 如果你想手动接力，把员工产物复制给下一位合适员工。
 

@@ -16,7 +16,7 @@ from datetime import date
 from pathlib import Path
 
 
-OFFICE_PREFIX = ("Agent Office",)
+OFFICE_PREFIX_LOWER = ("agent office",)
 
 SKIP_DIRS = {
     ".git",
@@ -175,7 +175,7 @@ def should_prune_dir(root: Path, path: Path) -> bool:
         rel = path.relative_to(root)
     except ValueError:
         return True
-    if len(rel.parts) >= 1 and rel.parts[:1] == OFFICE_PREFIX:
+    if len(rel.parts) >= 1 and tuple(part.lower() for part in rel.parts[:1]) == OFFICE_PREFIX_LOWER:
         return True
     return has_link_in_path(root, path)
 
@@ -198,7 +198,7 @@ def is_sensitive_path(rel_path: Path) -> bool:
 
 def skip_reason(rel_parts: tuple[str, ...]) -> str | None:
     lower = tuple(part.lower() for part in rel_parts)
-    if len(rel_parts) >= 1 and rel_parts[:1] == OFFICE_PREFIX:
+    if len(rel_parts) >= 1 and tuple(part.lower() for part in rel_parts[:1]) == OFFICE_PREFIX_LOWER:
         return "existing office skipped"
     for part in lower:
         if part in SKIP_DIRS:

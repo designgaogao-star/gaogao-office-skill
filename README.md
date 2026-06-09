@@ -4,7 +4,7 @@
 
 It treats the current chat as the founding project manager/controller, renames that chat to its job title when Codex Desktop allows it, proposes an organization, and invites employees only after formal takeover. In multi-employee mode, the user can keep talking to that one project-manager chat while it judges each request, routes employee-owned work to the right thread according to local capacity, records handoffs, and waits for the user to continue.
 
-v0.2.8 is a release-readiness safety update: office writes refuse symlink/junction targets, project inspection prunes large skipped directories before traversal, relative report paths resolve inside the project root, unsafe roots are rejected, and Chinese context budgets are counted reliably.
+v0.2.9 is a small experience cleanup: Chinese offices now use `项目总监`, current-window status is recorded as a real state value, metadata is lighter, and runtime skill references no longer include publishing-only notes.
 
 ## When To Use It
 
@@ -59,7 +59,9 @@ From the repository root:
 ```powershell
 $dest = "$env:USERPROFILE\.codex\skills\gaogao-office"
 if (Test-Path $dest) {
-  $backup = "$dest.backup-$(Get-Date -Format yyyyMMdd-HHmmss)"
+  $backupRoot = "$env:USERPROFILE\.codex\skill-backups\gaogao-office"
+  New-Item -ItemType Directory -Force $backupRoot | Out-Null
+  $backup = Join-Path $backupRoot "gaogao-office-$(Get-Date -Format yyyyMMdd-HHmmss)"
   Move-Item -LiteralPath $dest -Destination $backup
   Write-Host "Backed up existing install to $backup"
 }
@@ -69,7 +71,7 @@ Copy-Item -Recurse .\gaogao-office $dest
 
 Restart Codex after installing or updating.
 
-If `agent-office-os` is still installed, back it up or remove it so both skills do not respond to the same request.
+If `agent-office-os` is still installed, move it outside `.codex\skills` or remove it so both skills do not respond to the same request.
 
 ## Usage
 

@@ -1,6 +1,6 @@
 ---
 name: gaogao-office
-description: 搭建、迁移或维护 GaoGao Office，用一个项目总管窗口接管长期 AI Agent 项目，先判断生命周期状态和任务归属，再按需自办或调度员工对话；也可回答说明书、使用说明、你能做什么、help、capabilities、只读体检、健康检查、继续推进、盯进度、撤岗等功能或口令问题。适用于 Agent Office、多窗口员工角色、角色记忆、项目清理、旧 planning/vibe 框架 migrate/migration、AGENTS.md 审批、旧资料归档和长期项目管理；不适合一次性 AGENTS.md 编辑、普通任务清单或没有项目文件夹的短聊天。
+description: 搭建、迁移或维护 GaoGao Office，用一个项目总监窗口接管长期 AI Agent 项目，先判断生命周期状态和任务归属，再按需自办或调度员工对话；也可回答说明书、使用说明、你能做什么、help、capabilities、只读体检、健康检查、继续推进、盯进度、撤岗等功能或口令问题。适用于 Agent Office、多窗口员工角色、角色记忆、项目清理、旧 planning/vibe 框架 migrate/migration、AGENTS.md 审批、旧资料归档和长期项目管理；不适合一次性 AGENTS.md 编辑、普通任务清单或没有项目文件夹的短聊天。
 ---
 
 # GaoGao Office
@@ -63,7 +63,7 @@ Before changing files:
 - Before any final answer, run a public-output preflight: remove internal notes, tentative link syntax, tool implementation details, temporary config names, and analysis-like wording. If a file link format is uncertain, show a plain absolute path instead of exposing the uncertainty.
 - State that the current chat will become the founding project manager unless the user only wants a proposal.
 - In multi-employee mode, make the current project manager the user-facing controller by default: the user talks to this chat, this chat decomposes requests, dispatches work to employee threads, records the handoff, then stops. Do not poll employee threads, wait in-chat, or take over employee work unless the user explicitly asks for that mode.
-- In Codex Desktop, after formal takeover, rename the current chat to the founding project-manager job title only, such as `项目经理`, `项目总管`, or `Project Manager`. Do this before creating other employee threads when the thread title tool is available; if it is unavailable or the current thread cannot be confidently identified, tell the user the exact manual title to use.
+- In Codex Desktop, after formal takeover, rename the current chat to the founding project-manager job title only, such as `项目总监` or `Project Manager`. Do this before creating other employee threads when the thread title tool is available; if it is unavailable or the current thread cannot be confidently identified, tell the user the exact manual title to use.
 - Inspect project clues read-only: directory name, full filename map excluding skip directories, README, config files, existing `AGENTS.md`, `vibe/`, top-level docs, and Git status when available.
 - Before dispatching multiple employee threads, run or emulate `scripts/inspect_capacity.py`. Employees may all be onboarded, but active task dispatch must follow `dispatch_policy`; unknown or low-capacity machines dispatch one employee at a time.
 - Do not bulk-read every file. Full-scan filenames; read only relevant text candidates such as README, agent rules, planning, tasks, context/vibe, copy docs, ADRs, and status notes.

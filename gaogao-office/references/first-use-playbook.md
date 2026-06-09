@@ -106,7 +106,7 @@ Use a table for the employee part when it helps the user compare the recommendat
 ```md
 | 员工 | 为什么需要 | 职责边界 | 是否入职 |
 |---|---|---|---|
-| 项目总管 | 统一接收需求、维护办公室 | 公共区、任务路由、验收汇报 | 当前窗口 |
+| 项目总监 | 统一接收需求、维护办公室 | 公共区、任务路由、验收汇报 | 当前窗口 |
 | 设计师 | 稳定视觉判断 | 设计相关文件和自己的员工区 | 建议 |
 ```
 
@@ -141,7 +141,7 @@ Formal takeover must complete before employee prompts or threads are created:
 If the user chooses an option that does not complete formal takeover, do not output employee launch prompts or create employee threads.
 If the user chooses A or B, stop after takeover and onboarding. Report that the office is ready, list employees, and ask whether the user wants a direction-advisor conversation. Do not assign the first task, draft a project plan, browse the web, or create task-result files.
 
-If the current thread cannot be renamed automatically, do not silently skip it. Tell the user the exact title to set manually, for example `项目经理`, `项目总管`, or `Project Manager`.
+If the current thread cannot be renamed automatically, do not silently skip it. Tell the user the exact title to set manually, for example `项目总监` or `Project Manager`.
 
 Use blockquotes for takeover warnings:
 
@@ -248,7 +248,7 @@ Chinese example:
 当前状态：等待 `{员工职位}` 完成。
 
 接下来你可以这样推进：
-1. 员工完成后，回到项目总管这里发 `继续推进 {任务编号}`。
+1. 员工完成后，回到项目总监这里发 `继续推进 {任务编号}`。
 2. 直接去 `{员工职位}` 窗口继续聊，让它完成后按办公室规则写交接。
 3. 如果你想手动接力，把员工产物复制给下一位合适员工。
 

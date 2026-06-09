@@ -161,7 +161,7 @@ Current project-manager window title: `Project Manager`
 
 | Role | Thread Title | Thread ID | Mode | Current Assignment | Write Scope | Status |
 |---|---|---|---|---|---|---|
-| Project Manager | Project Manager | current-window | local | maintain the office | Agent Office public files | founding-steward |
+| Project Manager | Project Manager | current-window | local | maintain the office | Agent Office public files | current-window |
 | Designer | Designer | TBD | local | waiting | approved design/assets scope | waiting |
 
 ## Employee Rejoin / Restart Prompts
@@ -234,7 +234,7 @@ Chinese:
 当前状态：等待 `{员工职位}` 完成。
 
 接下来你可以这样推进：
-1. 员工完成后，回到项目总管这里发 `继续推进 {任务编号}`。
+1. 员工完成后，回到项目总监这里发 `继续推进 {任务编号}`。
 2. 直接去 `{员工职位}` 窗口继续聊，让它完成后按办公室规则写交接。
 3. 如果你想手动接力，把员工产物复制给下一位合适员工。
 
@@ -254,7 +254,7 @@ Manual dispatch packet fallback:
 本次派工：{任务编号或一句话任务}
 路由判断：{为什么这件事归这个员工}
 交接框架：{目标、约束、输入材料、验收标准；不要替员工写最终产物}
-完成后请更新你的 memory.md 和 current-task.md，然后把结果回复给项目总管。
+完成后请更新你的 memory.md 和 current-task.md，然后把结果回复给项目总监。
 ```
 ````
 
@@ -325,9 +325,9 @@ Chinese employee launch prompt shape:
 2. 你负责什么
 3. 你不能碰什么
 4. 当前等待什么派工
-5. 如需开工，你需要项目总管给什么输入
+5. 如需开工，你需要项目总监给什么输入
 
-之后等待项目总管派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再按“完成了什么 / 写到哪里 / 状态更新 / 建议下一步”回复项目总管。
+之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再按“完成了什么 / 写到哪里 / 状态更新 / 建议下一步”回复项目总监。
 ```
 
 ### Designer

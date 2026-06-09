@@ -25,13 +25,13 @@ EMPLOYEES_DIR = "Employees"
 PROPOSALS_DIR = "Proposals"
 ARCHIVE_DIR = "Archive"
 LEGACY_ARCHIVE_DIR = "Old Project Memory"
-OFFICE_SCHEMA_VERSION = "0.2.8"
+OFFICE_SCHEMA_VERSION = "0.2.9"
 
 
 ROLE_DEFINITIONS = {
     "pm": {
         "title": "Project Manager",
-        "zh_title": "项目总管",
+        "zh_title": "项目总监",
         "mission": "Maintain shared project truth, task ownership, scope, and handoffs.",
         "zh_mission": "维护项目共识、任务归属、范围和交接。",
         "authority": "May update public office files and coordinate employee work.",
@@ -263,9 +263,9 @@ def role_from_legacy_key(role: str, language: str) -> RoleSpec:
         current_window=is_manager,
         needs_thread=not is_manager,
         thread_title=title,
-        status=("项目总管" if zh else "founding-steward") if is_manager else "waiting",
+        status="current-window" if is_manager else "waiting",
         thread_mode="worktree" if role == "builder" else "local",
-        handoff_to=("项目总管" if role != "pm" else "用户") if zh else ("Project Manager" if role != "pm" else "User"),
+        handoff_to=("项目总监" if role != "pm" else "用户") if zh else ("Project Manager" if role != "pm" else "User"),
     )
 
 
@@ -292,15 +292,15 @@ def role_from_config(raw: dict[str, Any], index: int, default_handoff: str, lang
     title = coalesce(raw.get("title"), raw.get("name"), default=f"Role {index + 1}")
     slug = slugify(coalesce(raw.get("slug"), default=title), f"role-{index + 1}")
     validate_slug(slug)
-    current_window = bool(raw.get("current_window", raw.get("currentWindow", raw.get("founding_steward", False))))
+    current_window = bool(raw.get("current_window", raw.get("currentWindow", False)))
     needs_thread_raw = raw.get("needs_thread", raw.get("needsThread", None))
     needs_thread = (not current_window) if needs_thread_raw is None else bool(needs_thread_raw)
     default_mission = "负责一个经过批准的清晰工作范围，并把结果交接干净。" if zh else "Own a distinct part of the approved workflow."
     default_authority = "只更新批准的写入范围和本员工私有文件夹。" if zh else "May update only the approved write scope and this employee's private folder."
     default_write_scope = "仅限当前任务授权范围" if zh else "current task scope only"
-    default_assignment = "等待项目总管派工" if zh else "waiting"
+    default_assignment = "等待项目总监派工" if zh else "waiting"
     default_quality = "边界清楚、结果可验证、下一步容易接上。" if zh else "Work cleanly, verify the result, and leave the next action obvious."
-    default_inputs = "AGENTS.md、Agent Office 公共文件、本员工文件夹，以及项目总管或用户指令。" if zh else "AGENTS.md, Agent Office public files, this employee's folder, and user instructions."
+    default_inputs = "AGENTS.md、Agent Office 公共文件、本员工文件夹，以及项目总监或用户指令。" if zh else "AGENTS.md, Agent Office public files, this employee's folder, and user instructions."
     default_outputs = "完成的工作、更新后的员工记忆和当前任务，以及必要交接。" if zh else "Completed work, updated employee memory/current-task, and handoffs when needed."
     default_forbidden = "不要超出批准的写入范围；默认不要读取其他员工文件夹或旧档案。" if zh else "Do not exceed the approved write scope or read other employee folders or old archives by default."
     return RoleSpec(
@@ -334,7 +334,7 @@ def infer_default_handoff(roles: list[RoleSpec], language: str) -> str:
         haystack = f"{role.slug} {role.title}".lower()
         if any(token in haystack for token in ["coordinator", "owner", "lead", "manager", "producer"]):
             return role.title
-        if any(token in role.title for token in ["总管", "经理", "负责人", "协调", "主理", "策展", "主编"]):
+        if any(token in role.title for token in ["总监", "协调", "主理", "策展", "主编"]):
             return role.title
     if roles:
         return roles[0].title
@@ -349,7 +349,7 @@ def fill_missing_handoffs(roles: list[RoleSpec], default_handoff: str, language:
             role.handoff_to = fallback_owner if role.title == inferred else inferred
 
 
-def ensure_founding_steward(roles: list[RoleSpec], language: str) -> None:
+def ensure_project_manager(roles: list[RoleSpec], language: str) -> None:
     """Make the current chat the first project manager unless config already did."""
     if not roles:
         return
@@ -357,13 +357,13 @@ def ensure_founding_steward(roles: list[RoleSpec], language: str) -> None:
         for role in roles:
             if role.current_window:
                 role.needs_thread = False
-                role.status = role.status or ("founding-steward" if not is_zh(language) else "项目总管")
+                role.status = role.status or "current-window"
                 role.thread_id = role.thread_id if role.thread_id != "TBD" else "current-window"
                 role.thread_title = role.thread_title or role.title
         return
     roles[0].current_window = True
     roles[0].needs_thread = False
-    roles[0].status = roles[0].status or ("founding-steward" if not is_zh(language) else "项目总管")
+    roles[0].status = roles[0].status or "current-window"
     roles[0].thread_id = roles[0].thread_id if roles[0].thread_id != "TBD" else "current-window"
     roles[0].thread_title = roles[0].thread_title or roles[0].title
 
@@ -419,7 +419,7 @@ def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) ->
     if len(roles) != len(role_items):
         raise SystemExit("Each role in config must be a JSON object.")
     fill_missing_handoffs(roles, default_handoff, language)
-    ensure_founding_steward(roles, language)
+    ensure_project_manager(roles, language)
     validate_roles(roles)
     return OfficeSpec(
         project_name=coalesce(raw.get("project_name"), raw.get("name"), args.project_name, root.name, default="Project"),
@@ -444,7 +444,7 @@ def load_office_spec(args: argparse.Namespace, root: Path) -> OfficeSpec:
         return load_config_spec(Path(args.config).resolve(), args, root)
     language = normalize_language(args.language)
     roles = parse_roles(args.roles, args.profile, language)
-    ensure_founding_steward(roles, language)
+    ensure_project_manager(roles, language)
     return OfficeSpec(
         project_name=args.project_name or root.name or "Project",
         project_root=str(root),
@@ -502,20 +502,20 @@ def render_agents_proposal(language: str) -> str:
 - 日常工作不要读取 `Agent Office/Archive/Old Project Memory/`；那里是已吸收旧知识的历史档案。
 
 协作规则：
-- 当前窗口默认是第一任项目总管，负责给办公室挂牌、路由任务、更新公共区和处理迁移收尾。
-- 项目总管每次行动前先判断生命周期状态和授权等级：说明书、只读体检、接管方案、已批准接管、就绪、已派工、盯进度、维护或阻塞。
+- 当前窗口默认是第一任项目总监，负责给办公室挂牌、路由任务、更新公共区和处理迁移收尾。
+- 项目总监每次行动前先判断生命周期状态和授权等级：说明书、只读体检、接管方案、已批准接管、就绪、已派工、盯进度、维护或阻塞。
 - 会写文件、改 `AGENTS.md`、移动旧资料或操作线程的动作，必须有当前有效选项或明确授权。
-- 多员工模式默认由项目总管做单入口总控：用户主要和项目总管对话，项目总管拆任务、派给员工窗口、记录交接，然后停止等待用户继续推进。
-- 项目总管每次收到需求都先做任务路由判断：员工职责明确就派给员工；没有合适员工或只是办公室小事时自己处理；归属会影响方向时只补问一句。
-- 项目总管可以写交接框架、输入约束和验收标准，但不得替员工完成创意、提示词、设计、代码、研究、检查或发布产物，除非用户明确要求项目总管接手。
-- 员工数量不等于并发数量；项目总管按办公室派工策略控制同时派工数量。
+- 多员工模式默认由项目总监做单入口总控：用户主要和项目总监对话，项目总监拆任务、派给员工窗口、记录交接，然后停止等待用户继续推进。
+- 项目总监每次收到需求都先做任务路由判断：员工职责明确就派给员工；没有合适员工或只是办公室小事时自己处理；归属会影响方向时只补问一句。
+- 项目总监可以写交接框架、输入约束和验收标准，但不得替员工完成创意、提示词、设计、代码、研究、检查或发布产物，除非用户明确要求项目总监接手。
+- 员工数量不等于并发数量；项目总监按办公室派工策略控制同时派工数量。
 - `Agent Office/thread-registry.md` 是长期 Agent 员工名册和入职提示记录。
 - 跨角色请求、答复和交接写入 `Agent Office/communication.md`。
 - 当前任务和责任人写入 `Agent Office/task-board.md`。
-- 员工完成有意义工作后，先更新自己的 `memory.md` 和 `current-task.md`，再向项目总管汇报。
-- 默认派工后停止；只有用户明确要求 `盯进度 T-xxx` 时，项目总管才按 30-60 秒动态间隔查看员工进度。
+- 员工完成有意义工作后，先更新自己的 `memory.md` 和 `current-task.md`，再向项目总监汇报。
+- 默认派工后停止；只有用户明确要求 `盯进度 T-xxx` 时，项目总监才按 30-60 秒动态间隔查看员工进度。
 - `A/B/C/D` 只用于会触发不同动作的授权选择；`1/2/3` 只用于告知用户接下来可以怎样推进。
-- 只有项目总管、用户或被明确授权的员工才更新公共状态。
+- 只有项目总监、用户或被明确授权的员工才更新公共状态。
 - 结束任务时说明改了什么、验证了什么、还剩什么、下一个负责人是谁。
 """
     return """# AGENTS.md
@@ -577,11 +577,11 @@ def render_readme(spec: OfficeSpec) -> str:
 
 `Archive/Old Project Memory/` 是已吸收旧知识的历史档案。普通工作不要读取它。
 
-## 项目总管
+## 项目总监
 
-当前调用 GaoGao Office 的窗口默认接任第一任项目总管。它负责给办公室挂牌、保持公共区干净、先判断任务归属，再把合适任务分给员工，并在正式接管完成后邀请其他员工入职。
+当前调用 GaoGao Office 的窗口默认接任第一任项目总监。它负责给办公室挂牌、保持公共区干净、先判断任务归属，再把合适任务分给员工，并在正式接管完成后邀请其他员工入职。
 
-多员工模式下，用户可以继续主要和这个项目总管窗口对话。项目总管负责判断最终目标、识别下一位负责人、派工给员工窗口、写清交接记录，然后停止等待用户继续推进。默认不反复轮询员工窗口，也不抢员工的职责。
+多员工模式下，用户可以继续主要和这个项目总监窗口对话。项目总监负责判断最终目标、识别下一位负责人、派工给员工窗口、写清交接记录，然后停止等待用户继续推进。默认不反复轮询员工窗口，也不抢员工的职责。
 
 办公室派工策略：{dispatch_policy_summary(spec)}
 """
@@ -647,7 +647,7 @@ def render_status(spec: OfficeSpec) -> str:
 
 ## 下一步
 
-用户拍板后，项目总管先确认 `task-board.md` 的第一项任务是否仍然准确。若需要多人协作，项目总管先拆任务并派给必要员工，记录交接后停止，等待用户要求继续推进。
+用户拍板后，项目总监先确认 `task-board.md` 的第一项任务是否仍然准确。若需要多人协作，项目总监先拆任务并派给必要员工，记录交接后停止，等待用户要求继续推进。
 """
     return f"""# Project Status
 
@@ -716,10 +716,10 @@ def render_project_brief(spec: OfficeSpec) -> str:
 
 {notes}
 
-默认协作方式：用户主要和当前项目总管窗口沟通；项目总管按需派工给员工窗口，记录交接后停止，等待用户要求继续推进。
-运行中枢规则：项目总管每次行动前判断生命周期状态、动作授权等级和任务归属；没有当前有效授权时，只能报告、提案或询问。
+默认协作方式：用户主要和当前项目总监窗口沟通；项目总监按需派工给员工窗口，记录交接后停止，等待用户要求继续推进。
+运行中枢规则：项目总监每次行动前判断生命周期状态、动作授权等级和任务归属；没有当前有效授权时，只能报告、提案或询问。
 任务路由规则：每次收到需求先判断最终目标、当前阶段和下一位负责人；员工职责明确就派工，办公室小事自己处理，归属不清且影响方向时只补问一句。
-默认派工策略：员工可以全部入职，但项目总管按本机容量控制并发；配置未知或偏低时一次只派一个员工。
+默认派工策略：员工可以全部入职，但项目总监按本机容量控制并发；配置未知或偏低时一次只派一个员工。
 
 {role_lines}
 
@@ -826,7 +826,7 @@ def render_task_board(spec: OfficeSpec) -> str:
 ## 任务规则
 
 - 每项任务必须有 owner、reviewer、写入范围和验收方式。
-- 多员工任务默认由项目总管先做任务路由判断，再拆分和派工；派工后项目总管记录交接并停止，等用户要求继续推进后再读取员工结果。
+- 多员工任务默认由项目总监先做任务路由判断，再拆分和派工；派工后项目总监记录交接并停止，等用户要求继续推进后再读取员工结果。
 - 派工并发按办公室派工策略执行；本机容量未知或偏低时，一次只派一个员工。
 - 如果任务变复杂，再拆出单独任务文件或归档记录。
 """
@@ -870,18 +870,18 @@ def render_communication(language: str) -> str:
 ## 消息规则
 
 - 职责外请求不要直接抢活；先说明应该由哪个员工负责。
-- 用户的需求默认先进入项目总管；项目总管先做任务路由判断：最终交付物、当前阶段、候选负责人、是否派工、是否自办、是否补问一句。
-- 项目总管先判断生命周期状态和授权等级；写文件、改 `AGENTS.md`、移动旧资料或操作线程前，必须确认当前回复已经授权。
+- 用户的需求默认先进入项目总监；项目总监先做任务路由判断：最终交付物、当前阶段、候选负责人、是否派工、是否自办、是否补问一句。
+- 项目总监先判断生命周期状态和授权等级；写文件、改 `AGENTS.md`、移动旧资料或操作线程前，必须确认当前回复已经授权。
 - 需要跨角色处理时，在本文件追加一条消息记录，写清楚 from、to、task、routing decision、requested response、next owner。派工后默认停止，不轮询员工窗口；用户回来发 `继续推进 T-xxx` 时再读取结果和推进下一棒。
 - `A/B/C/D` 只用于会触发不同动作的授权选择；`1/2/3` 只用于告知用户接下来可以怎样推进。
-- 用户明确要求 `盯进度 T-xxx` 时，项目总管才进入盯进度模式；每 30-60 秒按任务复杂度动态检查一次，只汇报有意义进展、阻塞、交接或完成。
+- 用户明确要求 `盯进度 T-xxx` 时，项目总监才进入盯进度模式；每 30-60 秒按任务复杂度动态检查一次，只汇报有意义进展、阻塞、交接或完成。
 - 任务完成、阻塞、换 owner 或进入 review 时，在本文件追加交接记录。
 
-## Open Messages
+## 未处理消息
 
 暂无。
 
-## Handoffs
+## 交接记录
 
 暂无。
 """
@@ -958,8 +958,8 @@ def render_employee_readme(spec: OfficeSpec, role: RoleSpec) -> str:
 - 默认读取公共区和本员工文件夹。
 - 不读取其他员工文件夹，除非用户明确要求维护、审计或恢复办公室。
 - 日常工作不要读取 `Agent Office/Archive/Old Project Memory/`。
-- 默认接收项目总管派工，完成后把结果回给项目总管；用户直接点名时再直接回应。
-- 职责外请求先路由给合适员工或项目总管。
+- 默认接收项目总监派工，完成后把结果回给项目总监；用户直接点名时再直接回应。
+- 职责外请求先路由给合适员工或项目总监。
 - 正经完成任务后，更新 `memory.md` 的 `Next Action` 和 `Work Log`，必要时更新 `current-task.md`。
 """
     return f"""# {role.title}
@@ -1030,7 +1030,7 @@ def render_employee_memory(spec: OfficeSpec, role: RoleSpec) -> str:
 
 status: waiting
 next: {role.current_assignment}
-reason: 初始接管状态；等待用户或项目总管确认下一步。
+reason: 初始接管状态；等待用户或项目总监确认下一步。
 
 ## Work Log
 
@@ -1188,9 +1188,9 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
 2. 你负责什么
 3. 你不能碰什么
 4. 当前等待什么派工
-5. 如需开工，你需要项目总管给什么输入
+5. 如需开工，你需要项目总监给什么输入
 
-之后等待项目总管派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再按“完成了什么 / 写到哪里 / 状态更新 / 建议下一步”回复项目总管。
+之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再按“完成了什么 / 写到哪里 / 状态更新 / 建议下一步”回复项目总监。
 """
     return f"""Conversation role: {role.title}
 
@@ -1233,7 +1233,7 @@ def render_thread_registry(spec: OfficeSpec) -> str:
     rows = []
     launch_roles = [role for role in spec.roles if role.needs_thread and not role.current_window]
     manager_titles = [role.thread_title or role.title for role in spec.roles if role.current_window]
-    manager_title = manager_titles[0] if manager_titles else ("项目经理" if is_zh(spec.language) else "Project Manager")
+    manager_title = manager_titles[0] if manager_titles else ("项目总监" if is_zh(spec.language) else "Project Manager")
     for role in spec.roles:
         status = role.status or ("current-window" if role.current_window else "waiting")
         thread_id = role.thread_id if role.current_window or role.thread_id != "TBD" else "TBD"
@@ -1247,7 +1247,7 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "",
             f"最后更新：{today}",
             "",
-            f"当前项目经理窗口标题：`{manager_title}`",
+            f"当前项目总监窗口标题：`{manager_title}`",
             "",
             "| Role | Thread Title | Thread ID | Mode | Current Assignment | Write Scope | Status |",
             "|---|---|---|---|---|---|---|",
@@ -1257,26 +1257,26 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "",
             "> 这些提示词用于员工入职、换窗口续任或角色恢复。办公室挂牌、AGENTS.md 应用和旧资料入库完成前，不要发送这些提示词。",
             "",
-            "用户授权正式接管后，项目总管会先确认自己已经挂牌，再安排需要独立窗口的员工入职。员工已入职后，本区也可作为以后重建窗口时的启动材料。",
+            "用户授权正式接管后，项目总监会先确认自己已经挂牌，再安排需要独立窗口的员工入职。员工已入职后，本区也可作为以后重建窗口时的启动材料。",
             "",
-            "项目总管先给当前窗口挂牌，再邀请员工入职。Codex 桌面有线程工具时优先自动创建员工对话；工具不可用时，才手动复制下面的 `text` 代码框。",
+            "项目总监先给当前窗口挂牌，再邀请员工入职。Codex 桌面有线程工具时优先自动创建员工对话；工具不可用时，才手动复制下面的 `text` 代码框。",
             "",
-            "当前窗口默认已接任项目总管，不需要再为项目总管开一个窗口。",
+            "当前窗口默认已接任项目总监，不需要再为项目总监开一个窗口。",
             "",
             "## 派工并发策略",
             "",
             dispatch_policy_summary(spec),
             "",
-            "项目总管可以一次邀请所有员工入职，但正式派工要按这个并发上限执行；本机容量未知或偏低时，一个员工完成后再派下一个。",
+            "项目总监可以一次邀请所有员工入职，但正式派工要按这个并发上限执行；本机容量未知或偏低时，一个员工完成后再派下一个。",
             "",
-            "## 项目总管派工协议",
+            "## 项目总监派工协议",
             "",
             "行动前先做运行中枢自检：当前生命周期状态、用户意图、动作授权等级、是否已有当前有效授权、员工归属、执行后该停止还是盯进度。",
             "",
-            "用户默认只需要和项目总管窗口对话。项目总管每次先做任务路由判断：最终交付物、当前阶段、候选负责人、是否派工、是否自办、是否需要补问一句。员工职责明确时必须派给员工；没有合适员工或只是办公室小事时，项目总管可以自己处理并记录结果。",
+            "用户默认只需要和项目总监窗口对话。项目总监每次先做任务路由判断：最终交付物、当前阶段、候选负责人、是否派工、是否自办、是否需要补问一句。员工职责明确时必须派给员工；没有合适员工或只是办公室小事时，项目总监可以自己处理并记录结果。",
             "任务路由读取范围要小：读取 `office-plan.json`、`task-board.md`、`thread-registry.md`、`project-brief.md`、可选根 `AGENTS.md`，以及候选负责人的 `current-task.md`；不要为了选负责人而通读所有员工档案或记忆，也不要在普通派工前跑完整校验。",
             "",
-            "项目总管可以写路由理由、交接框架、输入材料、约束和验收标准；不得替员工完成最终创意、提示词、设计、代码、研究、检查或发布产物，除非用户明确要求项目总管接手。若给出建议，必须标注为“交接框架，待员工判断”。",
+            "项目总监可以写路由理由、交接框架、输入材料、约束和验收标准；不得替员工完成最终创意、提示词、设计、代码、研究、检查或发布产物，除非用户明确要求项目总监接手。若给出建议，必须标注为“交接框架，待员工判断”。",
             "",
             "会写文件、改 AGENTS.md、移动旧资料或操作线程的动作，必须有当前有效选项或明确授权。A/B/C/D 只用于授权动作；过期字母不能当作批准。",
             "",
@@ -1291,12 +1291,12 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "请先读取 AGENTS.md、Agent Office 公共文件，以及你自己的员工文件夹。",
             "写入范围：{明确路径或范围}",
             "交付内容：{期望输出}",
-            "完成后请更新你的 memory.md 和 current-task.md，然后把结果回复给项目总管。",
+            "完成后请更新你的 memory.md 和 current-task.md，然后把结果回复给项目总监。",
             "```",
             "",
-            "派工发出后，项目总管默认停止，不反复轮询员工窗口，也不抢员工职责。给用户的说明使用 `1/2/3` 编号：1. 员工完成后回到项目总管发 `继续推进 {任务编号}`；2. 直接去员工窗口推进并让它写交接；3. 手动把员工产物复制给下一位合适员工。`A/B/C/D` 只用于会触发不同动作的授权选择。盯进度命令必须单独放在 `text` 代码框里，不能混成第 4 个选项。",
+            "派工发出后，项目总监默认停止，不反复轮询员工窗口，也不抢员工职责。给用户的说明使用 `1/2/3` 编号：1. 员工完成后回到项目总监发 `继续推进 {任务编号}`；2. 直接去员工窗口推进并让它写交接；3. 手动把员工产物复制给下一位合适员工。`A/B/C/D` 只用于会触发不同动作的授权选择。盯进度命令必须单独放在 `text` 代码框里，不能混成第 4 个选项。",
             "",
-            "如果用户希望项目总管替他盯进度，让用户回复 `盯进度 {任务编号}`。盯进度模式每 30-60 秒动态检查一次员工状态；任务复杂或员工明显还在拆解时靠近 60 秒，快完成或读取成本很低时可更短。只汇报有意义进展、阻塞、交接或完成，不要每次安静轮询都打扰用户。",
+            "如果用户希望项目总监替他盯进度，让用户回复 `盯进度 {任务编号}`。盯进度模式每 30-60 秒动态检查一次员工状态；任务复杂或员工明显还在拆解时靠近 60 秒，快完成或读取成本很低时可更短。只汇报有意义进展、阻塞、交接或完成，不要每次安静轮询都打扰用户。",
             "",
         ]
         if not launch_roles:

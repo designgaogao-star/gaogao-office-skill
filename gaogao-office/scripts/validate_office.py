@@ -11,7 +11,7 @@ from pathlib import Path, PureWindowsPath
 
 
 OFFICE_DIR = "Agent Office"
-OFFICE_SCHEMA_VERSION = "0.2.8"
+OFFICE_SCHEMA_VERSION = "0.2.9"
 
 REQUIRED_FILES = [
     "Agent Office/README.md",
@@ -311,7 +311,7 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
         text = read_text(prompt_file)
         if text:
             general_registry_requirements = [
-                ["项目总管派工协议", "Project-Manager Dispatch Protocol"],
+                ["项目总监派工协议", "Project-Manager Dispatch Protocol"],
                 ["任务路由判断", "task routing judgment", "Routing decision"],
                 ["1/2/3", "Continue", "继续推进"],
                 ["不反复轮询", "non-blocking", "stops by default"],
@@ -350,7 +350,7 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
         for options in [["out-of-scope", "职责外"], ["Handoffs", "交接"], ["Open Messages", "消息"]]:
             if not contains_any(text, options):
                 findings.append(Finding("warning", "Agent Office/communication.md", f"communication protocol should mention `{label(options)}`"))
-        if not contains_any(text, ["project manager by default", "默认先进入项目总管"]):
+        if not contains_any(text, ["project manager by default", "默认先进入项目总监"]):
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain controller-dispatch entry through the project manager"))
         if not contains_any(text, ["任务路由判断", "task routing judgment", "routing decision"]):
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain task routing before dispatch or direct work"))
@@ -364,7 +364,7 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
     brief = root / "Agent Office/project-brief.md"
     if brief.exists() and not has_link_in_path(root, brief):
         text = read_text(brief)
-        if not contains_any(text, ["controller-dispatch", "项目总管按需派工"]):
+        if not contains_any(text, ["controller-dispatch", "项目总监按需派工"]):
             findings.append(Finding("warning", "Agent Office/project-brief.md", "project brief should record the controller-dispatch collaboration style"))
 
     plan = root / "Agent Office/office-plan.json"
@@ -408,9 +408,9 @@ def validate_employees(root: Path, findings: list[Finding]) -> None:
     if not employee_dirs:
         findings.append(Finding("error", "Agent Office/Employees", "no employee role folders found"))
     registry_text = read_text(root / "Agent Office/thread-registry.md")
-    if registry_text and not contains_any(registry_text, ["current-window", "founding-steward", "项目总管"]):
+    if registry_text and not contains_any(registry_text, ["current-window", "项目总监"]):
         findings.append(Finding("warning", "Agent Office/thread-registry.md", "registry should identify the current chat as the founding project manager"))
-    if registry_text and not contains_any(registry_text, ["Current project-manager window title", "当前项目经理窗口标题"]):
+    if registry_text and not contains_any(registry_text, ["Current project-manager window title", "当前项目总监窗口标题"]):
         findings.append(Finding("warning", "Agent Office/thread-registry.md", "registry should state the title for the current project-manager chat"))
     if registry_text:
         for line in registry_text.splitlines():
@@ -424,7 +424,7 @@ def validate_employees(root: Path, findings: list[Finding]) -> None:
         title = title_match.group(1).strip() if title_match else employee.name
         current_window_employee = bool(
             registry_text
-            and re.search(rf"^\|\s*{re.escape(title)}\s*\|[^\n]*(current-window|founding-steward|项目总管)", registry_text, re.MULTILINE)
+            and re.search(rf"^\|\s*{re.escape(title)}\s*\|[^\n]*(current-window|项目总监)", registry_text, re.MULTILINE)
         )
         title_lower = title.lower()
         if any(token in title_lower or token in title for token in BAD_ROLE_TITLE_TOKENS):

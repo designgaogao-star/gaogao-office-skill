@@ -17,15 +17,15 @@ From the package repository:
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v0.2.8"
+git commit -m "Release gaogao office v0.2.9"
 ```
 
 ## 3. Tag
 
 ```bash
-git tag v0.2.8
+git tag v0.2.9
 git push origin main
-git push origin v0.2.8
+git push origin v0.2.9
 ```
 
 ## 4. Zip Asset
@@ -35,22 +35,22 @@ The release asset should be `outputs/gaogao-office-skill.zip` from the parent wo
 ## 5. Release Notes
 
 ```md
-# GaoGao Office v0.2.8
+# GaoGao Office v0.2.9
 
-Release-readiness safety update for project scanning, path handling, and office writes.
+Small experience cleanup for Chinese office wording, runtime metadata, and generated state values.
 
 Highlights:
-- office writes now refuse symlink or junction targets
-- project inspection prunes skipped directories before traversal
-- relative report paths resolve inside the selected project root
-- inspect, archive, and validate scripts reject unsafe project roots
-- Chinese and English budget checks now use mixed budget units
+- Chinese offices now use `项目总监` for the founding project-manager role
+- current-window employees record `status: current-window` instead of a job title
+- `agents/openai.yaml` default prompt is shorter and less repetitive
+- runtime skill references no longer include publishing-only notes
+- project inspection skips `Agent Office/` case-insensitively
 - no change to the lightweight `Agent Office/` structure
 ```
 
 ## 6. GitHub Release
 
-Upload `outputs/gaogao-office-skill.zip` as the release asset for `v0.2.8`.
+Upload `outputs/gaogao-office-skill.zip` as the release asset for `v0.2.9`.
 
 ## 7. Install Prompt
 
