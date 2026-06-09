@@ -25,7 +25,7 @@ EMPLOYEES_DIR = "Employees"
 PROPOSALS_DIR = "Proposals"
 ARCHIVE_DIR = "Archive"
 LEGACY_ARCHIVE_DIR = "Old Project Memory"
-OFFICE_SCHEMA_VERSION = "0.2.4"
+OFFICE_SCHEMA_VERSION = "0.2.6"
 
 
 ROLE_DEFINITIONS = {
@@ -154,6 +154,7 @@ class OfficeSpec:
     role_decisions: str = ""
     deferred_roles: list[str] = field(default_factory=list)
     collaboration_mode: str = "controller-dispatch"
+    operation_model: str = "stateful-router"
     dispatch_policy: dict[str, Any] = field(default_factory=dict)
 
 
@@ -433,6 +434,7 @@ def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) ->
         role_decisions=coalesce(raw.get("role_decisions"), raw.get("role_strategy"), default=""),
         deferred_roles=as_string_list(raw.get("deferred_roles")),
         collaboration_mode=coalesce(raw.get("collaboration_mode"), raw.get("collaborationMode"), default="controller-dispatch"),
+        operation_model=coalesce(raw.get("operation_model"), raw.get("operationModel"), default="stateful-router"),
         dispatch_policy=normalize_dispatch_policy(raw.get("dispatch_policy", raw.get("dispatchPolicy")), language),
     )
 
@@ -454,6 +456,7 @@ def load_office_spec(args: argparse.Namespace, root: Path) -> OfficeSpec:
         language=language,
         roles=roles,
         collaboration_mode="controller-dispatch",
+        operation_model="stateful-router",
         dispatch_policy=default_dispatch_policy(language),
     )
 
@@ -500,6 +503,8 @@ def render_agents_proposal(language: str) -> str:
 
 协作规则：
 - 当前窗口默认是第一任项目总管，负责给办公室挂牌、路由任务、更新公共区和处理迁移收尾。
+- 项目总管每次行动前先判断生命周期状态和授权等级：说明书、只读体检、接管方案、已批准接管、就绪、已派工、盯进度、维护或阻塞。
+- 会写文件、改 `AGENTS.md`、移动旧资料或操作线程的动作，必须有当前有效选项或明确授权。
 - 多员工模式默认由项目总管做单入口总控：用户主要和项目总管对话，项目总管拆任务、派给员工窗口、记录交接，然后停止等待用户继续推进。
 - 项目总管每次收到需求都先做任务路由判断：员工职责明确就派给员工；没有合适员工或只是办公室小事时自己处理；归属会影响方向时只补问一句。
 - 员工数量不等于并发数量；项目总管按办公室派工策略控制同时派工数量。
@@ -508,6 +513,7 @@ def render_agents_proposal(language: str) -> str:
 - 当前任务和责任人写入 `Agent Office/task-board.md`。
 - 员工完成有意义工作后，先更新自己的 `memory.md` 和 `current-task.md`，再向项目总管汇报。
 - 默认派工后停止；只有用户明确要求 `盯进度 T-xxx` 时，项目总管才按 30-60 秒动态间隔查看员工进度。
+- `A/B/C/D` 只用于会触发不同动作的授权选择；`1/2/3` 只用于告知用户接下来可以怎样推进。
 - 只有项目总管、用户或被明确授权的员工才更新公共状态。
 - 结束任务时说明改了什么、验证了什么、还剩什么、下一个负责人是谁。
 """
@@ -525,6 +531,8 @@ Before project work:
 
 Coordination:
 - The current chat is the founding project manager unless the user chooses otherwise.
+- Before acting, the project manager classifies lifecycle state and authorization level: manual, checkup, proposal, takeover-approved, ready, active-dispatch, watching, maintenance, or blocked.
+- Any action that writes files, changes `AGENTS.md`, moves old memory, or operates threads requires the current valid option or explicit approval.
 - In multi-employee mode, the project manager is the single user-facing controller by default: it splits requests, dispatches work to employee threads, records the handoff, and stops until the user asks it to continue.
 - The project manager runs a task routing judgment for every request: dispatch clear employee-owned work, handle unowned or small office-maintenance work directly, and ask one brief question when ownership affects direction.
 - Employee roster size is not active concurrency; the project manager follows the office dispatch policy when dispatching employee work.
@@ -533,6 +541,7 @@ Coordination:
 - Current tasks and owners go in `Agent Office/task-board.md`.
 - After meaningful work, employees update their own `memory.md` and `current-task.md` before reporting back to the project manager.
 - Dispatch is non-blocking by default; the project manager watches progress only after an explicit `Watch T-xxx` request, using an adaptive 30-60 second interval.
+- Use A/B/C/D only for current action choices that authorize different actions; use 1/2/3 only for informational continuation paths.
 - Only the project manager, project owner, or explicitly assigned employee updates public status.
 - End every task with what changed, what was verified, what remains, and who should pick it up next.
 """
@@ -696,6 +705,7 @@ def render_project_brief(spec: OfficeSpec) -> str:
 - 办公室配置：{spec.profile}
 - 办公室版本：{OFFICE_SCHEMA_VERSION}
 - 协作方式：{spec.collaboration_mode}
+- 运行模型：{spec.operation_model}
 - 办公室派工策略：{dispatch_policy_summary(spec)}
 - 风险等级：{spec.risk_level}
 - 当前角色：{role_titles(spec.roles)}
@@ -705,6 +715,7 @@ def render_project_brief(spec: OfficeSpec) -> str:
 {notes}
 
 默认协作方式：用户主要和当前项目总管窗口沟通；项目总管按需派工给员工窗口，记录交接后停止，等待用户要求继续推进。
+运行中枢规则：项目总管每次行动前判断生命周期状态、动作授权等级和任务归属；没有当前有效授权时，只能报告、提案或询问。
 任务路由规则：每次收到需求先判断最终目标、当前阶段和下一位负责人；员工职责明确就派工，办公室小事自己处理，归属不清且影响方向时只补问一句。
 默认派工策略：员工可以全部入职，但项目总管按本机容量控制并发；配置未知或偏低时一次只派一个员工。
 
@@ -739,6 +750,7 @@ Generated: {today}
 - Office profile: {spec.profile}
 - Office schema version: {OFFICE_SCHEMA_VERSION}
 - Collaboration mode: {spec.collaboration_mode}
+- Operation model: {spec.operation_model}
 - Office dispatch policy: {dispatch_policy_summary(spec)}
 - Risk level: {spec.risk_level}
 - Current roles: {role_titles(spec.roles)}
@@ -748,6 +760,7 @@ Generated: {today}
 {notes}
 
 Default collaboration style: the user primarily talks to the current project-manager chat; the project manager judges the final outcome, current stage, and next owner before working, dispatches employee-owned work as needed, records the handoff, and stops until the user asks it to continue.
+Operation router rule: before acting, the project manager classifies lifecycle state, authorization level, and task owner; without current valid approval, it can only report, propose, or ask.
 Task routing rule: dispatch clear employee-owned work, handle tiny office-maintenance work directly, and ask one brief clarification when ownership affects direction.
 Default dispatch policy: employees may all onboard, but the project manager controls concurrent employee work based on local capacity. Unknown or low-capacity machines dispatch one employee at a time.
 
@@ -856,7 +869,9 @@ def render_communication(language: str) -> str:
 
 - 职责外请求不要直接抢活；先说明应该由哪个员工负责。
 - 用户的需求默认先进入项目总管；项目总管先做任务路由判断：最终交付物、当前阶段、候选负责人、是否派工、是否自办、是否补问一句。
+- 项目总管先判断生命周期状态和授权等级；写文件、改 `AGENTS.md`、移动旧资料或操作线程前，必须确认当前回复已经授权。
 - 需要跨角色处理时，在本文件追加一条消息记录，写清楚 from、to、task、routing decision、requested response、next owner。派工后默认停止，不轮询员工窗口；用户回来发 `继续推进 T-xxx` 时再读取结果和推进下一棒。
+- `A/B/C/D` 只用于会触发不同动作的授权选择；`1/2/3` 只用于告知用户接下来可以怎样推进。
 - 用户明确要求 `盯进度 T-xxx` 时，项目总管才进入盯进度模式；每 30-60 秒按任务复杂度动态检查一次，只汇报有意义进展、阻塞、交接或完成。
 - 任务完成、阻塞、换 owner 或进入 review 时，在本文件追加交接记录。
 
@@ -874,7 +889,9 @@ def render_communication(language: str) -> str:
 
 - Do not perform out-of-scope requests directly; name the role that should own the work.
 - User requests enter through the project manager by default; the project manager first runs a task routing judgment: final deliverable, current stage, candidate owner, whether to dispatch, whether to handle directly, or whether to ask one clarification.
+- The project manager classifies lifecycle state and authorization level first; before writing files, changing `AGENTS.md`, moving old memory, or operating threads, it must confirm the current reply authorized that action.
 - When cross-role coordination is needed, append a message here with from, to, task, routing decision, requested response, and next owner. Dispatch is non-blocking by default; after dispatch, stop until the user returns with `Continue T-xxx` or another continuation request.
+- Use A/B/C/D only for choices that authorize different actions; use 1/2/3 only for informational continuation paths.
 - Enter watch mode only when the user explicitly asks with `Watch T-xxx` or equivalent. Check every 30-60 seconds based on task complexity and token cost, and report only meaningful progress, blockers, handoffs, or completion.
 - When work is done, blocked, changes owner, or enters review, append a handoff here.
 
@@ -1252,7 +1269,11 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "",
             "## 项目总管派工协议",
             "",
+            "行动前先做运行中枢自检：当前生命周期状态、用户意图、动作授权等级、是否已有当前有效授权、员工归属、执行后该停止还是盯进度。",
+            "",
             "用户默认只需要和项目总管窗口对话。项目总管每次先做任务路由判断：最终交付物、当前阶段、候选负责人、是否派工、是否自办、是否需要补问一句。员工职责明确时必须派给员工；没有合适员工或只是办公室小事时，项目总管可以自己处理并记录结果。",
+            "",
+            "会写文件、改 AGENTS.md、移动旧资料或操作线程的动作，必须有当前有效选项或明确授权。A/B/C/D 只用于授权动作；过期字母不能当作批准。",
             "",
             "需要员工时，先更新任务板、communication.md 和员工 current-task，再把下面这种派工消息发给员工窗口。",
             "",
@@ -1314,7 +1335,11 @@ def render_thread_registry(spec: OfficeSpec) -> str:
         "",
         "## Project-Manager Dispatch Protocol",
         "",
+        "Before acting, run the operation-router self-check: lifecycle state, user intent, authorization level, current valid approval, employee owner, and whether to stop or watch afterward.",
+        "",
         "The user only needs to talk to the project-manager chat by default. The project manager runs task routing judgment first: final deliverable, current stage, candidate owner, whether to dispatch, whether to handle directly, or whether to ask one clarification. Clear employee-owned work must be dispatched; unowned or small office-maintenance work may be handled by the project manager and recorded.",
+        "",
+        "Actions that write files, change AGENTS.md, move old memory, or operate threads require a current valid option or explicit approval. A/B/C/D are only for authorization choices; stale letters are not approval.",
         "",
         "When an employee is needed, update the task board, communication.md, and employee current-task before sending a concise task message like this.",
         "",

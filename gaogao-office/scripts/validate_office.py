@@ -11,7 +11,7 @@ from pathlib import Path, PureWindowsPath
 
 
 OFFICE_DIR = "Agent Office"
-OFFICE_SCHEMA_VERSION = "0.2.4"
+OFFICE_SCHEMA_VERSION = "0.2.6"
 
 REQUIRED_FILES = [
     "Agent Office/README.md",
@@ -306,6 +306,8 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 ["1/2/3", "Continue", "继续推进"],
                 ["不反复轮询", "non-blocking", "stops by default"],
                 ["盯进度", "Watch", "30-60"],
+                ["生命周期", "lifecycle state", "operation-router"],
+                ["授权等级", "authorization level", "current valid approval"],
                 ["用户", "user", "project manager"],
             ]
             for options in general_registry_requirements:
@@ -341,6 +343,8 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain non-blocking dispatch continuation"))
         if not contains_any(text, ["盯进度", "Watch T-", "30-60"]):
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain opt-in watch mode"))
+        if not contains_any(text, ["生命周期状态", "lifecycle state"]) or not contains_any(text, ["授权等级", "authorization level"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain lifecycle and authorization routing"))
 
     brief = root / "Agent Office/project-brief.md"
     if brief.exists() and not has_link_in_path(root, brief):
@@ -365,6 +369,8 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 )
             if data.get("collaboration_mode") != "controller-dispatch":
                 findings.append(Finding("warning", "Agent Office/office-plan.json", "collaboration_mode should be `controller-dispatch`"))
+            if data.get("operation_model") != "stateful-router":
+                findings.append(Finding("warning", "Agent Office/office-plan.json", "operation_model should be `stateful-router`"))
             dispatch_policy = data.get("dispatch_policy")
             if not isinstance(dispatch_policy, dict):
                 findings.append(Finding("warning", "Agent Office/office-plan.json", "dispatch_policy should record local-capacity-aware employee dispatch"))

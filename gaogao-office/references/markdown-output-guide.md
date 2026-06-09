@@ -28,6 +28,66 @@ The goal is readability, not decoration. Use the smallest Markdown structure tha
 | `<details>` | Optional long logs or extra evidence | Required decisions |
 | Mermaid | First-use roadmap or complex workflows | Ordinary status updates |
 
+## Command Menu Shape
+
+Use command menus only when the user asks for the manual, asks what GaoGao Office can do, or seems lost about next actions. Do not show the full menu in the first-use opening.
+
+Chinese:
+
+```md
+**常用口令**
+
+| 口令 | 作用 |
+|---|---|
+| `说明书` | 看完整功能说明 |
+| `只读体检` | 只看项目状态，不写文件 |
+| `继续推进 T-xxx` | 员工完成后继续流转 |
+| `盯进度 T-xxx` | 临时让项目总管看进度 |
+```
+
+English:
+
+```md
+**Common Commands**
+
+| Command | Purpose |
+|---|---|
+| `help` | Show the capability manual |
+| `checkup` | Inspect the project read-only |
+| `Continue T-xxx` | Continue after an employee result |
+| `Watch T-xxx` | Temporarily watch employee progress |
+```
+
+## State-Aware Reply Shape
+
+Show the current safety boundary when the next action could be misunderstood.
+
+Read-only:
+
+```md
+> 现在是只读体检，不写文件、不改 `AGENTS.md`、不创建员工线程。
+```
+
+English:
+
+```md
+> This is a read-only checkup: no file writes, no `AGENTS.md` changes, and no employee threads.
+```
+
+Write or move warning:
+
+```md
+> [!WARNING]
+> 下一步会写入项目或移动旧资料。我会先给你清单；只有当前有效选项或明确确认能授权执行。
+```
+
+English:
+
+```md
+> [!WARNING]
+> The next step writes project files or moves old memory. I will show the list first; only the current valid option or explicit approval authorizes it.
+```
+
 ## Standard Blocks
 
 Use plain blockquotes for stable rendering:
@@ -63,10 +123,7 @@ Use this structure for a Chinese first invocation:
 
 ```mermaid
 flowchart LR
-  A["只读体检"] --> B["接管方案"] --> C["你选 A/B/C/D"]
-  C -->|A/B| D["正式接管"]
-  C -->|C| E["调整团队"]
-  C -->|D| F["以后再说"]
+  A["只读体检"] --> B["接管方案"] --> C["你选择"] --> D["接管或暂停"]
 ```
 
 **项目体检**
@@ -90,10 +147,7 @@ After the checkup, I’ll bring you a takeover proposal; before you confirm, I w
 
 ```mermaid
 flowchart LR
-  A["Read-only checkup"] --> B["Takeover proposal"] --> C["Choose A/B/C/D"]
-  C -->|A/B| D["Take over"]
-  C -->|C| E["Adjust team"]
-  C -->|D| F["Later"]
+  A["Checkup"] --> B["Proposal"] --> C["You choose"] --> D["Take over or pause"]
 ```
 
 **Project Checkup**
@@ -109,6 +163,18 @@ If this is wrong, correct me; if it is right, I’ll bring you the takeover prop
 
 Use this first-use roadmap only during onboarding, migration takeover, or upgrade takeover. Do not add Mermaid to ordinary progress updates.
 
+Add one lightweight manual hint during first-use opening, without expanding it into the full manual:
+
+```md
+想先看我能做什么，可以回复 `说明书`。
+```
+
+English:
+
+```md
+If you want the capability manual first, reply `help`.
+```
+
 If the project purpose is unknown, ask one light question in a `text` block:
 
 ````md
@@ -122,6 +188,52 @@ English:
 ````md
 ```text
 What is this project mainly trying to do? One casual sentence is enough; I’ll use it to decide how to shape the team.
+```
+````
+
+## Capability Manual Shape
+
+Use this only when the user asks for `说明书`, `使用说明`, `功能介绍`, `你能做什么`, `help`, `capabilities`, or similar. Read `references/capability-manual.md` and output only the user's language unless bilingual output is requested.
+
+Do not scan the project or write files in manual mode. Use a short introduction, a safety blockquote, one capability table, copyable starter prompts, and optional `<details>` for advanced notes.
+
+Chinese shape:
+
+````md
+我是 GaoGao Office。你可以把我当成一个长期项目的项目总管：先帮你看清项目，再决定要不要建立 `Agent Office/`、接管旧资料、邀请员工入职，以及后续怎么把任务派给合适的人。
+
+> 说明书模式只介绍功能，不扫描项目、不写文件、不改 `AGENTS.md`、不创建或归档线程。
+
+**我能做什么**
+
+| 能力 | 适合什么时候用 | 会不会写文件 | 授权要求 |
+|---|---|---|---|
+| 项目体检 | 不确定项目是什么、乱在哪里、有没有旧规则 | 否 | 不需要 |
+| 员工入职 | 想把长期项目拆给多个专业对话窗口 | 是 | 正式接管后再授权 |
+| Codex 线程增强 | 自动创建、命名、登记、归档或停用员工对话 | 可能 | 只有有线程工具且你明确授权时 |
+
+```text
+说明书
+```
+````
+
+English shape:
+
+````md
+I am GaoGao Office, a project manager for long-running AI-assisted projects.
+
+> Manual mode only explains capabilities. I will not scan the project, write files, change `AGENTS.md`, create threads, or archive anything.
+
+**What I Can Do**
+
+| Capability | When To Use It | Writes Files? | Authorization |
+|---|---|---|---|
+| Project checkup | You are not sure what the project contains | No | Not needed |
+| Employee onboarding | You want specialist chats for long-running roles | Yes | After formal takeover |
+| Codex thread enhancement | Create, title, register, archive, or retire employee chats | Maybe | Only when thread tools exist and you approve |
+
+```text
+help
 ```
 ````
 

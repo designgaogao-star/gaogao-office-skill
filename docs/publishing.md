@@ -17,15 +17,15 @@ From the package repository:
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v0.2.4"
+git commit -m "Release gaogao office v0.2.6"
 ```
 
 ## 3. Tag
 
 ```bash
-git tag v0.2.4
+git tag v0.2.6
 git push origin main
-git push origin v0.2.4
+git push origin v0.2.6
 ```
 
 ## 4. Zip Asset
@@ -35,7 +35,7 @@ The release asset should be `outputs/gaogao-office-skill.zip` from the parent wo
 ## 5. Release Notes
 
 ```md
-# GaoGao Office v0.2.4
+# GaoGao Office v0.2.6
 
 Polished takeover choices, neutral user addressing, and safer legacy archiving.
 
@@ -55,7 +55,7 @@ Highlights:
 
 ## 6. GitHub Release
 
-Upload `outputs/gaogao-office-skill.zip` as the release asset for `v0.2.4`.
+Upload `outputs/gaogao-office-skill.zip` as the release asset for `v0.2.6`.
 
 ## 7. Install Prompt
 

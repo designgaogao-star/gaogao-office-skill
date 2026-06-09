@@ -10,7 +10,9 @@ For user-visible formatting, follow `references/markdown-output-guide.md`. That 
 
 If the user invokes only `$gaogao-office` with no extra request, treat that as approval to start the first read-only checkup. Do not spend a turn asking what they want to do with the skill.
 
-On first invocation, show one compact Mermaid roadmap so the user knows what will happen next. Keep it to 2-3 visible lines; it should show checkup, proposal, A/B/C/D, and the main branches only. Do not draw the full office system. Keep the rest short: normal prose plus one safety blockquote is enough.
+Before any visible action, apply `references/operation-router.md`: this should be `checkup`, not `manual`, unless the user asked for the manual or capabilities. If `Agent Office/` already exists, leave this first-use playbook and use maintenance/upgrade flow instead.
+
+On first invocation, show one compact Mermaid roadmap so the user knows what will happen next. Keep it to four visible nodes: checkup, proposal, user choice, and takeover-or-pause. Do not draw the full office system. Keep the rest short: normal prose plus one safety blockquote is enough.
 
 Say, in the user's language:
 
@@ -22,6 +24,8 @@ Say, in the user's language:
 6. Employees are invited only after formal takeover is complete.
 7. In Codex Desktop, the founding project manager chat should be renamed to its job title before other employees are invited.
 8. Office takeover and project direction are separate stages. Do not draft a project plan or start work during takeover; after onboarding, ask whether the user wants a direction-advisor conversation.
+9. If the user wants the full capability manual first, they can reply `说明书` or `help`.
+10. The current A/B/C/D options authorize only the next user reply; if the user sends other text, the options expire.
 
 Keep the tone practical, friendly, and office-like. Respect the user's preferred form of address; in Chinese, default to natural `你` wording when no preference is visible. Do not force `BOSS` unless the user has already chosen or accepted it. In English chat, use natural `you` wording. GaoGao Office is the project manager preparing an organization proposal.
 
@@ -103,6 +107,7 @@ A/B are dynamic:
 - If single-employee is recommended, A is `单员工（推荐）` / `One-person office (recommended)` and B is `多员工` / `Multi-employee office`.
 - If multi-employee is recommended, A is `多员工（推荐）` / `Multi-employee office (recommended)` and B is `单员工` / `One-person office`.
 - A and B are both formal takeover options. Both create `Agent Office/`, apply `AGENTS.md` with backup when needed, and finish with a ready office. The only difference is whether extra employee chats are invited.
+- D means later/stop without writing, not a soft approval.
 
 For old projects, A should clearly say it includes creating `Agent Office/`, applying `AGENTS.md` with backup, and archiving absorbed old knowledge under `Agent Office/Archive/Old Project Memory/`.
 For old projects, keep the takeover options about office/team only. Do not include "draft first cleanup plan" as a takeover option.

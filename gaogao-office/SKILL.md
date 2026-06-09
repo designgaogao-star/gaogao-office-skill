@@ -1,6 +1,6 @@
 ---
 name: gaogao-office
-description: 搭建、迁移或维护 GaoGao Office，用一个项目总管窗口接管长期 AI Agent 项目，先判断任务归属，再按需自办或调度员工对话。适用于 Agent Office、多窗口员工角色、角色记忆、项目清理、旧 planning/vibe 框架 migrate/migration、AGENTS.md 审批和长期项目管理；不适合一次性 AGENTS.md 编辑、普通任务清单或没有项目文件夹的短聊天。
+description: 搭建、迁移或维护 GaoGao Office，用一个项目总管窗口接管长期 AI Agent 项目，先判断生命周期状态和任务归属，再按需自办或调度员工对话；也可回答说明书、使用说明、你能做什么、help、capabilities、只读体检、健康检查、继续推进、盯进度、撤岗等功能或口令问题。适用于 Agent Office、多窗口员工角色、角色记忆、项目清理、旧 planning/vibe 框架 migrate/migration、AGENTS.md 审批、旧资料归档和长期项目管理；不适合一次性 AGENTS.md 编辑、普通任务清单或没有项目文件夹的短聊天。
 ---
 
 # GaoGao Office
@@ -27,11 +27,33 @@ If the request is ambiguous, inspect the project first, then ask only the questi
 
 If `Agent Office/` already exists, do not run first-use initialization as if the project were empty. Treat the project as maintain/upgrade unless the user explicitly asks to discard the old office after review.
 
+## Operation Router
+
+Before project inspection, file writes, thread operations, employee dispatch, progress watching, migration, upgrade, cleanup, or retirement, read or follow `references/operation-router.md`.
+
+- Classify the user's intent first: manual/help, read-only checkup, takeover, migration, maintenance, dispatch, continue, watch, stop watching, retire role, archive old memory, or ordinary project work.
+- Classify the lifecycle state before acting: `manual`, `checkup`, `proposal`, `takeover-approved`, `ready`, `active-dispatch`, `watching`, `maintenance`, or `blocked`.
+- Classify the action level before side effects: `read-only`, `proposal-only`, `approved-write`, `thread-action`, `archive-move`, or `delete`.
+- If the current reply does not authorize the action level, stop in `blocked` or proposal mode and ask for the smallest needed approval.
+- Treat command words such as `说明书`, `只读体检`, `继续推进 T-xxx`, and `盯进度 T-xxx` as shortcuts. Natural language with the same intent should route the same way.
+
+## Capability Manual Mode
+
+Use this before project inspection when the user asks what GaoGao Office can do, asks for a manual, says `说明书`, `使用说明`, `功能介绍`, `你能做什么`, `help`, `capabilities`, or similar.
+
+- Read `references/capability-manual.md`.
+- Explain capabilities only. Do not scan the project, write files, change `AGENTS.md`, create threads, archive files, or run office scripts in this mode.
+- Follow the user's language. Output Chinese or English only, unless the user asks for both.
+- Keep the answer scannable: short intro, safety blockquote, capability table, copyable starter prompts, optional `<details>` for advanced notes.
+- If the user asks for a specific capability, answer that capability directly and mention whether it requires explicit authorization or Codex Desktop thread tools.
+
 ## Required First Pass
 
 Before changing files:
 
 - Introduce GaoGao Office briefly: it will inspect the project, propose an office organization, and wait for approval before takeover.
+- First decide whether this turn is manual, checkup, takeover, maintenance, dispatch, continue, watch, or blocked. Use `references/operation-router.md` for that routing check.
+- Keep first-use self-introduction lightweight. Mention that the user can reply `说明书` / `help` to see the full capability manual, but do not output the full manual unless asked.
 - Use practical office language in chat: project checkup, user approval, office signboard, manager on duty, employees onboarded, old records room. Keep it clear and lightly human; do not turn command progress into cute fiction.
 - Respect any user-defined name or preferred form of address from the current conversation or system context. Do not override it with GaoGao Office language. In Chinese, default to natural `你` wording when no preference is visible; use `BOSS` only if the user has already chosen or accepted that address. In English, use natural `you` wording unless the user chose another address. Machine fields such as table column `Owner` may keep their stable names.
 - Make user-visible replies easy to scan. For onboarding proposals, migration reports, maintenance reports, retirement summaries, or employee launch prompts, read `references/markdown-output-guide.md`.
@@ -188,6 +210,7 @@ If thread tools are unavailable, fall back to manual copy prompts and task messa
 
 - Treat context as a budget. Full-scan filenames; do not full-read the whole project.
 - Keep `AGENTS.md` short and index-like.
+- Before acting, run the operation-router self-check: lifecycle state, user intent, action level, approval status, employee owner, and whether to stop or watch.
 - Do not apply root `AGENTS.md`, archive old knowledge, create employee threads, or start employee work unless the current reply option explicitly authorized that action.
 - In first-use setup, formal takeover and project work are separate stages. After creating the office, applying `AGENTS.md`, and onboarding employees, stop and report the ready state, then ask whether the user wants a direction-advisor conversation. Do not draft a plan, dispatch work, search the web, or create task-result files until the user approves that separate direction flow.
 - Do not let multiple writer roles own the same file scope.
@@ -201,6 +224,8 @@ If thread tools are unavailable, fall back to manual copy prompts and task messa
 ## Resources
 
 - `references/office-blueprint.md`: operating model and context-budget rules.
+- `references/operation-router.md`: command routing, lifecycle state machine, authorization matrix, and project-manager self-check.
+- `references/capability-manual.md`: user-facing capability manual for `说明书`, `你能做什么`, `help`, and capability questions.
 - `references/first-use-playbook.md`: consultation, dynamic role planning, and prompt-output rules.
 - `references/markdown-output-guide.md`: user-visible Markdown output standards for readable chat interactions.
 - `references/interview-guide.md`: questions for new projects, migrations, and maintenance.

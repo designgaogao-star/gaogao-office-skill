@@ -17,15 +17,15 @@ python work/run_gaogao_office_gate.py --workspace .
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v0.2.4"
+git commit -m "Release gaogao office v0.2.6"
 ```
 
 ## 3. 打 tag
 
 ```bash
-git tag v0.2.4
+git tag v0.2.6
 git push origin main
-git push origin v0.2.4
+git push origin v0.2.6
 ```
 
 ## 4. Zip 资产
@@ -35,7 +35,7 @@ Release asset 使用父级工作区里的 `outputs/gaogao-office-skill.zip`。�
 ## 5. Release Notes
 
 ```md
-# GaoGao Office v0.2.4
+# GaoGao Office v0.2.6
 
 Polished takeover choices, neutral user addressing, and safer legacy archiving.
 
@@ -52,7 +52,7 @@ Highlights:
 
 ## 6. GitHub Release
 
-把 `outputs/gaogao-office-skill.zip` 上传为 `v0.2.4` 的 release asset。
+把 `outputs/gaogao-office-skill.zip` 上传为 `v0.2.6` 的 release asset。
 
 ## 7. 安装提示
 

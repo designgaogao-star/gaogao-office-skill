@@ -2,6 +2,8 @@
 
 Use this when an existing project has old agent rules, planning docs, scattered project memory, stale prompts, or cleanup needs.
 
+Before migration action, apply `references/operation-router.md`. Migration begins as `checkup` or `maintenance`, produces a `proposal-only` report, and becomes `takeover-approved` only after the current A/B option or another explicit approval authorizes formal takeover.
+
 ## Migration Rules
 
 - Start read-only: filename map first, then candidate text files.
@@ -9,6 +11,7 @@ Use this when an existing project has old agent rules, planning docs, scattered 
 - Absorb durable facts into active office files before archiving the source material.
 - Default archive action is copy. Moving originals requires a separate exact move list and explicit move approval.
 - Never silently delete old files.
+- Ordinary employees must not read `Agent Office/Archive/Old Project Memory/` after migration; it is historical material, not active project truth.
 
 ## What To Inspect
 
@@ -102,6 +105,8 @@ B. 单员工
 ```
 
 A and B both include creating `Agent Office/`, applying `AGENTS.md` with backup, archiving absorbed old knowledge, and only then onboarding employees if that organization mode uses employees.
+
+If the next user reply after A/B/C/D is not a valid letter, the options expire. Ask again before treating a later letter as approval.
 
 Use a warning block for the risk boundary:
 

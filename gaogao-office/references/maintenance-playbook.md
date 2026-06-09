@@ -4,6 +4,8 @@ Use this when auditing or cleaning an existing `Agent Office/`.
 
 If the user has updated the skill and runs it again in a project that already has `Agent Office/`, treat that as an office upgrade/re-takeover request, not a fresh initialization.
 
+Before maintenance action, apply `references/operation-router.md`. Existing offices usually enter `maintenance`; if the user asks to use the latest workflow or rerun the skill, enter upgrade/re-takeover inside `maintenance`.
+
 For user-visible maintenance, follow `references/markdown-output-guide.md`: use task lists for health checks and retirement summaries, tables for stale-entry maps, and warning blocks for deletion or move risks.
 
 ## Default Mode
@@ -30,6 +32,9 @@ Start read-only. Produce a maintenance report before cleanup edits unless the us
 - Do not read `Archive/Old Project Memory/` unless the task is migration absorption, missing-fact audit, or restore.
 - Move detail out of public files when they exceed budget; keep public files short.
 - Do not delete office history unless the user approves an exact deletion list.
+- Thread creation, renaming, reading, or archival is a `thread-action`: do it only when Codex Desktop thread tools are available and the user clearly approved that thread action.
+- Moving old project files is an `archive-move`: show the exact list before moving originals. Copying approved absorbed old knowledge into archive remains safer than moving originals.
+- Deleting files is a `delete` action: require a separate exact deletion list and explicit delete approval.
 
 ## Team Retirement / Downsizing
 
@@ -82,6 +87,7 @@ When upgrading an existing office:
 4. Ask for A/B/C/D approval before overwriting active office files.
 5. Preserve or archive retired employee folders instead of deleting them.
 6. Rebuild current templates only after approval, then run validation again.
+7. Treat stale A/B/C/D letters as expired if the next user reply after the options was not a valid letter.
 
 Use this wording when helpful:
 
