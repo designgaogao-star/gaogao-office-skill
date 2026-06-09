@@ -256,7 +256,7 @@ def role_from_legacy_key(role: str, language: str) -> RoleSpec:
         current_assignment="T-000" if role == "pm" else "waiting",
         domain=mission,
         quality_standard="保持范围清楚、结果可验证、下一位 Agent 容易接上。" if zh else "Keep work scoped, verified, and easy for the next agent to resume.",
-        inputs="用户的请求、AGENTS.md、Agent Office 公共文件，以及本员工私有文件。" if zh else "Project owner requests, AGENTS.md, Agent Office public files, and this employee's private files.",
+        inputs="用户的请求、AGENTS.md、Agent Office 公共文件，以及本员工私有文件。" if zh else "User requests, AGENTS.md, Agent Office public files, and this employee's private files.",
         outputs="完成的工作、简短状态记录，以及需要别人继续时的交接。" if zh else "Updated work, concise status notes, and handoffs when another employee should continue.",
         forbidden="不要超出批准的写入范围；默认不读取其他员工文件夹。" if zh else "Do not work outside the approved write scope or read other employee folders by default.",
         current_window=is_manager,
@@ -264,7 +264,7 @@ def role_from_legacy_key(role: str, language: str) -> RoleSpec:
         thread_title=title,
         status=("项目总管" if zh else "founding-steward") if is_manager else "waiting",
         thread_mode="worktree" if role == "builder" else "local",
-        handoff_to=("项目总管" if role != "pm" else "用户") if zh else ("Project Manager" if role != "pm" else "Project owner"),
+        handoff_to=("项目总管" if role != "pm" else "用户") if zh else ("Project Manager" if role != "pm" else "User"),
     )
 
 
@@ -337,11 +337,11 @@ def infer_default_handoff(roles: list[RoleSpec], language: str) -> str:
             return role.title
     if roles:
         return roles[0].title
-    return "用户" if is_zh(language) else "Project owner"
+    return "用户" if is_zh(language) else "User"
 
 
 def fill_missing_handoffs(roles: list[RoleSpec], default_handoff: str, language: str) -> None:
-    fallback_owner = "用户" if is_zh(language) else "Project owner"
+    fallback_owner = "用户" if is_zh(language) else "User"
     inferred = default_handoff or infer_default_handoff(roles, language)
     for role in roles:
         if not role.handoff_to:
@@ -459,7 +459,7 @@ def load_office_spec(args: argparse.Namespace, root: Path) -> OfficeSpec:
 
 
 def first_role_title(spec: OfficeSpec) -> str:
-    return spec.roles[0].title if spec.roles else "Project owner"
+    return spec.roles[0].title if spec.roles else "User"
 
 
 def reviewer_title(spec: OfficeSpec) -> str:
@@ -501,7 +501,7 @@ def render_agents_proposal(language: str) -> str:
 协作规则：
 - 当前窗口默认是第一任项目总管，负责给办公室挂牌、路由任务、更新公共区和处理迁移收尾。
 - 多员工模式默认由项目总管做单入口总控：用户主要和项目总管对话，项目总管拆任务、派给员工窗口、回收结果并统一汇报。
-- 员工数量不等于并发数量；项目总管按 `Agent Office/office-plan.json` 的 `dispatch_policy` 控制同时派工数量。
+- 员工数量不等于并发数量；项目总管按办公室派工策略控制同时派工数量。
 - `Agent Office/thread-registry.md` 是长期 Agent 员工名册和入职提示记录。
 - 跨角色请求、答复和交接写入 `Agent Office/communication.md`。
 - 当前任务和责任人写入 `Agent Office/task-board.md`。
@@ -524,7 +524,7 @@ Before project work:
 Coordination:
 - The current chat is the founding project manager unless the user chooses otherwise.
 - In multi-employee mode, the project manager is the single user-facing controller by default: it splits requests, dispatches work to employee threads, collects results, and reports back.
-- Employee roster size is not active concurrency; the project manager follows `dispatch_policy` in `Agent Office/office-plan.json` when dispatching employee work.
+- Employee roster size is not active concurrency; the project manager follows the office dispatch policy when dispatching employee work.
 - `Agent Office/thread-registry.md` is the staff directory and onboarding prompt record for long-running agent employees.
 - Cross-role requests, answers, and handoffs go in `Agent Office/communication.md`.
 - Current tasks and owners go in `Agent Office/task-board.md`.
@@ -568,7 +568,7 @@ def render_readme(spec: OfficeSpec) -> str:
 
 多员工模式下，用户可以继续主要和这个项目总管窗口对话。项目总管负责拆解需求、派工给员工窗口、读取员工回复、更新办公室记录，再把整合后的结果汇报给用户。
 
-派工策略：{dispatch_policy_summary(spec)}
+办公室派工策略：{dispatch_policy_summary(spec)}
 """
     return f"""# Agent Office
 
@@ -602,7 +602,7 @@ The current GaoGao Office chat becomes the founding project manager by default. 
 
 In multi-employee mode, the user can keep using this project-manager chat as the main entry point. The project manager decomposes requests, dispatches work to employee threads, reads employee replies, updates office records, and reports the synthesized result back.
 
-Dispatch policy: {dispatch_policy_summary(spec)}
+Office dispatch policy: {dispatch_policy_summary(spec)}
 """
 
 
@@ -692,7 +692,7 @@ def render_project_brief(spec: OfficeSpec) -> str:
 - 办公室配置：{spec.profile}
 - 办公室版本：{OFFICE_SCHEMA_VERSION}
 - 协作方式：{spec.collaboration_mode}
-- 派工策略：{dispatch_policy_summary(spec)}
+- 办公室派工策略：{dispatch_policy_summary(spec)}
 - 风险等级：{spec.risk_level}
 - 当前角色：{role_titles(spec.roles)}
 
@@ -734,7 +734,7 @@ Generated: {today}
 - Office profile: {spec.profile}
 - Office schema version: {OFFICE_SCHEMA_VERSION}
 - Collaboration mode: {spec.collaboration_mode}
-- Dispatch policy: {dispatch_policy_summary(spec)}
+- Office dispatch policy: {dispatch_policy_summary(spec)}
 - Risk level: {spec.risk_level}
 - Current roles: {role_titles(spec.roles)}
 
@@ -806,7 +806,7 @@ def render_task_board(spec: OfficeSpec) -> str:
 
 - 每项任务必须有 owner、reviewer、写入范围和验收方式。
 - 多员工任务默认由项目总管拆分和派工；员工完成后回给项目总管，由项目总管统一汇报用户。
-- 派工并发按 `office-plan.json` 的 `dispatch_policy` 执行；本机容量未知或偏低时，一次只派一个员工。
+- 派工并发按办公室派工策略执行；本机容量未知或偏低时，一次只派一个员工。
 - 如果任务变复杂，再拆出单独任务文件或归档记录。
 """
     return f"""# Task Board
@@ -821,7 +821,7 @@ Last updated: {today}
 
 - Every task needs an owner, reviewer, write scope, and verification approach.
 - Multi-employee work is split and dispatched by the project manager; employees return results to the project manager, who reports back to the user.
-- Follow `dispatch_policy` in `office-plan.json`; when local capacity is unknown or low, dispatch one employee at a time.
+- Follow the office dispatch policy; when local capacity is unknown or low, dispatch one employee at a time.
 - If a task grows too large, split it into a separate task note or archive record.
 """
 
@@ -832,13 +832,13 @@ def render_decisions(language: str) -> str:
 
 | ID | Status | Owner | Decision | Notes |
 |---|---|---|---|---|
-| D-000 | proposed | Project owner | 暂无长期决策 | 需要时再记录 |
+| D-000 | proposed | 用户 | 暂无长期决策 | 需要时再记录 |
 """
     return """# Decisions
 
 | ID | Status | Owner | Decision | Notes |
 |---|---|---|---|---|
-| D-000 | proposed | Project owner | No durable decisions yet | Record when needed |
+| D-000 | proposed | User | No durable decisions yet | Record when needed |
 """
 
 

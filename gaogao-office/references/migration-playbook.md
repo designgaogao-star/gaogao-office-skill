@@ -1,78 +1,92 @@
 # Migration Playbook
 
-Use this when an existing project has old agent rules, scattered planning docs, old memory folders, or cleanup needs.
+Use this when an existing project has old agent rules, planning docs, scattered project memory, stale prompts, or cleanup needs.
 
-For user-visible migration summaries, follow `references/markdown-output-guide.md`: use a short summary, a migration table, and one clear warning block when files may move.
+## Migration Rules
 
-## Goal
-
-Turn old project knowledge into a clean `Agent Office/` without letting old frameworks keep competing for agent attention.
-
-Use office language in chat. Say "项目体检" for the read-only scan, "旧资料入库" for archiving absorbed knowledge, and "办公室挂牌" for the approved takeover in Chinese. Keep the user in control: present what will happen, then wait for the A/B/C/D reply.
-
-Formal takeover means:
-
-1. old knowledge has been read selectively and absorbed
-2. `Agent Office/` exists
-3. root `AGENTS.md` points to the office, with backup
-4. absorbed old knowledge is archived under `Agent Office/Archive/Old Project Memory/`
-5. the current chat is recorded as founding project manager
-6. the current chat is renamed to the project-manager job title when Codex Desktop title tools are available
-7. employees are invited only after the previous steps are complete
+- Start read-only: filename map first, then candidate text files.
+- Do not read binary, media, secrets, dependencies, build output, caches, `.git`, symlinks, or linked external paths.
+- Absorb durable facts into active office files before archiving the source material.
+- Default archive action is copy. Moving originals requires a separate exact move list and explicit move approval.
+- Never silently delete old files.
 
 ## What To Inspect
 
-Filename-map the full project while skipping `.git`, dependencies, build output, caches, virtualenvs, temporary output folders, linked paths, and existing `Agent Office/`.
+Likely old-knowledge candidates include:
 
-Read only likely old-knowledge text candidates:
+- `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`
+- `README.md`, `docs/`, planning, task, roadmap, architecture, ADR, status, handoff, workflow, changelog, checklist, and copy files
+- memory folders such as `vibe/`, `context/`, `notes/`, or old handoff folders
 
-- agent rules: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`
-- memory folders: `vibe/`, `context/`, old handoff or notes folders
-- project management: tasks, todos, roadmap, planning, milestones, status, decisions, ADRs
-- domain context: copy docs, architecture notes, workflows, QA checklists, changelogs, content strategy, release notes
+Images, videos, archives, and structured data are metadata-only unless the user explicitly asks for content analysis.
 
-Do not content-read images, video, audio, fonts, binaries, secrets, credentials, dependencies, build artifacts, or generated QA output. For ordinary structured data such as `.json`, `.yaml`, `.csv`, or `.tsv`, read the filename and metadata first; content-read it only when the path/name looks like rules, plans, tasks, context, decisions, copy, or handoff material.
+## Absorption Targets
+
+| Old Material | Absorb Into |
+|---|---|
+| project purpose, audience, constraints | `Agent Office/project-brief.md` |
+| active state, blockers, next steps | `Agent Office/status.md` |
+| tasks, owners, acceptance criteria | `Agent Office/task-board.md` |
+| decisions, rules, architecture notes | `Agent Office/decisions.md` |
+| agent rules and safety boundaries | `Agent Office/Proposals/AGENTS.proposed.md` |
+| cross-role notes and handoffs | `Agent Office/communication.md` |
+| employee-specific continuity | `Agent Office/Employees/{role-slug}/memory.md` |
+
+## Migration Report Shape
+
+Use tables for scan and migration results:
+
+```md
+## Project Map
+
+| Path | Kind | Read Policy | Why |
+|---|---|---|---|
+| `vibe/notes.md` | project-memory | content-read | old working context |
+| `assets/hero.png` | media | metadata-only | visual asset |
 
 ## Absorption Map
 
-For every old-knowledge candidate, say:
-
-- what durable facts were absorbed
-- where those facts now live in `Agent Office/`
-- whether the original should be archived, left alone, or ignored
-
-Typical destinations:
-
-| Old knowledge | New destination |
-|---|---|
-| agent rules and safety boundaries | `Agent Office/Proposals/AGENTS.proposed.md` |
-| current state and next work | `Agent Office/status.md`, `Agent Office/task-board.md` |
-| file map and code ownership | `Agent Office/project-map.md` |
-| durable decisions | `Agent Office/decisions.md` |
-| employee-specific continuity | `Agent Office/Employees/{role-slug}/memory.md` |
-| old source material after absorption | `Agent Office/Archive/Old Project Memory/` |
-
-For user-facing migration reports, use this table shape:
-
-```md
-| 旧资料 | 吸收位置 | 归档动作 |
+| Source | Absorbed Into | Status |
 |---|---|---|
-| `vibe/notes.md` | `Agent Office/project-brief.md`、`Agent Office/task-board.md` | 已吸收后入库 |
+| `vibe/notes.md` | `Agent Office/project-brief.md`, `Agent Office/task-board.md` | absorbed into active office files |
+
+## Proposed Archive List
+
+| Source | Archive Destination | Reason |
+|---|---|---|
+| `vibe/notes.md` | `Agent Office/Archive/Old Project Memory/{stamp}/vibe/notes.md` | content absorbed into active office |
+
+## Proposed Move List
+
+No files are proposed for moving yet.
+
+## Proposed Delete List
+
+No files are proposed for deletion.
+
+## User Approval Record
+
+Approved archive list: NO
+Approved AGENTS replacement: NO
+Approved legacy move list: NO
+Approved deletion list: NO
 ```
 
 ## User Choice
 
-After the migration proposal, use plain A/B/C/D reply options. Do not use tables or card-like choice layouts. Put the "reply one letter" instruction in a fenced `text` block. The options choose the office organization, not whether the takeover is half-applied:
+After the migration proposal, use the same dynamic A/B/C/D reply options as first-use. The options choose the office organization, not whether the takeover is half-applied.
+
+If single-employee is recommended:
 
 ```text
 回一个字母即可：A / B / C / D
 ```
 
-A. 推荐组织方式
-创建 `Agent Office/`、应用 `AGENTS.md`、归档已吸收旧资料，并按推荐的单员工或多员工方式完成接管。
+A. 单员工（推荐）
+创建 `Agent Office/`、应用 `AGENTS.md`、归档已吸收旧资料；当前项目总管窗口正式接管，不邀请额外员工。
 
-B. 另一种组织方式
-如果 A 推荐单员工，这里就是多员工；如果 A 推荐多员工，这里就是单员工。仍然是正式接管，不是半接管。
+B. 多员工
+创建 `Agent Office/`、应用 `AGENTS.md`、归档已吸收旧资料；邀请合适员工入职，由项目总管统一调度。
 
 C. 自定义
 用户指定员工数量或岗位；项目总管重新分配职责、边界和入职方案。
@@ -80,10 +94,16 @@ C. 自定义
 D. 以后再说
 不创建文件，不修改项目。
 
-Make clear that A and B both include creating `Agent Office/`, applying `AGENTS.md` with backup, archiving absorbed old knowledge, and only then onboarding employees if that organization mode uses employees.
-If the selected organization invites employees, also make clear that the user can keep using the current project-manager chat as the single entry point; the manager will dispatch work to employee threads.
+If multi-employee is recommended, swap A and B:
 
-Use a blockquote or warning callout for the risk boundary:
+```text
+A. 多员工（推荐）
+B. 单员工
+```
+
+A and B both include creating `Agent Office/`, applying `AGENTS.md` with backup, archiving absorbed old knowledge, and only then onboarding employees if that organization mode uses employees.
+
+Use a warning block for the risk boundary:
 
 ```md
 > [!WARNING]
@@ -108,14 +128,19 @@ Root `AGENTS.md` should be short and index-like. It must tell ordinary employees
 Absorbed old knowledge should leave the active project surface when the user selects formal takeover. Archive under:
 
 ```text
-Agent Office/Archive/Old Project Memory/<date>/
+Agent Office/Archive/Old Project Memory/
 ```
 
-Default action is archive/move according to the approved migration plan. Do not delete old files. If unsure, copy into the archive and leave a clear pending decision.
+Default action is to copy absorbed old knowledge into the archive. Move originals only with all of these:
 
-Use `scripts/archive_legacy.py` for deterministic archive/move operations. It requires archive approval and an Absorption Map status that says each source was absorbed into `Agent Office/`. `needs absorption note`, `proposed`, or pending wording must be resolved before archiving.
+- `--move-originals`
+- exact `## Proposed Move List`
+- `Approved archive list: YES`
+- `Approved legacy move list: YES`
 
-When `--move-originals` is used, only files listed in `## Proposed Move List` may move. The broader archive list is for copy-only historical preservation.
+If unsure, copy into the archive and leave a clear pending decision.
+
+Use `scripts/archive_legacy.py` for deterministic archive or move operations. It requires archive approval and an Absorption Map status that says each source was absorbed into `Agent Office/`. `needs absorption note`, `proposed`, or pending wording must be resolved before archiving.
 
 If root `AGENTS.md` was replaced during formal takeover, archive the pre-apply backup (`AGENTS.md.gaogao-office-*.bak`) as the old `AGENTS.md` material. Do not archive the newly applied root `AGENTS.md` as old knowledge.
 
@@ -130,11 +155,3 @@ Do not invite employees before formal takeover. After takeover:
 - employee profiles are written before launch prompts
 - Codex Desktop threads are created automatically when authorized and tools are available
 - fallback prompts start with `本对话角色：职位名` or `Conversation role: Job Title`
-
-Good Chinese report style after migration:
-
-```text
-旧资料已经入库，活跃项目面现在干净了。
-我把可用信息吸收到 `project-brief.md`、`task-board.md` 和员工档案里；原始材料放进 `Agent Office/Archive/Old Project Memory/`，日常员工不会再翻那里。
-接下来可以开始让员工按岗位工作。
-```

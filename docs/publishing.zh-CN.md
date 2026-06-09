@@ -1,10 +1,10 @@
 # 发布 GaoGao Office
 
-只有本机安装版在真实项目里测试通过后，才考虑发布。不要因为本地 skill 改了就自动打 tag、打包或发 GitHub release。
+只有本机安装版已经在真实项目里测试通过后，才发布新版本。不要因为本地文件改了就自动打 tag 或创建 GitHub release。
 
-## 1. 校验
+## 1. 验证
 
-在工作区根目录运行：
+在工作区根目录运行完整 gate：
 
 ```bash
 python work/run_gaogao_office_gate.py --workspace .
@@ -12,44 +12,52 @@ python work/run_gaogao_office_gate.py --workspace .
 
 ## 2. 提交
 
-进入发布包仓库后：
+在 skill 包仓库里：
 
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v0.2.3"
+git commit -m "Release gaogao office v0.2.4"
 ```
 
-## 3. 打标签
+## 3. 打 tag
 
 ```bash
-git tag v0.2.3
+git tag v0.2.4
 git push origin main
-git push origin v0.2.3
+git push origin v0.2.4
 ```
 
-## 4. Release Notes
+## 4. Zip 资产
+
+Release asset 使用父级工作区里的 `outputs/gaogao-office-skill.zip`。发布前重新生成，并确认完整 gate 输出 `zip content matches package`。
+
+## 5. Release Notes
 
 ```md
-# GaoGao Office v0.2.3
+# GaoGao Office v0.2.4
 
-实战接管、容量派工和最终回复体验改进。
+Polished takeover choices, neutral user addressing, and safer legacy archiving.
 
 Highlights:
-- 当前窗口默认接任第一任项目总管
-- 用户通过 A/B/C/D 回复选择首次接管方式
-- 方案咨询从接管选项中移除，改为接管完成后的方向顾问模式
-- 员工使用人类岗位名和入职式提示
-- Codex 桌面可在授权后自动创建员工对话
-- 项目总管根据本机容量控制员工并发派工
-- 最终回复增加公开输出自检，避免内部草稿泄露
+- A/B/C/D 变成动态接管选项：A 是推荐方式，B 是另一种正式接管方式
+- 中文输出尊重用户已有称呼，不再强制使用 `BOSS`
+- 单独调用 `$gaogao-office` 会直接进入只读体检
+- 首次调用流程图更短、更容易扫读
+- 旧资料归档会拒绝活动办公室、依赖、构建、缓存和项目根路径
+- 发布和安装文档已对齐当前流程
+- Codex Desktop 授权后仍可自动创建员工对话
 - 已吸收旧知识归档到 `Agent Office/Archive/Old Project Memory/`
 ```
 
-## 5. 安装提示
+## 6. GitHub Release
 
-发布后，别人可以让 Codex 安装：
+把 `outputs/gaogao-office-skill.zip` 上传为 `v0.2.4` 的 release asset。
+
+## 7. 安装提示
+
+发布后，用户可以让 Codex 执行：
 
 ```text
-Install the skill from https://github.com/<owner>/gaogao-office-skill and restart Codex after installation.
+Install the skill from https://github.com/designgaogao-star/gaogao-office-skill and restart Codex after installation.
 ```

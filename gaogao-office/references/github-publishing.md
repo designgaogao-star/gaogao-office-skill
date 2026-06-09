@@ -24,6 +24,11 @@ Copy `gaogao-office/` into the Codex skills directory:
 
 ```powershell
 $dest = "$env:USERPROFILE\.codex\skills\gaogao-office"
+if (Test-Path $dest) {
+  $backup = "$dest.backup-$(Get-Date -Format yyyyMMdd-HHmmss)"
+  Move-Item -LiteralPath $dest -Destination $backup
+  Write-Host "Backed up existing install to $backup"
+}
 Copy-Item -Recurse .\gaogao-office $dest
 ```
 
@@ -44,28 +49,27 @@ If `agent-office-os` is still installed, back it up or remove it so both skills 
    ```
 7. Commit and tag:
    ```bash
-   git commit -m "Release gaogao office v0.2.3"
-   git tag v0.2.3
+   git commit -m "Release gaogao office v0.2.4"
+   git tag v0.2.4
    ```
+8. Push and create the GitHub release with `outputs/gaogao-office-skill.zip` as the release asset.
 
 ## Suggested Release Notes
 
 ```md
-# GaoGao Office v0.2.3
+# GaoGao Office v0.2.4
 
-Practical takeover, capacity-aware dispatch, and final-answer refinement.
+Polished takeover choices, neutral user addressing, and safer legacy archiving.
 
 Highlights:
-- skill renamed to `$gaogao-office` with display name GaoGao Office
 - generated project folder is `Agent Office/`
-- public files live directly in `Agent Office/`
-- each role gets one private folder under `Agent Office/Employees/`
-- root `AGENTS.md` is proposed first and applied only after the current reply option authorizes it
-- first-use takeover uses plain A/B/C/D replies
+- A/B/C/D takeover choices are dynamic: A is the recommended mode, B is the other formal mode
+- Chinese output respects the user's preferred address and does not force `BOSS`
+- single `$gaogao-office` invocation starts the read-only checkup directly
+- first-use Mermaid roadmap is shorter and easier to scan
+- root `AGENTS.md` is proposal-first and applied only after the current reply option authorizes it
 - direction planning moves to post-takeover direction-advisor mode
-- project managers throttle employee dispatch based on local capacity
-- final-answer preflight prevents internal draft leakage
 - migration starts with full filename scanning and candidate text reads
-- old `vibe/` and planning files are absorbed before archive or move
+- legacy archive rejects active office, dependency, build, cache, and project-root paths
 - approved old knowledge archives to `Agent Office/Archive/Old Project Memory/`
 ```

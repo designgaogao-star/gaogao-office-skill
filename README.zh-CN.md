@@ -2,7 +2,7 @@
 
 `gaogao-office` 是一个 Codex skill，用来在长期项目里创建、迁移和维护轻量化的 `Agent Office/`。
 
-它会让当前窗口先接任第一任项目总管，提出组织方案，等你用 A/B/C/D 拍板后再正式接管并邀请员工入职。多员工模式下，你也可以继续只和项目总管窗口说话，由它按本机容量拆任务、派给员工窗口、回收结果并统一汇报。
+它会让当前窗口先接任第一任项目总管，提出组织方案，等你用 A/B/C/D 拍板后再正式接管。多员工模式下，你也可以继续只和项目总管窗口说话，由它按本机容量拆任务、派给员工窗口、回收结果并统一汇报。
 
 ## 什么时候适合用
 
@@ -36,13 +36,17 @@ Agent Office/
 
 默认不会直接写根目录 `AGENTS.md`。只有你在当前回复选项里授权正式接管或应用 AGENTS 时，它才会备份旧版并应用新入口。已吸收的旧知识会进入 `Agent Office/Archive/Old Project Memory/`。
 
-## 本机安装
+## 本机安装或更新
 
 在仓库根目录运行：
 
 ```powershell
 $dest = "$env:USERPROFILE\.codex\skills\gaogao-office"
-if (Test-Path $dest) { throw "Skill already exists at $dest. Back it up or remove it first." }
+if (Test-Path $dest) {
+  $backup = "$dest.backup-$(Get-Date -Format yyyyMMdd-HHmmss)"
+  Move-Item -LiteralPath $dest -Destination $backup
+  Write-Host "已备份旧安装到 $backup"
+}
 New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse .\gaogao-office $dest
 ```
@@ -56,19 +60,19 @@ Copy-Item -Recurse .\gaogao-office $dest
 新项目：
 
 ```text
-使用 $gaogao-office 只读体检这个项目，告诉我你判断它是什么，并给我一份 Agent Office 组织建议。等我回复 A/B/C/D 后再创建文件；A 是按推荐团队正式接管，B 是单窗口接管，C 是自定义团队，D 是暂不接管。接管完成后再问我要不要进入方向顾问模式。
+使用 $gaogao-office 只读体检这个项目，并给我一份 Agent Office 组织建议。直接开始；如果你判断不出项目用途，只问我一个简短问题。等我回复 A/B/C/D 后再创建文件。A 是你推荐的正式接管方式，B 是另一种正式接管方式，C 是自定义团队，D 是以后再说且不写文件。接管完成后，再问我要不要进入方向顾问模式。
 ```
 
 旧项目接管：
 
 ```text
-Use $gaogao-office to take over this old project. Scan filenames, inspect likely old-knowledge docs, propose an organization, and let the current chat act as project manager. Do not invite employees until formal takeover is complete.
+使用 $gaogao-office 接管这个旧项目。先扫描文件名，读取明显像旧知识、规则、计划、上下文或交接记录的文本文件，给出组织方案，并让当前窗口接任项目总管。正式接管完成前，不要邀请员工或移动旧资料。
 ```
 
 更新 skill 后升级已有办公室：
 
 ```text
-使用 $gaogao-office 检查这个项目里已有的 Agent Office。不要直接删掉重来；先告诉我旧办公室哪些内容会保留、哪些旧入口会归档、哪些文件需要升级。等我回复当前选项后，再把它升级成当前 GaoGao Office 流程。
+使用 $gaogao-office 检查这个项目里已有的 Agent Office。不要直接删除或重建；先告诉我旧办公室哪些内容会保留、哪些旧入口会归档、哪些文件需要升级。等我回复当前选项后，再把它升级成当前 GaoGao Office 流程。
 ```
 
 在 Codex 桌面环境中，授权后会先尝试把当前项目经理对话改成职位名标题，再自动创建员工对话并设置职位名标题。员工入职后，项目总管会按本机容量控制并发派工、读取员工回复，并把整理后的结果汇报给你；如果没有线程工具，会回退成可复制的入职提示词和手动派工消息。

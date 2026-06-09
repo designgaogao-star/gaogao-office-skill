@@ -42,7 +42,11 @@ From the repository root:
 
 ```powershell
 $dest = "$env:USERPROFILE\.codex\skills\gaogao-office"
-if (Test-Path $dest) { throw "Skill already exists at $dest. Back it up or remove it first." }
+if (Test-Path $dest) {
+  $backup = "$dest.backup-$(Get-Date -Format yyyyMMdd-HHmmss)"
+  Move-Item -LiteralPath $dest -Destination $backup
+  Write-Host "Backed up existing install to $backup"
+}
 New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse .\gaogao-office $dest
 ```
@@ -56,7 +60,7 @@ If `agent-office-os` is still installed, back it up or remove it so both skills 
 New project:
 
 ```text
-Use $gaogao-office to inspect this project read-only, tell me what you think it is, and propose an Agent Office organization. Wait for my A/B/C/D choice before creating files. A is recommended-team takeover, B is single-window takeover, C is custom team, and D pauses without writing. After takeover, ask whether I want direction-advisor mode.
+Use $gaogao-office to inspect this project read-only and propose an Agent Office organization. Start immediately; if you cannot infer the project purpose, ask one short question. Wait for my A/B/C/D choice before creating files. A should be the recommended formal takeover mode, B the other formal takeover mode, C custom team, and D later without writing. After takeover, ask whether I want direction-advisor mode.
 ```
 
 Existing project migration:

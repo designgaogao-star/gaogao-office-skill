@@ -31,6 +31,27 @@ SENSITIVE_NAMES = {
     "id_ed25519",
 }
 
+SKIP_ARCHIVE_DIRS = {
+    ".git",
+    ".hg",
+    ".svn",
+    ".cache",
+    ".next",
+    ".nuxt",
+    ".turbo",
+    ".venv",
+    "__pycache__",
+    "agent office",
+    "build",
+    "coverage",
+    "dist",
+    "node_modules",
+    "out",
+    "target",
+    "vendor",
+    "venv",
+}
+
 
 @dataclass
 class ArchiveAction:
@@ -190,12 +211,20 @@ def validate_absorption_ready(report_text: str, sources: list[str]) -> None:
 
 
 def is_safe_report_path(raw_path: str) -> bool:
-    normalized = raw_path.replace("\\", "/")
+    normalized = raw_path.replace("\\", "/").strip()
+    if not normalized or normalized == ".":
+        return False
     path = Path(normalized)
     windows_path = PureWindowsPath(raw_path)
-    if path.is_absolute() or windows_path.is_absolute() or windows_path.drive:
+    if path.is_absolute() or windows_path.is_absolute() or windows_path.drive or windows_path.root:
         return False
-    return ".." not in path.parts
+    parts = path.parts
+    if not parts or ".." in parts:
+        return False
+    lower_parts = [part.lower() for part in parts]
+    if lower_parts[0] in SKIP_ARCHIVE_DIRS:
+        return False
+    return not any(part in SKIP_ARCHIVE_DIRS for part in lower_parts)
 
 
 def is_sensitive_path(raw_path: str) -> bool:
@@ -216,6 +245,8 @@ def is_sensitive_path(raw_path: str) -> bool:
 
 
 def assert_safe_source_tree(root: Path, source: Path, raw_source: str) -> None:
+    if not is_safe_report_path(raw_source):
+        raise SystemExit(f"Unsafe archive source path: {raw_source}")
     if not source.exists():
         raise SystemExit(f"Archive source does not exist: {raw_source}")
     if has_link_in_path(root, source):

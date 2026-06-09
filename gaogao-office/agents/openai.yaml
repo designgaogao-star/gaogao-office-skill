@@ -1,6 +1,6 @@
 interface:
   display_name: "GaoGao Office"
   short_description: "把长期 AI 项目整理成可交接、可追踪的 Agent Office"
-  default_prompt: "使用 $gaogao-office 只读体检当前项目，并按用户语言回复；若用途不清先只问一句。随后展示接管流程图和 A/B/C/D 组织方案；等我确认后，再创建 Agent Office、备份并应用 AGENTS.md、邀请员工入职。"
+  default_prompt: "使用 $gaogao-office 直接只读体检当前项目，并按用户语言回复；若用途不清只问一句。随后展示短流程图和动态 A/B/C/D：A 是推荐的单员工或多员工正式接管，B 是另一种正式接管，C 自定义，D 以后再说。用户选 A/B 后，再创建 Agent Office、备份并应用 AGENTS.md，并按组织方式入职员工。"
 policy:
   allow_implicit_invocation: true

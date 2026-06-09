@@ -60,6 +60,27 @@ BAD_ROLE_TITLE_TOKENS = [
     "前端运行层",
 ]
 
+SKIP_ARCHIVE_DIRS = {
+    ".git",
+    ".hg",
+    ".svn",
+    ".cache",
+    ".next",
+    ".nuxt",
+    ".turbo",
+    ".venv",
+    "__pycache__",
+    "agent office",
+    "build",
+    "coverage",
+    "dist",
+    "node_modules",
+    "out",
+    "target",
+    "vendor",
+    "venv",
+}
+
 
 @dataclass
 class Finding:
@@ -164,12 +185,20 @@ def table_source_paths(section: str) -> list[str]:
 
 
 def is_safe_report_path(raw_path: str) -> bool:
-    normalized = raw_path.replace("\\", "/")
+    normalized = raw_path.replace("\\", "/").strip()
+    if not normalized or normalized == ".":
+        return False
     path = Path(normalized)
     windows_path = PureWindowsPath(raw_path)
-    if path.is_absolute() or windows_path.is_absolute() or windows_path.drive:
+    if path.is_absolute() or windows_path.is_absolute() or windows_path.drive or windows_path.root:
         return False
-    return ".." not in path.parts
+    parts = path.parts
+    if not parts or ".." in parts:
+        return False
+    lower_parts = [part.lower() for part in parts]
+    if lower_parts[0] in SKIP_ARCHIVE_DIRS:
+        return False
+    return not any(part in SKIP_ARCHIVE_DIRS for part in lower_parts)
 
 
 def archive_files(archive_dir: Path) -> list[Path]:
@@ -193,11 +222,8 @@ def archive_contains_source(archive_dir: Path, archived: list[Path], source: str
             archived_parts = archived_file.relative_to(archive_dir).parts
         except ValueError:
             continue
-        if len(archived_parts) >= len(source_parts) and archived_parts[-len(source_parts) :] == source_parts:
+        if len(archived_parts) >= len(source_parts) + 1 and archived_parts[1 : 1 + len(source_parts)] == source_parts:
             return True
-        for index in range(0, len(archived_parts) - len(source_parts)):
-            if archived_parts[index : index + len(source_parts)] == source_parts:
-                return True
     return False
 
 
@@ -442,6 +468,9 @@ def validate_migration_report(root: Path, findings: list[Finding]) -> None:
 
     archive_section = markdown_section(text, "Proposed Archive List")
     approval_section = markdown_section(text, "User Approval Record")
+    agents_replacement_approved = approval_value(approval_section, "Approved AGENTS replacement") == "YES"
+    if agents_section and agents_replacement_approved and (root / "AGENTS.md").exists() and not list(root.glob("AGENTS.md.gaogao-office-*.bak")):
+        findings.append(Finding("warning", "AGENTS.md", "approved AGENTS replacement should leave a dated `AGENTS.md.gaogao-office-*.bak` backup when replacing an existing root AGENTS.md"))
     proposed_archive = table_source_paths(archive_section)
     absorption_entries = {entry.path: entry for entry in table_source_entries(markdown_section(text, "Absorption Map"))}
     archived = archive_files(archive_dir) if not has_link_in_path(root, archive_dir) else []
@@ -464,6 +493,8 @@ def validate_migration_report(root: Path, findings: list[Finding]) -> None:
     move_entries = table_source_entries(markdown_section(text, "Proposed Move List"))
     if move_entries and not proposed_archive:
         findings.append(Finding("error", rel_report, "move list exists but no archive list was found"))
+    if move_entries and not archive_approved:
+        findings.append(Finding("error", rel_report, "move list exists but the archive list is not marked approved"))
     for entry in move_entries:
         source = entry.path
         if not is_safe_report_path(source):
