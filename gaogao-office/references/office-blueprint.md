@@ -12,6 +12,7 @@ GaoGao Office creates a lightweight `Agent Office/` with a public area, employee
 - Employee roster size is not the same as active concurrency. Employees may all be onboarded, but active work dispatch follows `dispatch_policy`; low or unknown local capacity means one employee task at a time.
 - Other employees read public files plus only their own private folder by default.
 - Employees primarily receive work from the project director and report back to the project director. Direct user-to-employee work is allowed only when the user explicitly wants it.
+- Employee report transport is explicit: after local memory/task updates, employees use `send_message_to_thread` to the registered project-director thread only when that thread ID is confirmed. Otherwise they produce a copyable report for manual return.
 - Old project memory is not ordinary working context after absorption.
 
 ## Structure
@@ -82,14 +83,14 @@ When the user gives work to the project director after employees are onboarded:
 4. for multi-stage work, split only the next unblocked subtask and record the likely next owner without dispatching downstream work too early
 5. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
 6. send task messages to employee threads when tools are available
-7. require each employee to update its own `memory.md` and `current-task.md`, then report back with the fixed employee-report shape
+7. require each employee to update its own `memory.md` and `current-task.md`, then return the fixed employee-report shape to the project director
 8. record partial reports, wait for required dependencies, and advance only according to A/B/C mode
 
 This loop should reduce the user's coordination burden. It should not create busywork or route tiny tasks to employees just because threads exist.
 
 Task routing must stay small. Read `office-plan.json`, `task-board.md`, `thread-registry.md`, `project-brief.md`, optional root `AGENTS.md`, and only the likely owner's `current-task.md`; do not read every employee file or run full validation before ordinary dispatch.
 
-Dispatch must stay small: update the active task board, one communication handoff, and the assigned employee's current task; send one employee-thread message when possible; then report and stop. If writes or thread sends are unavailable, provide a manual dispatch packet instead of expanding the turn.
+Dispatch must stay small: update the active task board, one communication handoff, and the assigned employee's current task; send one employee-thread message when possible; then report and stop. Each dispatch includes the project-director return target and the manual-copy fallback. If writes or employee-thread sends are unavailable, provide a manual dispatch packet instead of expanding the turn.
 
 Do not create orphan active tasks. If the target employee thread ID is `TBD`, missing, or not tied to this project, show the manual dispatch packet and stop; record the task after the user confirms it was sent, the employee thread is registered, or a result returns.
 

@@ -11,7 +11,7 @@ from pathlib import Path, PureWindowsPath
 
 
 OFFICE_DIR = "Agent Office"
-OFFICE_SCHEMA_VERSION = "1.0.0"
+OFFICE_SCHEMA_VERSION = "1.0.1"
 
 REQUIRED_FILES = [
     "Agent Office/README.md",
@@ -319,6 +319,10 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 ["依赖", "dependency", "A/B/C progress"],
                 ["heartbeat", "自动推进", "automatic follow-up"],
                 ["【员工汇报】", "Employee Report"],
+                ["send_message_to_thread"],
+                ["项目总监 Thread ID", "Project-director Thread ID"],
+                ["自动回传", "auto-return", "Employee Return Protocol"],
+                ["手动复制", "manual copy", "copyable report"],
                 ["依赖", "dependency", "wait until required"],
                 ["交接框架", "Handoff frame", "handoff framing"],
                 ["不要替员工写最终产物", "employee-owned output", "不得替员工完成"],
@@ -343,6 +347,9 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 ["Agent Office/Employees/"],
                 ["memory.md"],
                 ["current-task.md"],
+                ["send_message_to_thread"],
+                ["thread-registry.md"],
+                ["需要复制回项目总监窗口", "copied back to the project-director chat"],
             ]
             for options in launch_prompt_requirements:
                 if not contains_any(text, options):
@@ -364,6 +371,8 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain A/B/C progress modes"))
         if not contains_any(text, ["【员工汇报】", "Employee Report"]):
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should include the employee report shape"))
+        if "send_message_to_thread" not in text or not contains_any(text, ["手动复制", "manual copy", "copyable report"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain employee report transport and manual fallback"))
         if not contains_any(text, ["依赖等待", "Dependency Waiting", "wait for required"]):
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain dependency waiting before the next stage"))
         if not contains_any(text, ["heartbeat", "自动推进", "automatic follow-up", "automatic progress"]):
@@ -400,6 +409,8 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 "task_reference_policy": "user-facing-title-internal-id",
                 "progress_mode": "ask-per-workstream",
                 "employee_report_route": "director-only",
+                "employee_report_transport": "director-thread-first",
+                "employee_report_fallback": "copyable-report",
                 "dependency_policy": "wait-for-required-inputs",
                 "short_continue_policy": "contextual-natural-language",
             }

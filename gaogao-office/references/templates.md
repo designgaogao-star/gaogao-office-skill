@@ -187,10 +187,11 @@ When the user sends work to the project director:
 3. if one employee clearly owns the next stage, dispatch to that employee; if no employee owns it or it is small office maintenance, the project director may handle it
 4. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
 5. follow `dispatch_policy.max_parallel_employee_tasks`; do not dispatch all employees in parallel unless the user explicitly approves it
-6. send the employee a concise task message when thread tools are available
-7. ask the employee to update `memory.md` and `current-task.md`, then report back with the fixed employee-report shape
-8. record partial employee reports, wait for required dependencies, and continue only according to A/B/C mode
-9. in automatic progress mode, create or update heartbeat only when automation tools are available and stop at completion, blocker, risk, or the next user checkpoint
+6. send the employee a concise task message when thread tools and a registered employee thread ID are available
+7. include the project-director return target in that message: title, thread ID status, automatic return condition, and manual-copy fallback
+8. ask the employee to update `memory.md` and `current-task.md`, then return the fixed employee-report shape to the project director
+9. record partial employee reports, wait for required dependencies, and continue only according to A/B/C mode
+10. in automatic progress mode, create or update heartbeat only when automation tools are available and stop at completion, blocker, risk, or the next user checkpoint
 
 The project director may write handoff framing, inputs, constraints, and acceptance criteria. It must not write the employee-owned final output unless the user explicitly asks the project director to take over that employee's work.
 
@@ -202,7 +203,7 @@ If the employee thread ID is `TBD`, missing, or not clearly tied to this project
 
 ## Employee Report Shape
 
-Employees reply to the project director in this shape after real work:
+Employees reply to the project director in this shape after real work. If `send_message_to_thread` is available and `thread-registry.md` has a confirmed project-director thread ID, send this report to that thread; otherwise output the report as a copyable block and say it needs to be copied back to the project-director chat.
 
 ```text
 【员工汇报】
@@ -258,7 +259,9 @@ Manual dispatch packet fallback:
 本次派工：{任务名}
 路由判断：{为什么这件事归这个员工}
 交接框架：{目标、约束、输入材料、验收标准；不要替员工写最终产物}
+回传目标：项目总监窗口 `{项目总监标题}`；若 thread-registry.md 有真实项目总监 thread ID，优先用 send_message_to_thread 发回。
 完成后请更新你的 memory.md 和 current-task.md，然后用 `【员工汇报】` 格式回复给项目总监。
+如果无法自动发回项目总监线程，请在本窗口输出完整 `【员工汇报】`，并写明需要复制回项目总监窗口。
 ```
 ````
 
@@ -288,7 +291,9 @@ The employee thread is not registered yet, so I will not create an orphan active
 Dispatch task: {task title}
 Routing decision: {why this belongs to this employee}
 Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}
-After completion, update your memory.md and current-task.md, then reply to the project director with the `[Employee Report]` shape.
+Return target: project-director chat `{project-director title}`; if thread-registry.md contains a real project-director thread ID, prefer send_message_to_thread.
+After completion, update your memory.md and current-task.md, then prepare the `[Employee Report]` shape.
+If you cannot send it back to the project-director thread automatically, output the full report here and state that it needs to be copied back to the project-director chat.
 ```
 ````
 
@@ -327,7 +332,9 @@ Chinese employee launch prompt shape:
 4. 当前等待什么派工
 5. 如需开工，你需要项目总监给什么输入
 
-之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再用 `【员工汇报】` 格式回复项目总监。
+之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再生成 `【员工汇报】`。
+
+回传规则：读取 `Agent Office/thread-registry.md` 确认项目总监窗口标题和 thread ID。如果 Codex Desktop 提供 `send_message_to_thread`，且项目总监 thread ID 已登记并能确认属于本项目，就主动把完整 `【员工汇报】` 发回项目总监线程；如果 thread ID 是 `current-window`、`TBD`、缺失或不确定，或线程工具不可用，就在本窗口输出可复制的 `【员工汇报】`，并写明“需要复制回项目总监窗口”。不要把汇报发给其他员工。
 ```
 
 ### Designer
@@ -363,7 +370,9 @@ Read first:
 
 For the first reply, use 5-8 lines to confirm who you are, what you own, what you must not touch, what dispatch you are waiting for, and what input you would need to start.
 
-Then wait for the project director to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md before reporting back with the `[Employee Report]` shape.
+Then wait for the project director to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md before preparing the `[Employee Report]` shape.
+
+Return rule: read `Agent Office/thread-registry.md` for the project-director chat title and thread ID. If Codex Desktop exposes `send_message_to_thread` and the project-director thread ID is registered and clearly tied to this project, send the full `[Employee Report]` back to that thread. If the ID is `current-window`, `TBD`, missing, uncertain, or thread tools are unavailable, output a copyable `[Employee Report]` in this chat and state that it needs to be copied back to the project-director chat. Do not send reports to other employees.
 ```
 ````
 

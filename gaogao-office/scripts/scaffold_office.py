@@ -25,7 +25,7 @@ EMPLOYEES_DIR = "Employees"
 PROPOSALS_DIR = "Proposals"
 ARCHIVE_DIR = "Archive"
 LEGACY_ARCHIVE_DIR = "Old Project Memory"
-OFFICE_SCHEMA_VERSION = "1.0.0"
+OFFICE_SCHEMA_VERSION = "1.0.1"
 
 
 ROLE_DEFINITIONS = {
@@ -159,6 +159,8 @@ class OfficeSpec:
     task_reference_policy: str = "user-facing-title-internal-id"
     progress_mode: str = "ask-per-workstream"
     employee_report_route: str = "director-only"
+    employee_report_transport: str = "director-thread-first"
+    employee_report_fallback: str = "copyable-report"
     dependency_policy: str = "wait-for-required-inputs"
     short_continue_policy: str = "contextual-natural-language"
 
@@ -444,6 +446,8 @@ def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) ->
         task_reference_policy=coalesce(raw.get("task_reference_policy"), raw.get("taskReferencePolicy"), default="user-facing-title-internal-id"),
         progress_mode=coalesce(raw.get("progress_mode"), raw.get("progressMode"), default="ask-per-workstream"),
         employee_report_route=coalesce(raw.get("employee_report_route"), raw.get("employeeReportRoute"), default="director-only"),
+        employee_report_transport=coalesce(raw.get("employee_report_transport"), raw.get("employeeReportTransport"), default="director-thread-first"),
+        employee_report_fallback=coalesce(raw.get("employee_report_fallback"), raw.get("employeeReportFallback"), default="copyable-report"),
         dependency_policy=coalesce(raw.get("dependency_policy"), raw.get("dependencyPolicy"), default="wait-for-required-inputs"),
         short_continue_policy=coalesce(raw.get("short_continue_policy"), raw.get("shortContinuePolicy"), default="contextual-natural-language"),
     )
@@ -471,6 +475,8 @@ def load_office_spec(args: argparse.Namespace, root: Path) -> OfficeSpec:
         task_reference_policy="user-facing-title-internal-id",
         progress_mode="ask-per-workstream",
         employee_report_route="director-only",
+        employee_report_transport="director-thread-first",
+        employee_report_fallback="copyable-report",
         dependency_policy="wait-for-required-inputs",
         short_continue_policy="contextual-natural-language",
     )
@@ -521,7 +527,8 @@ def render_agents_proposal(language: str) -> str:
 - 项目总监每次行动前先判断生命周期状态和授权等级：说明书、只读体检、接管方案、已批准接管、就绪、已派工、自动跟进、维护或阻塞。
 - 会写文件、改 `AGENTS.md`、移动旧资料或操作线程的动作，必须有当前有效选项或明确授权。
 - 多员工模式默认由项目总监做单入口总控：用户主要和项目总监对话，项目总监拆任务、派给员工窗口、记录交接，并等待员工向项目总监汇报。
-- 员工不默认互相派工；所有员工完成正式任务后都用 `【员工汇报】` 格式回项目总监，由项目总监根据全局、依赖和风险决定下一步。
+- 员工不默认互相派工；所有员工完成正式任务后先更新自己的 `memory.md` 和 `current-task.md`，再用 `【员工汇报】` 格式回项目总监，由项目总监根据全局、依赖和风险决定下一步。
+- 员工回传优先使用线程工具：若 Codex Desktop 提供 `send_message_to_thread`，且 `Agent Office/thread-registry.md` 有可确认的项目总监 thread ID，就主动发回项目总监线程；否则在员工窗口输出可复制汇报，等待复制回项目总监窗口。
 - 用户安排较长任务时，项目总监先说明预计步骤、参与员工和下一个用户检查点，并让用户用 A/B/C 选择手动推进、半自动推进或自动推进到检查点。
 - 项目总监每次收到需求都先做任务路由判断：员工职责明确就派给员工；没有合适员工或只是办公室小事时自己处理；归属会影响方向时只补问一句。
 - 如果后续阶段依赖多个员工结果，项目总监必须等待依赖齐全；收到部分员工汇报时，只记录当前结果并说明还在等谁。
@@ -530,7 +537,7 @@ def render_agents_proposal(language: str) -> str:
 - `Agent Office/thread-registry.md` 是长期 Agent 员工名册和入职提示记录。
 - 跨角色请求、答复和交接写入 `Agent Office/communication.md`。
 - 当前任务和责任人写入 `Agent Office/task-board.md`。
-- 员工完成有意义工作后，先更新自己的 `memory.md` 和 `current-task.md`，再向项目总监汇报。
+- 员工完成有意义工作后，先更新自己的 `memory.md` 和 `current-task.md`，再按自动回传优先、手动复制降级的规则向项目总监汇报。
 - 用户侧默认使用任务名和自然语言短词，例如 `跟进`、`继续`、`OK`；`task_id` 只作为内部账本字段，日常对话不要求用户记编号。
 - 只有用户选择自动推进模式或明确要求自动跟进时，项目总监才可以设置或更新 Codex heartbeat；自动化不能越权执行删除、归档、发布或改 `AGENTS.md`。
 - `A/B/C/D` 只用于会触发不同动作的授权选择；`1/2/3` 只用于信息说明或多任务消歧。
@@ -554,7 +561,8 @@ Coordination:
 - Before acting, the project director classifies lifecycle state and authorization level: manual, checkup, proposal, takeover-approved, ready, active-dispatch, automatic-progress, maintenance, or blocked.
 - Any action that writes files, changes `AGENTS.md`, moves old memory, or operates threads requires the current valid option or explicit approval.
 - In multi-employee mode, the project director is the single user-facing controller by default: it splits requests, dispatches work to employee threads, records the handoff, and waits for employees to report back to the project director.
-- Employees do not dispatch work to each other by default. After meaningful work, every employee reports back with an `Employee Report` shape; the project director decides the next step from the full project context, dependencies, and risk.
+- Employees do not dispatch work to each other by default. After meaningful work, every employee updates its own `memory.md` and `current-task.md`, then reports back with an `Employee Report` shape; the project director decides the next step from the full project context, dependencies, and risk.
+- Employee return prefers thread tools: if Codex Desktop exposes `send_message_to_thread` and `Agent Office/thread-registry.md` has a confirmed project-director thread ID, send the report to that thread; otherwise output a copyable report in the employee chat for manual return to the project-director chat.
 - Before longer work starts, the project director gives the user an expected step count, participating employees, and the next user checkpoint, then asks the user to choose A/B/C: manual progress, semi-automatic progress, or automatic progress until the checkpoint.
 - The project director runs a task routing judgment for every request: dispatch clear employee-owned work, handle unowned or small office-maintenance work directly, and ask one brief question when ownership affects direction.
 - If a downstream stage depends on several employee results, the project director must wait until required inputs are complete. Partial reports should be recorded, not rushed into the next stage.
@@ -563,7 +571,7 @@ Coordination:
 - `Agent Office/thread-registry.md` is the staff directory and onboarding prompt record for long-running agent employees.
 - Cross-role requests, answers, and handoffs go in `Agent Office/communication.md`.
 - Current tasks and owners go in `Agent Office/task-board.md`.
-- After meaningful work, employees update their own `memory.md` and `current-task.md` before reporting back to the project director.
+- After meaningful work, employees update their own `memory.md` and `current-task.md`, then report back to the project director with automatic thread return first and copyable manual fallback.
 - User-facing replies use task titles and natural short words such as `continue`, `ok`, or `proceed`; `task_id` stays as an internal ledger field and is not required in daily chat.
 - The project director may create or update a Codex heartbeat only when the user chooses automatic progress or explicitly asks for automatic follow-up. Automation never authorizes delete, archive, publish, or `AGENTS.md` changes.
 - Use A/B/C/D only for current action choices that authorize different actions; use 1/2/3 only for informational guidance or task disambiguation.
@@ -739,6 +747,8 @@ def render_project_brief(spec: OfficeSpec) -> str:
 - 任务引用方式：{spec.task_reference_policy}
 - 推进模式：{spec.progress_mode}
 - 员工汇报路径：{spec.employee_report_route}
+- 员工汇报传输：{spec.employee_report_transport}
+- 员工汇报降级：{spec.employee_report_fallback}
 - 依赖策略：{spec.dependency_policy}
 - 短词推进策略：{spec.short_continue_policy}
 - 风险等级：{spec.risk_level}
@@ -749,6 +759,7 @@ def render_project_brief(spec: OfficeSpec) -> str:
 {notes}
 
 默认协作方式：用户主要和当前项目总监窗口沟通；项目总监按需派工给员工窗口，员工统一向项目总监汇报，项目总监根据依赖是否齐全再推进下一阶段。
+员工回传规则：员工完成正式任务后，先更新自己的 `memory.md` 和 `current-task.md`，再生成 `【员工汇报】`。如果 Codex Desktop 线程工具可用且 `thread-registry.md` 里能确定项目总监 thread ID，员工优先用 `send_message_to_thread` 发回项目总监；否则在员工窗口输出可复制汇报，等待用户或项目总监带回。
 运行中枢规则：项目总监每次行动前判断生命周期状态、动作授权等级和任务归属；没有当前有效授权时，只能报告、提案或询问。
 任务路由规则：每次收到需求先判断最终目标、当前阶段和下一位负责人；员工职责明确就派工，办公室小事自己处理，归属不清且影响方向时只补问一句。
 默认派工策略：员工可以全部入职，但项目总监按本机容量控制并发；配置未知或偏低时一次只派一个员工。
@@ -791,6 +802,8 @@ Generated: {today}
 - Task reference policy: {spec.task_reference_policy}
 - Progress mode: {spec.progress_mode}
 - Employee report route: {spec.employee_report_route}
+- Employee report transport: {spec.employee_report_transport}
+- Employee report fallback: {spec.employee_report_fallback}
 - Dependency policy: {spec.dependency_policy}
 - Short continue policy: {spec.short_continue_policy}
 - Risk level: {spec.risk_level}
@@ -801,6 +814,7 @@ Generated: {today}
 {notes}
 
 Default collaboration style: the user primarily talks to the current project-director chat; the project director dispatches employee-owned work as needed, employees report back to the project director, and the project director advances only after required dependencies are ready.
+Employee return rule: after real work, employees update their own `memory.md` and `current-task.md`, then prepare an `[Employee Report]`. If Codex Desktop thread tools are available and `thread-registry.md` identifies the project-director thread ID, employees send the report back with `send_message_to_thread`; otherwise they output a copyable report in their own chat for the user or project director to carry back.
 Operation router rule: before acting, the project director classifies lifecycle state, authorization level, and task owner; without current valid approval, it can only report, propose, or ask.
 Task routing rule: dispatch clear employee-owned work, handle tiny office-maintenance work directly, and ask one brief clarification when ownership affects direction.
 Default dispatch policy: employees may all onboard, but the project director controls concurrent employee work based on local capacity. Unknown or low-capacity machines dispatch one employee at a time.
@@ -869,6 +883,7 @@ def render_task_board(spec: OfficeSpec) -> str:
 - `task_id` 是内部账本字段；用户可见沟通优先使用 `task_title`。
 - 每项任务必须有 owner、reviewer、写入范围、预计步骤、下一次用户检查点和依赖状态。
 - 多员工任务默认由项目总监先做任务路由判断，再拆分和派工；员工统一向项目总监汇报。
+- 员工汇报先走 `send_message_to_thread` 回项目总监线程；项目总监 thread ID 不确定或线程工具不可用时，使用可复制汇报降级。
 - 依赖未齐时，项目总监只记录已返回结果并等待缺失汇报，不提前推进下一阶段。
 - 派工并发按办公室派工策略执行；本机容量未知或偏低时，一次只派一个员工。
 - 如果任务变复杂，再拆出单独任务文件或归档记录。
@@ -886,6 +901,7 @@ Last updated: {today}
 - `task_id` is an internal ledger field; user-facing conversation should prefer `task_title`.
 - Every task needs an owner, reviewer, write scope, expected steps, next user checkpoint, and dependency status.
 - Multi-employee work starts with task routing judgment, then is split and dispatched by the project director; employees report back to the project director.
+- Employee reports use `send_message_to_thread` back to the project-director thread first; if the director thread ID is uncertain or thread tools are unavailable, fall back to a copyable report.
 - When dependencies are missing, record returned results and wait for the missing reports before advancing.
 - Follow the office dispatch policy; when local capacity is unknown or low, dispatch one employee at a time.
 - If a task grows too large, split it into a separate task note or archive record.
@@ -918,7 +934,8 @@ def render_communication(language: str) -> str:
 - 用户的需求默认先进入项目总监；项目总监先做任务路由判断：最终交付物、当前阶段、候选负责人、是否派工、是否自办、是否补问一句。
 - 项目总监先判断生命周期状态和授权等级；写文件、改 `AGENTS.md`、移动旧资料或操作线程前，必须确认当前回复已经授权。
 - 需要跨角色处理时，在本文件追加一条消息记录，写清楚 from、to、task_title、task_id、routing decision、requested response、next owner。
-- 员工不默认互相派工。员工完成正式任务后必须用 `【员工汇报】` 格式向项目总监汇报。
+- 员工不默认互相派工。员工完成正式任务后必须先更新自己的 `memory.md` 和 `current-task.md`，再用 `【员工汇报】` 格式向项目总监汇报。
+- 员工回传优先走项目总监线程：如果 Codex Desktop 提供 `send_message_to_thread`，且 `thread-registry.md` 能确定项目总监 thread ID，就主动把 `【员工汇报】` 发回项目总监线程。否则在员工窗口输出可复制汇报，并说明需要复制回项目总监窗口。
 - 用户侧推进优先使用任务名和自然语言短词，例如 `跟进`、`继续`、`OK`、`好的`。如果多个任务都可推进，项目总监列出任务名让用户选。
 - `A/B/C/D` 只用于会触发不同动作的授权选择；`1/2/3` 只用于信息说明或多任务消歧。
 - 用户选择自动推进模式或明确要求自动跟进时，项目总监才可以创建/更新 Codex heartbeat；自动化只负责继续未完成工作或在完成/阻塞/需用户反馈时停下。
@@ -935,6 +952,16 @@ def render_communication(language: str) -> str:
 结论摘要：{短摘要}
 建议下一步：{下一步或等待项目总监判断}
 需要用户介入：是/否
+```
+
+## 员工回传状态
+
+```text
+【回传状态】
+任务：{任务名}
+项目总监线程：已确认 / 未登记 / 不确定
+回传方式：send_message_to_thread / 手动复制
+结果：已发送 / 需要复制回项目总监窗口
 ```
 
 ## 依赖等待记录
@@ -973,7 +1000,8 @@ heartbeat：已设置 / 未设置 / 工具不可用
 - User requests enter through the project director by default; the project director first runs a task routing judgment: final deliverable, current stage, candidate owner, whether to dispatch, whether to handle directly, or whether to ask one clarification.
 - The project director classifies lifecycle state and authorization level first; before writing files, changing `AGENTS.md`, moving old memory, or operating threads, it must confirm the current reply authorized that action.
 - When cross-role coordination is needed, append a message here with from, to, task_title, task_id, routing decision, requested response, and next owner.
-- Employees do not dispatch to each other by default. After meaningful work, employees report back to the project director with the `Employee Report` shape.
+- Employees do not dispatch to each other by default. After meaningful work, employees update their own `memory.md` and `current-task.md`, then report back to the project director with the `Employee Report` shape.
+- Employee return prefers the project-director thread: when Codex Desktop exposes `send_message_to_thread` and `thread-registry.md` identifies the project-director thread ID, send the `[Employee Report]` back to that thread. Otherwise output a copyable report in the employee chat and state that it needs to be carried back to the project-director chat.
 - User-facing continuation uses task titles and short natural-language replies such as `continue`, `ok`, or `proceed`. If several tasks can continue, list task titles and ask the user to choose.
 - Use A/B/C/D only for choices that authorize different actions; use 1/2/3 only for informational guidance or task disambiguation.
 - The project director may create/update a Codex heartbeat only when the user chooses automatic progress or explicitly asks for automatic follow-up. Automation only continues unfinished work or stops at completion, blockers, user feedback, or risky actions.
@@ -990,6 +1018,16 @@ Output: {path or concise result}
 Summary: {short summary}
 Recommended next step: {next step or project-director judgment}
 Needs user input: yes/no
+```
+
+## Employee Return Status
+
+```text
+[Return Status]
+Task: {task title}
+Project-director thread: confirmed / not registered / uncertain
+Return method: send_message_to_thread / manual copy
+Result: sent / needs copy back to project-director chat
 ```
 
 ## Dependency Waiting Record
@@ -1075,6 +1113,7 @@ def render_employee_readme(spec: OfficeSpec, role: RoleSpec) -> str:
 - 日常工作不要读取 `Agent Office/Archive/Old Project Memory/`。
 - 默认接收项目总监派工，完成后把结果回给项目总监；不要默认把任务直接派给其他员工。
 - 回给项目总监时必须使用 `【员工汇报】` 格式，写清汇报人、任务名、状态、产出位置、结论摘要、建议下一步和是否需要用户介入。
+- 回传优先用 `send_message_to_thread` 发到已登记的项目总监 thread ID；如果 thread ID 不确定或工具不可用，就在本窗口输出可复制汇报并说明需要复制回项目总监窗口。
 - 职责外请求先路由给合适员工或项目总监。
 - 正经完成任务后，更新 `memory.md` 的 `Next Action` 和 `Work Log`，必要时更新 `current-task.md`。
 """
@@ -1129,6 +1168,7 @@ You are not a feature module; you are the person holding this job's judgment for
 - Do not read `Agent Office/Archive/Old Project Memory/` during ordinary work.
 - Receive work from the project director by default and return results to the project director; do not dispatch work directly to other employees by default.
 - Report back with the `Employee Report` shape, naming reporter, task title, status, output, summary, recommended next step, and whether user input is needed.
+- Prefer `send_message_to_thread` to the registered project-director thread ID; if the ID is uncertain or the tool is unavailable, output a copyable report here and state that it needs to be copied back to the project-director chat.
 - Route out-of-scope requests to the right employee or project director.
 - After significant work, update `memory.md` `Next Action` and `Work Log`; update `current-task.md` when needed.
 """
@@ -1243,7 +1283,7 @@ owner: {role.title}
 
 - 更新本文件状态：waiting / active / deferred / cancelled / done。
 - 更新 `memory.md` 的 `Next Action` 和 `Work Log`。
-- 使用 `【员工汇报】` 格式把结果回给项目总监。
+- 生成 `【员工汇报】`，优先用 `send_message_to_thread` 发回已登记的项目总监 thread ID；不能自动发回时，在本窗口输出可复制汇报并说明需要复制回项目总监窗口。
 - 不默认直接派其他员工；建议下一步即可，由项目总监决定是否推进。
 """
     return f"""# Current Task
@@ -1270,7 +1310,7 @@ owner: {role.title}
 
 - Update this file status: waiting / active / deferred / cancelled / done.
 - Update `memory.md` `Next Action` and `Work Log`.
-- Report back to the project director with the `Employee Report` shape.
+- Prepare the `Employee Report`, prefer `send_message_to_thread` to the registered project-director thread ID, and fall back to a copyable report in this chat when automatic return is unavailable.
 - Do not dispatch other employees directly by default; recommend the next step and let the project director decide.
 """
 
@@ -1309,7 +1349,9 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
 4. 当前等待什么派工
 5. 如需开工，你需要项目总监给什么输入
 
-之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再用下面格式回复项目总监：
+之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再生成下面格式的汇报。
+
+回传规则：读取 `Agent Office/thread-registry.md` 确认项目总监窗口标题和 thread ID。如果 Codex Desktop 提供 `send_message_to_thread`，且项目总监 thread ID 已登记且能确认属于本项目，就主动把完整 `【员工汇报】` 发回项目总监线程；如果 thread ID 是 `current-window`、`TBD`、缺失或不确定，或线程工具不可用，就在本窗口输出可复制的 `【员工汇报】`，并写明“需要复制回项目总监窗口”。不要把汇报发给其他员工。
 
 【员工汇报】
 汇报人：{role.title}
@@ -1352,7 +1394,9 @@ For the first reply, only confirm onboarding. Do not edit files and do not start
 4. what dispatch you are waiting for
 5. what input you would need from the project director to start
 
-Then wait for the project director to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md, then report to the project director in this shape:
+Then wait for the project director to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md, then prepare this report shape.
+
+Return rule: read `Agent Office/thread-registry.md` for the project-director chat title and thread ID. If Codex Desktop exposes `send_message_to_thread` and the project-director thread ID is registered and clearly tied to this project, send the full `[Employee Report]` back to that project-director thread. If the ID is `current-window`, `TBD`, missing, uncertain, or thread tools are unavailable, output a copyable `[Employee Report]` in this chat and state that it needs to be copied back to the project-director chat. Do not send reports to other employees.
 
 [Employee Report]
 Reporter: {role.title}
@@ -1400,6 +1444,17 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "",
             "当前窗口默认已接任项目总监，不需要再为项目总监开一个窗口。",
             "",
+            "## 项目总监回传目标",
+            "",
+            f"- 项目总监窗口标题：`{manager_title}`",
+            "- 项目总监 Thread ID：`current-window`，除非 Codex Desktop 能可靠识别并写入真实 thread ID。",
+            "- 员工自动回传条件：Codex Desktop 提供 `send_message_to_thread`，且本表中项目总监 Thread ID 是真实 ID、不是 `current-window` / `TBD` / 空值。",
+            "- 自动回传不可用时：员工必须在自己的窗口输出完整 `【员工汇报】`，并标注“需要复制回项目总监窗口”。",
+            "",
+            "## 员工回传协议",
+            "",
+            "员工完成正式任务后的顺序固定为：更新自己的 `memory.md`，更新自己的 `current-task.md`，生成 `【员工汇报】`，再回传项目总监。员工不得默认把汇报发给其他员工，也不得让其他员工代替项目总监判断下一步。",
+            "",
             "## 派工并发策略",
             "",
             dispatch_policy_summary(spec),
@@ -1430,7 +1485,8 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "请先读取 AGENTS.md、Agent Office 公共文件，以及你自己的员工文件夹。",
             "写入范围：{明确路径或范围}",
             "交付内容：{期望输出}",
-            "完成后请更新你的 memory.md 和 current-task.md，然后用【员工汇报】格式回复项目总监。",
+            f"回传目标：项目总监窗口 `{manager_title}`；若 thread-registry.md 中有真实项目总监 thread ID，优先用 send_message_to_thread 发回。",
+            "完成后请更新你的 memory.md 和 current-task.md，然后生成【员工汇报】。如果无法自动发回项目总监线程，请在本窗口输出完整汇报，并写明需要复制回项目总监窗口。",
             "```",
             "",
             "派工发出后，项目总监按用户选择的 A/B/C 推进模式工作。A 手动推进时，等待用户短词触发，如 `跟进`、`继续`、`OK`；B 半自动推进时，按员工汇报推进到关键检查点；C 自动推进到检查点时，可以设置或更新 heartbeat。",
@@ -1475,6 +1531,17 @@ def render_thread_registry(spec: OfficeSpec) -> str:
         "",
         "The current chat is the project director by default; do not create a second project-director thread.",
         "",
+        "## Project-Director Return Target",
+        "",
+        f"- Project-director chat title: `{manager_title}`",
+        "- Project-director Thread ID: `current-window` unless Codex Desktop can reliably identify and write the real thread ID.",
+        "- Employee auto-return condition: Codex Desktop exposes `send_message_to_thread`, and this registry contains a real project-director Thread ID, not `current-window`, `TBD`, or blank.",
+        "- If auto-return is unavailable: employees must output the full `[Employee Report]` in their own chat and mark that it needs to be copied back to the project-director chat.",
+        "",
+        "## Employee Return Protocol",
+        "",
+        "After real work, employees always update their own `memory.md`, update their own `current-task.md`, prepare an `[Employee Report]`, then return it to the project director. Employees do not send reports to other employees by default and do not ask another employee to decide the next stage for the project director.",
+        "",
         "## Dispatch Concurrency Policy",
         "",
         dispatch_policy_summary(spec),
@@ -1505,7 +1572,8 @@ def render_thread_registry(spec: OfficeSpec) -> str:
         "First read AGENTS.md, Agent Office public files, and your own employee folder.",
         "Write scope: {explicit paths or scope}",
         "Deliverable: {expected output}",
-        "After completion, update your memory.md and current-task.md, then reply to the project director with the Employee Report shape.",
+        f"Return target: project-director chat `{manager_title}`; if thread-registry.md contains a real project-director thread ID, prefer send_message_to_thread.",
+        "After completion, update your memory.md and current-task.md, then prepare the Employee Report. If you cannot send it back to the project-director thread automatically, output the full report here and state that it needs to be copied back to the project-director chat.",
         "```",
         "",
         "After dispatch, the project director follows the user's A/B/C progress mode. A waits for a short natural-language reply such as `continue`, `ok`, or `proceed`; B advances from employee reports but stops at key checkpoints; C may create or update a heartbeat and continue until the next user checkpoint.",

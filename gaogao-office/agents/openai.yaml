@@ -1,6 +1,6 @@
 interface:
   display_name: "GaoGao Office"
-  short_description: "让项目总监接管长期 AI 项目，调度员工对话、维护角色记忆和旧资料归档"
-  default_prompt: "使用 $gaogao-office 只读体检当前项目；若用户问说明书/help，只介绍能力不扫描项目。接管时先给动态 A/B/C/D 组织方案，用户批准后再创建 Agent Office、应用 AGENTS.md、邀请员工入职。多员工模式下当前窗口担任项目总监，先路由任务再派工；长任务开工前给进度预期，并让用户选择 A/B/C：手动推进、半自动推进或自动推进到下一个用户检查点。"
+  short_description: "让项目总监接管长期 AI 项目，调度员工对话、接收员工回传和维护角色记忆"
+  default_prompt: "使用 $gaogao-office 只读体检当前项目；若用户问说明书/help，只介绍能力不扫描项目。接管时先给动态 A/B/C/D 组织方案，用户批准后再创建 Agent Office、应用 AGENTS.md、邀请员工入职。多员工模式下当前窗口担任项目总监，先路由任务再派工；员工完成后更新记忆与 current-task，并优先通过线程工具回传项目总监，做不到时输出可复制汇报。长任务开工前给进度预期，并让用户选择 A/B/C：手动推进、半自动推进或自动推进到下一个用户检查点。"
 policy:
   allow_implicit_invocation: true

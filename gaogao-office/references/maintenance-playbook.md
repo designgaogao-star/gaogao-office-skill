@@ -27,7 +27,8 @@ If validation is unavailable, noisy, or slow, do not stall. Report the useful fi
 - `task-board.md` tasks missing owner, reviewer, write scope, status, or verification
 - `communication.md` messages or handoffs that are unresolved
 - `thread-registry.md` entries that are missing thread IDs, stale, retired, or still waiting
-- whether controller-dispatch is still true: user requests should enter through the project director by default, employees should report back to the project director, and employee threads should have current task/memory updates
+- whether controller-dispatch is still true: user requests should enter through the project director by default, employees should update current task/memory before reporting, and employee reports should either return via `send_message_to_thread` to a confirmed project-director thread ID or fall back to a copyable report
+- whether v1.0.0 offices are missing the v1.0.1 upward report transport fields: `employee_report_transport`, `employee_report_fallback`, project-director thread ID status, and manual-copy fallback wording
 - employee folders missing `README.md`, `memory.md`, or `current-task.md`
 - employee `memory.md` files that are too long, stale, or contain shared facts that belong in public files
 - `decisions.md` entries that are superseded or unresolved

@@ -216,9 +216,10 @@ When the user gives a request after employees are onboarded:
 2. choose the first necessary employee by responsibility, using the actual office roster. Do not hard-code a specific role set; for direction, topic, strategy, or pipeline questions, route to the planning/operator employee before downstream production employees when that role exists.
 3. if employees are needed, split only the next necessary subtask. Do not assign downstream employees until the upstream handoff is available unless the user explicitly approves parallel work.
 4. update `task-board.md`, `communication.md`, and each assigned employee's `current-task.md`.
-5. send a concise task message to the employee thread when thread tools are available.
-6. ask the employee to update its own `memory.md` and `current-task.md` before replying.
-7. report the assignment to the user and follow the selected A/B/C progress mode. Do not poll, wait, or read the employee thread unless automatic progress is active or the user asks the project director to continue.
+5. send a concise task message to the employee thread when thread tools and a registered employee thread ID are available.
+6. include the return target in the dispatch: project-director title, project-director thread ID status, automatic return condition, and manual-copy fallback.
+7. ask the employee to update its own `memory.md` and `current-task.md` before returning the fixed employee report.
+8. report the assignment to the user and follow the selected A/B/C progress mode. Do not poll, wait, or read the employee thread unless automatic progress is active or the user asks the project director to continue.
 
 Keep the dispatch transaction small. The project director should update at most the active task board, one handoff in `communication.md`, and the assigned employee's `current-task.md`; then send at most one employee-thread message and immediately report back. Do not inspect unrelated employee folders, old archives, or downstream roles during dispatch. If any write or thread action is unavailable, output a manual dispatch packet and stop instead of trying to recover inside the same turn.
 
@@ -234,7 +235,7 @@ Before longer or multi-employee work starts, show a short progress expectation a
 
 After dispatch, follow the selected progress mode. The project director must not rush downstream work before employee reports and dependencies are ready. If a user later sends `跟进`, `继续`, `OK`, `好的`, `可以`, or an English equivalent, resolve it by current task context. If several tasks could continue, list task titles and ask the user to choose by number or name.
 
-Employee reports must come back to the project director in fixed shape:
+Employee reports must come back to the project director in fixed shape. If `send_message_to_thread` is available and `thread-registry.md` has a confirmed project-director thread ID, the employee sends the report to that thread. If the ID is `current-window`, `TBD`, missing, stale, or uncertain, or thread tools are unavailable, the employee outputs a copyable report in its own chat and says it needs to be copied back to the project-director chat.
 
 ```text
 【员工汇报】

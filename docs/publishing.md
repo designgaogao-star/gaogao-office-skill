@@ -17,15 +17,15 @@ From the package repository:
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v1.0.0"
+git commit -m "Release gaogao office v1.0.1"
 ```
 
 ## 3. Tag
 
 ```bash
-git tag v1.0.0
+git tag v1.0.1
 git push origin main
-git push origin v1.0.0
+git push origin v1.0.1
 ```
 
 ## 4. Zip Asset
@@ -35,23 +35,22 @@ The release asset should be `outputs/gaogao-office-skill.zip` from the parent wo
 ## 5. Release Notes
 
 ```md
-# GaoGao Office v1.0.0
+# GaoGao Office v1.0.1
 
-First stable office-collaboration release for long-running AI agent projects.
+Focused employee-report return patch for the stable office-collaboration release.
 
 Highlights:
-- the current chat acts as project director for centralized dispatch
-- employees report back with a fixed employee-report shape
-- user-facing task continuation uses task titles and short natural replies instead of internal IDs
-- long work starts with expected steps, participating employees, and the next user checkpoint
-- A/B/C progress modes support manual, semi-automatic, or automatic progress until checkpoint
-- automatic heartbeat is opt-in and never authorizes risky actions
+- employees now have an explicit upward report transport
+- after real work, employees update `memory.md` and `current-task.md` before reporting
+- employee reports prefer `send_message_to_thread` to a confirmed project-director thread ID
+- if thread tools or the director thread ID are unavailable, employees output a copyable report instead of pretending it was sent
+- v1.0.0 offices validate with a warning and can be upgraded without rebuilding employee memory
 - no change to the lightweight `Agent Office/` structure
 ```
 
 ## 6. GitHub Release
 
-Upload `outputs/gaogao-office-skill.zip` as the release asset for `v1.0.0`.
+Upload `outputs/gaogao-office-skill.zip` as the release asset for `v1.0.1`.
 
 ## 7. Install Prompt
 

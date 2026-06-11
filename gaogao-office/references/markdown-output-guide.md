@@ -384,6 +384,7 @@ Use this after the project director assigns work to any employee. Adapt the empl
 任务：`{任务名}`
 路由判断：{为什么这件事归这个员工；如果有下一棒，写下一棒是谁}
 交接框架：{只保留目标、约束、输入材料、验收标准；不要替员工写最终产物}
+回传方式：{已登记项目总监 thread ID，将自动回传 / 未登记，将在员工窗口输出可复制汇报}
 当前状态：等待 `{员工职位}` 完成。
 
 我会按你选择的推进方式处理：
@@ -401,6 +402,7 @@ Assigned to: `{employee job title}`
 Task: `{task title}`
 Routing decision: {why this belongs to this employee; name the likely next owner if any}
 Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}
+Return method: {registered project-director thread ID, automatic return / not registered, copyable employee report}
 Current status: waiting for `{employee job title}`.
 
 I will follow the progress mode you chose:
