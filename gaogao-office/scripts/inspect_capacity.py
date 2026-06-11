@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Inspect local capacity for GaoGao Office employee dispatch.
 
-This script is read-only. It gives the project manager a conservative
+This script is read-only. It gives the project director a conservative
 recommendation for how many employee conversations to dispatch at once.
 """
 

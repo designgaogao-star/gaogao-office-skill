@@ -27,9 +27,9 @@ Before work:
 - If assigned an employee role, read the public office files and your own folder under `Agent Office/Employees/{employee-slug}/`.
 - Do not read other employee folders unless explicitly authorized.
 - Do not read `Agent Office/Archive/Old Project Memory/` during ordinary work.
-- The current chat is the founding project manager unless the user changes that.
-- In Codex Desktop, title the current project-manager chat with the job title only.
-- In multi-employee mode, the user talks to the project manager by default. The project manager dispatches work to employee threads, records the handoff, and stops until the user asks it to continue.
+- The current chat is the founding project director unless the user changes that.
+- In Codex Desktop, title the current project-director chat with the job title only.
+- In multi-employee mode, the user talks to the project director by default. The project director dispatches work to employee threads, receives employee reports, waits for required dependencies, and advances according to the user's A/B/C progress mode.
 - Employee dispatch follows `dispatch_policy`; unknown or low-capacity machines dispatch one employee task at a time.
 
 Coordination:
@@ -37,7 +37,7 @@ Coordination:
 - Current tasks and owners go in `task-board.md`.
 - Significant work updates the employee's `memory.md` and `current-task.md`.
 - Employees finish meaningful work by updating their own `memory.md` and `current-task.md` before reporting back.
-- The project manager runs a task routing judgment before doing work: if a current employee clearly owns the next stage, dispatch it; if no employee owns it or it is tiny office maintenance, handle it directly and record the result.
+- The project director runs a task routing judgment before doing work: if a current employee clearly owns the next stage, dispatch it; if no employee owns it or it is tiny office maintenance, handle it directly and record the result.
 ```
 
 ## Employee Profile
@@ -75,14 +75,14 @@ Coordination:
 
 ## Handoff Target
 
-{project manager or another employee}
+{project director}
 
 ## Rules
 
 - Read public office files and this employee folder by default.
 - Do not read other employee folders.
 - Do not read `Archive/Old Project Memory/` during ordinary work.
-- Route out-of-scope work to the project manager.
+- Route out-of-scope work to the project director.
 - Update memory after meaningful work.
 ```
 
@@ -157,42 +157,42 @@ owner: {Job Title}
 ````md
 # Thread Registry
 
-Current project-manager window title: `Project Manager`
+Current project-director window title: `Project Director`
 
 | Role | Thread Title | Thread ID | Mode | Current Assignment | Write Scope | Status |
 |---|---|---|---|---|---|---|
-| Project Manager | Project Manager | current-window | local | maintain the office | Agent Office public files | current-window |
+| Project Director | Project Director | current-window | local | maintain the office | Agent Office public files | current-window |
 | Designer | Designer | TBD | local | waiting | approved design/assets scope | waiting |
 
 ## Employee Rejoin / Restart Prompts
 
 These prompts are for employee onboarding, employee restart, or role recovery after formal takeover. Do not send them before the office is created, AGENTS.md is applied, and absorbed old knowledge is archived.
 
-The project manager should title this current chat first, then invite employees.
+The project director should title this current chat first, then invite employees.
 Use automatic Codex Desktop thread creation when available. Manual prompts are fallback only.
 
 User-facing wording:
-- "The office is open, and the project manager is on duty."
+- "The office is open, and the project director is on duty."
 - "Employees are onboarded" after thread creation or manual prompts are ready.
-- "You can keep talking to this project-manager chat; I will dispatch work to employees and tell you how to continue."
+- "You can keep talking to this project-director chat; I will dispatch work to employees and collect their reports."
 - "No task is assigned yet; the office is ready when you want to start" after formal takeover.
 - "I can enter direction-advisor mode next; first tell me whether you already have a direction" after takeover.
 
 ## Controller Dispatch
 
-When the user sends work to the project manager:
+When the user sends work to the project director:
 
-1. run a task routing judgment: final outcome, next workflow stage, candidate owner, and whether to dispatch, handle directly, or ask one clarification
-2. if one employee clearly owns the next stage, dispatch to that employee; if no employee owns it or it is small office maintenance, the project manager may handle it
-3. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
-4. follow `dispatch_policy.max_parallel_employee_tasks`; do not dispatch all employees in parallel unless the user explicitly approves it
-5. send the employee a concise task message when thread tools are available
-6. ask the employee to update `memory.md` and `current-task.md`
-7. report the assignment to the user with numbered continuation paths, then stop
-8. resume when the user asks to continue, or when the user explicitly asks the project manager to wait or take over
-9. if the user opts into watch mode, check progress at an adaptive 30-60 second interval and report only meaningful progress, blockers, handoffs, completion, or timeout
+1. before long or multi-employee work starts, state expected steps, participating employees, and the next user checkpoint, then ask for A/B/C progress mode
+2. run a task routing judgment: final outcome, next workflow stage, candidate owner, and whether to dispatch, handle directly, or ask one clarification
+3. if one employee clearly owns the next stage, dispatch to that employee; if no employee owns it or it is small office maintenance, the project director may handle it
+4. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
+5. follow `dispatch_policy.max_parallel_employee_tasks`; do not dispatch all employees in parallel unless the user explicitly approves it
+6. send the employee a concise task message when thread tools are available
+7. ask the employee to update `memory.md` and `current-task.md`, then report back with the fixed employee-report shape
+8. record partial employee reports, wait for required dependencies, and continue only according to A/B/C mode
+9. in automatic progress mode, create or update heartbeat only when automation tools are available and stop at completion, blocker, risk, or the next user checkpoint
 
-The project manager may write handoff framing, inputs, constraints, and acceptance criteria. It must not write the employee-owned final output unless the user explicitly asks the project manager to take over that employee's work.
+The project director may write handoff framing, inputs, constraints, and acceptance criteria. It must not write the employee-owned final output unless the user explicitly asks the project director to take over that employee's work.
 
 Task-routing read budget: read `office-plan.json`, `task-board.md`, `thread-registry.md`, `project-brief.md`, optional root `AGENTS.md`, and only the likely owner's `current-task.md`. Do not read every employee file or run full validation before ordinary dispatch.
 
@@ -200,49 +200,53 @@ Dispatch transaction budget: update only `task-board.md`, `communication.md`, an
 
 If the employee thread ID is `TBD`, missing, or not clearly tied to this project, do not mark the task `active`. Show the manual dispatch packet and stop; record the task after the user confirms it was sent or after the employee result returns.
 
-## Employee Result Reply Shape
+## Employee Report Shape
 
-Employees reply to the project manager in this shape after real work:
+Employees reply to the project director in this shape after real work:
 
 ```text
-完成了什么：...
-写到哪里：...
-状态更新：...
-建议下一步：...
+【员工汇报】
+汇报人：{员工职位}
+任务：{任务名}
+状态：已完成 / 阻塞 / 需要确认
+产出位置：{路径或线程摘要}
+结论摘要：{短摘要}
+建议下一步：{建议交给谁或停在哪里}
+需要用户介入：是/否
 ```
 
 English:
 
 ```text
-Completed work: ...
-Output path: ...
-Status update: ...
-Recommended next step: ...
+[Employee Report]
+Reporter: {employee job title}
+Task: {task title}
+Status: done / blocked / needs-confirmation
+Output location: {path or thread summary}
+Summary: {short summary}
+Suggested next step: {next owner or stop point}
+User input needed: yes/no
 ```
 
-## Non-Blocking Dispatch Reply Shape
+## Dispatch Reply Shape
 
-Use numbered `1/2/3` for continuation guidance because this is informational. Reserve A/B/C/D for choices that authorize different actions.
+Use task titles in user-facing text. Internal `task_id` may be recorded in office files, but do not ask the user to remember it. Reserve A/B/C/D for choices that authorize different progress modes or actions.
 
 Chinese:
 
 ````md
 已派工给：`{员工职位}`
-任务：`{任务编号}` {一句话任务}
+任务：`{任务名}`
 路由判断：{为什么这件事归这个员工；若有下一棒，写下一棒是谁}
 交接框架：{目标、约束、输入材料、验收标准；不要替员工写最终产物}
 当前状态：等待 `{员工职位}` 完成。
 
-接下来你可以这样推进：
-1. 员工完成后，回到项目总监这里发 `继续推进 {任务编号}`。
-2. 直接去 `{员工职位}` 窗口继续聊，让它完成后按办公室规则写交接。
-3. 如果你想手动接力，把员工产物复制给下一位合适员工。
+我会按你选择的推进方式处理：
+- A：等你回来发 `跟进` / `继续` / `OK` 后再推进。
+- B：员工汇报回来后，我会继续流转，但关键检查点会停下来给你看。
+- C：我会自动推进到下一个用户检查点；如可用，会设置 heartbeat 防止中断。
 
-需要我替你盯进度的话，回复：
-
-```text
-盯进度 {任务编号}
-```
+如果还有多个可继续任务，我会列任务名让你选。
 ````
 
 Manual dispatch packet fallback:
@@ -251,10 +255,10 @@ Manual dispatch packet fallback:
 员工线程还没有登记，所以我先不给办公室写孤儿任务。请把下面这段发给 `{员工职位}` 窗口：
 
 ```text
-本次派工：{任务编号或一句话任务}
+本次派工：{任务名}
 路由判断：{为什么这件事归这个员工}
 交接框架：{目标、约束、输入材料、验收标准；不要替员工写最终产物}
-完成后请更新你的 memory.md 和 current-task.md，然后把结果回复给项目总监。
+完成后请更新你的 memory.md 和 current-task.md，然后用 `【员工汇报】` 格式回复给项目总监。
 ```
 ````
 
@@ -262,21 +266,17 @@ English:
 
 ````md
 Assigned to: `{employee job title}`
-Task: `{task id}` {one-sentence task}
+Task: `{task title}`
 Routing decision: {why this belongs to this employee; name the likely next owner if any}
 Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}
 Current status: waiting for `{employee job title}`.
 
-You can continue in three ways:
-1. After the employee finishes, return here and send `Continue {task id}`.
-2. Continue directly in the `{employee job title}` chat and let it write the handoff.
-3. Manually copy the employee output to the next suitable employee.
+I will follow the progress mode you chose:
+- A: I wait until you return with `continue`, `ok`, or a similar short reply.
+- B: I continue from employee reports, but stop at key checkpoints.
+- C: I continue automatically until the next user checkpoint; if available, I set a heartbeat to avoid interruption.
 
-If you want me to watch progress for you, reply:
-
-```text
-Watch {task id}
-```
+If several tasks can continue, I will list task titles and ask you to choose.
 ````
 
 Manual dispatch packet fallback:
@@ -285,10 +285,10 @@ Manual dispatch packet fallback:
 The employee thread is not registered yet, so I will not create an orphan active task. Send this to the `{employee job title}` chat:
 
 ```text
-Dispatch task: {task id or one-sentence task}
+Dispatch task: {task title}
 Routing decision: {why this belongs to this employee}
 Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}
-After completion, update your memory.md and current-task.md, then reply to the project manager with the result.
+After completion, update your memory.md and current-task.md, then reply to the project director with the `[Employee Report]` shape.
 ```
 ````
 
@@ -301,7 +301,7 @@ Chinese employee launch prompt shape:
 
 项目：{project name}
 项目根目录：{project root}
-默认语言：中文。路径、任务 ID、status enum、代码标识保持原样。
+默认语言：中文。路径、内部任务 ID、status enum、代码标识保持原样。
 
 岗位价值：{role value}
 职责域：{responsibility domain}
@@ -327,7 +327,7 @@ Chinese employee launch prompt shape:
 4. 当前等待什么派工
 5. 如需开工，你需要项目总监给什么输入
 
-之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再按“完成了什么 / 写到哪里 / 状态更新 / 建议下一步”回复项目总监。
+之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再用 `【员工汇报】` 格式回复项目总监。
 ```
 
 ### Designer
@@ -348,8 +348,8 @@ Role value: keep the visual judgment steady: what should ship, what should be re
 Responsibility domain: visual direction, design assets, and design-quality decisions.
 Quality standard: clear visual rationale, scoped changes, and easy handoff.
 Write boundary: approved design or asset paths plus `Agent Office/Employees/designer/`.
-Forbidden: do not edit other employee folders, old-memory archives, or unrelated production code unless the project manager explicitly authorizes it.
-Handoff target: Project Manager
+Forbidden: do not edit other employee folders, old-memory archives, or unrelated production code unless the project director explicitly authorizes it.
+Handoff target: Project Director
 
 Read first:
 1. AGENTS.md
@@ -363,7 +363,7 @@ Read first:
 
 For the first reply, use 5-8 lines to confirm who you are, what you own, what you must not touch, what dispatch you are waiting for, and what input you would need to start.
 
-Then wait for the project manager to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md before reporting back with completed work / output path / status update / recommended next step.
+Then wait for the project director to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md before reporting back with the `[Employee Report]` shape.
 ```
 ````
 

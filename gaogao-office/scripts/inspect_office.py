@@ -506,7 +506,7 @@ def render_markdown(root: Path, inventory: list[FileEntry], candidates: list[Can
             "",
             "These are role-design hints, not an approved roster. Choose final roles dynamically after the user confirms current deliverables, write scopes, and handoff targets.",
             "",
-            "- Project Manager: the current chat should take this job by default.",
+            "- Project Director: the current chat should take this job by default.",
             "- Human job titles: use names like Designer, Engineer, Release Checker, Researcher, or Editor.",
             "- Responsibility domains: put pipeline/process wording inside employee profiles, not in the job title.",
             "",

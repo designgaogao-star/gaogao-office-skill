@@ -8,7 +8,7 @@ Create people-shaped jobs, not process-shaped modules.
 
 Good display titles:
 
-- Project Manager
+- Project Director
 - Designer
 - Frontend Engineer
 - Release Checker
@@ -30,9 +30,9 @@ Put those process names in the responsibility domain inside the employee profile
 
 ## Current Chat
 
-The current GaoGao Office chat is the founding project manager by default. Do not ask the user to create another project-manager window. In Codex Desktop, rename this current chat to the project-manager job title only, such as `项目总监` or `Project Manager`, before inviting other employees. If the current chat later becomes too long, it may write a successor prompt for a new project-manager chat.
+The current GaoGao Office chat is the founding project director by default. Do not ask the user to create another project-director window. In Codex Desktop, rename this current chat to the project-director job title only, such as `项目总监` or `Project Director`, before inviting other employees. If the current chat later becomes too long, it may write a successor prompt for a new project-director chat.
 
-The project manager is the user-facing controller in multi-employee mode. The user can keep talking to that one chat. For each request, the manager first judges the final outcome and next responsible role, dispatches clear employee-owned work, handles only project-manager or tiny office-maintenance work directly, and records handoffs for later continuation.
+The project director is the user-facing controller in multi-employee mode. The user can keep talking to that one chat. For each request, the director first judges the final outcome and next responsible role, dispatches clear employee-owned work, handles only project-director or tiny office-maintenance work directly, receives employee reports, waits for required dependencies, and advances according to the user's A/B/C progress mode.
 
 ## Split Test
 
@@ -42,7 +42,7 @@ Create a separate employee only when at least two are true:
 - the write scope is different
 - the employee needs long-running private memory
 - context would become noisy if mixed with another employee
-- the project manager benefits from delegating to that employee, or the user explicitly wants direct employee access
+- the project director benefits from delegating to that employee, or the user explicitly wants direct employee access
 
 Merge or defer jobs that fail this test.
 
@@ -74,6 +74,6 @@ Every employee needs:
 
 ## Onboarding
 
-After formal takeover, first title the current project-manager chat, then invite employees. In Codex Desktop, create threads automatically when authorized and set titles to the job title only. If manual prompts are needed, start with `Conversation role: Job Title` or `本对话角色：职位名`.
+After formal takeover, first title the current project-director chat, then invite employees. In Codex Desktop, create threads automatically when authorized and set titles to the job title only. If manual prompts are needed, start with `Conversation role: Job Title` or `本对话角色：职位名`.
 
 After onboarding, do not push the user into every employee window. Treat employee chats as managed workrooms unless the user asks to enter one directly.

@@ -17,15 +17,15 @@ From the package repository:
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v0.2.9"
+git commit -m "Release gaogao office v1.0.0"
 ```
 
 ## 3. Tag
 
 ```bash
-git tag v0.2.9
+git tag v1.0.0
 git push origin main
-git push origin v0.2.9
+git push origin v1.0.0
 ```
 
 ## 4. Zip Asset
@@ -35,22 +35,23 @@ The release asset should be `outputs/gaogao-office-skill.zip` from the parent wo
 ## 5. Release Notes
 
 ```md
-# GaoGao Office v0.2.9
+# GaoGao Office v1.0.0
 
-Small experience cleanup for Chinese office wording, runtime metadata, and generated state values.
+First stable office-collaboration release for long-running AI agent projects.
 
 Highlights:
-- Chinese offices now use `项目总监` for the founding project-manager role
-- current-window employees record `status: current-window` instead of a job title
-- `agents/openai.yaml` default prompt is shorter and less repetitive
-- runtime skill references no longer include publishing-only notes
-- project inspection skips `Agent Office/` case-insensitively
+- the current chat acts as project director for centralized dispatch
+- employees report back with a fixed employee-report shape
+- user-facing task continuation uses task titles and short natural replies instead of internal IDs
+- long work starts with expected steps, participating employees, and the next user checkpoint
+- A/B/C progress modes support manual, semi-automatic, or automatic progress until checkpoint
+- automatic heartbeat is opt-in and never authorizes risky actions
 - no change to the lightweight `Agent Office/` structure
 ```
 
 ## 6. GitHub Release
 
-Upload `outputs/gaogao-office-skill.zip` as the release asset for `v0.2.9`.
+Upload `outputs/gaogao-office-skill.zip` as the release asset for `v1.0.0`.
 
 ## 7. Install Prompt
 

@@ -2,9 +2,9 @@
 
 `gaogao-office` is a Codex skill for creating, migrating, and maintaining a lightweight `Agent Office/` inside long-running agent-assisted projects.
 
-It treats the current chat as the founding project manager/controller, renames that chat to its job title when Codex Desktop allows it, proposes an organization, and invites employees only after formal takeover. In multi-employee mode, the user can keep talking to that one project-manager chat while it judges each request, routes employee-owned work to the right thread according to local capacity, records handoffs, and waits for the user to continue.
+It treats the current chat as the founding project director, renames that chat to its job title when Codex Desktop allows it, proposes an organization, and invites employees only after formal takeover. In multi-employee mode, the user can keep talking to that one project-director chat while it judges each request, routes employee-owned work to the right thread according to local capacity, receives employee reports, waits for dependencies, and advances according to the user's A/B/C progress mode.
 
-v0.2.9 is a small experience cleanup: Chinese offices now use `项目总监`, current-window status is recorded as a real state value, metadata is lighter, and runtime skill references no longer include publishing-only notes.
+v1.0.0 is the first stable collaboration release: centralized project-director dispatch, fixed employee reports, task-title-first continuation, progress expectations before work starts, and A/B/C manual, semi-automatic, or automatic progress until the next user checkpoint.
 
 ## When To Use It
 
@@ -47,9 +47,9 @@ Root `AGENTS.md` is not written until the user approves a current reply option t
 | `take over` | Start the formal takeover proposal |
 | `migrate` | Absorb old project memory and propose migration |
 | `health check` | Audit an existing office |
-| `Continue T-xxx` | Continue after an employee result |
-| `Watch T-xxx` | Temporarily let the project manager watch employee progress |
-| `Stop watching` | Stop progress polling |
+| `continue` / `ok` / `proceed` | Continue the current task from context |
+| `automatic progress to checkpoint` | Let the project director continue until the next user checkpoint |
+| `stop automatic progress` | Stop automatic progress or heartbeat |
 | `retire role` | Downsize or retire employee routes |
 
 ## Local Install
@@ -78,7 +78,7 @@ If `agent-office-os` is still installed, move it outside `.codex\skills` or remo
 New project:
 
 ```text
-Use $gaogao-office to inspect this project read-only and propose an Agent Office organization. Start immediately; if you cannot infer the project purpose, ask one short question. Wait for my A/B/C/D choice before creating files. A should be the recommended formal takeover mode, B the other formal takeover mode, C custom team, and D later without writing. After takeover, ask whether I want direction-advisor mode. After dispatching employee work, stop and give numbered continuation paths instead of polling.
+Use $gaogao-office to inspect this project read-only and propose an Agent Office organization. Start immediately; if you cannot infer the project purpose, ask one short question. Wait for my A/B/C/D choice before creating files. A should be the recommended formal takeover mode, B the other formal takeover mode, C custom team, and D later without writing. After takeover, ask whether I want direction-advisor mode.
 ```
 
 Capability manual:
@@ -90,7 +90,7 @@ Use $gaogao-office help to explain what you can do. Do not scan the project or w
 Existing project migration:
 
 ```text
-Use $gaogao-office to take over this old project. Scan filenames, inspect likely old-knowledge docs, propose an organization, and let the current chat act as project manager. Do not invite employees until formal takeover is complete.
+Use $gaogao-office to take over this old project. Scan filenames, inspect likely old-knowledge docs, propose an organization, and let the current chat act as project director. Do not invite employees until formal takeover is complete.
 ```
 
 Upgrade an existing office after updating the skill:
@@ -99,7 +99,7 @@ Upgrade an existing office after updating the skill:
 Use $gaogao-office to inspect the existing Agent Office in this project. Do not delete or rebuild blindly. Tell me what will be kept, what stale entrances will be archived, and what needs to be upgraded. Wait for my current reply option before updating it to the current GaoGao Office workflow.
 ```
 
-In Codex Desktop, approved employees can be created automatically. After onboarding, the project manager first judges who should own each request: clear employee-owned work is dispatched, small office work is handled directly, and ambiguous direction gets one brief clarification. By default it stops after dispatch and gives numbered continuation paths; it does not repeatedly poll employee chats or take over employee responsibilities. You can opt into `Watch T-xxx` when you want the project manager to monitor progress at an adaptive 30-60 second interval. If thread tools are unavailable, the skill falls back to copyable onboarding prompts and manual dispatch messages.
+In Codex Desktop, approved employees can be created automatically. After onboarding, the project director first judges who should own each request: clear employee-owned work is dispatched, small office work is handled directly, and ambiguous direction gets one brief clarification. Before long work starts, it states expected steps, participating employees, and the next user checkpoint, then asks for A/B/C: A manual progress, B semi-automatic progress, C automatic progress until the checkpoint. C mode may create or update a heartbeat when automation tools are available. If thread or automation tools are unavailable, the skill falls back to copyable onboarding prompts and manual dispatch messages.
 
 ## Helper Scripts
 

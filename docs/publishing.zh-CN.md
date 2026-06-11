@@ -17,15 +17,15 @@ python work/run_gaogao_office_gate.py --workspace .
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v0.2.9"
+git commit -m "Release gaogao office v1.0.0"
 ```
 
 ## 3. 打 tag
 
 ```bash
-git tag v0.2.9
+git tag v1.0.0
 git push origin main
-git push origin v0.2.9
+git push origin v1.0.0
 ```
 
 ## 4. Zip 资产
@@ -35,22 +35,23 @@ git push origin v0.2.9
 ## 5. Release Notes
 
 ```md
-# GaoGao Office v0.2.9
+# GaoGao Office v1.0.0
 
-这版主要清理中文办公室措辞、运行时 metadata 和生成状态值。
+第一个稳定办公室协作版本，面向长期 AI Agent 项目。
 
 重点：
-- 中文办公室默认使用 `项目总监` 作为当前窗口的管理岗位名
-- 当前窗口员工记录 `status: current-window`，不再把岗位名写成状态
-- `agents/openai.yaml` 默认提示更短、更少重复
-- 运行时参考文档不再包含发布专用说明
-- 项目扫描会大小写不敏感地跳过 `Agent Office/`
+- 当前窗口担任项目总监，集中调度员工对话
+- 员工用固定格式向项目总监汇报
+- 用户侧用任务名和短词继续推进，不再要求记内部任务编号
+- 长任务开工前先说明预计步骤、参与员工和下次用户检查点
+- A/B/C 推进模式支持手动、半自动或自动推进到检查点
+- heartbeat 只在用户选择自动推进时启用，且不授权高风险动作
 - 不改变轻量化 `Agent Office/` 目录结构
 ```
 
 ## 6. GitHub Release
 
-把 `outputs/gaogao-office-skill.zip` 上传为 `v0.2.9` 的发布附件。
+把 `outputs/gaogao-office-skill.zip` 上传为 `v1.0.0` 的发布附件。
 
 ## 7. 安装提示
 

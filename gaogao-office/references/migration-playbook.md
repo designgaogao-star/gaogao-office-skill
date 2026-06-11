@@ -153,9 +153,9 @@ If root `AGENTS.md` was replaced during formal takeover, archive the pre-apply b
 
 Do not invite employees before formal takeover. After takeover:
 
-- current chat is the project manager
-- project manager is the user's default single entry point and dispatches work to employee threads
-- rename the current project-manager chat to its job title only; if this cannot be done automatically, tell the user the exact manual title
+- current chat is the project director
+- project director is the user's default single entry point, dispatches work to employee threads, and receives employee reports
+- rename the current project-director chat to its job title only; if this cannot be done automatically, tell the user the exact manual title
 - each other employee gets a human job title
 - employee profiles are written before launch prompts
 - Codex Desktop threads are created automatically when authorized and tools are available

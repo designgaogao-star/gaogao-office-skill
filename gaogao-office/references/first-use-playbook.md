@@ -18,16 +18,16 @@ Say, in the user's language:
 
 1. GaoGao Office will give the project a read-only "office checkup" before writing anything.
 2. It will then bring the user an organization proposal to approve.
-3. The current chat can become the founding project manager.
-4. If multiple employees are used, the user can still talk mainly to the current project-manager chat; it will dispatch work to employees.
+3. The current chat can become the founding project director.
+4. If multiple employees are used, the user can still talk mainly to the current project-director chat; it will dispatch work to employees and receive their reports.
 5. Files, root `AGENTS.md`, old-knowledge archive, and employee onboarding happen only after the user chooses an option.
 6. Employees are invited only after formal takeover is complete.
-7. In Codex Desktop, the founding project manager chat should be renamed to its job title before other employees are invited.
+7. In Codex Desktop, the founding project director chat should be renamed to its job title before other employees are invited.
 8. Office takeover and project direction are separate stages. Do not draft a project plan or start work during takeover; after onboarding, ask whether the user wants a direction-advisor conversation.
 9. If the user wants the full capability manual first, they can reply `说明书` or `help`.
 10. The current A/B/C/D options authorize only the next user reply; if the user sends other text, the options expire.
 
-Keep the tone practical, friendly, and office-like. Respect the user's preferred form of address; in Chinese, default to natural `你` wording when no preference is visible. Do not force `BOSS` unless the user has already chosen or accepted it. In English chat, use natural `you` wording. GaoGao Office is the project manager preparing an organization proposal.
+Keep the tone practical, friendly, and office-like. Respect the user's preferred form of address; in Chinese, default to natural `你` wording when no preference is visible. Do not force `BOSS` unless the user has already chosen or accepted it. In English chat, use natural `you` wording. GaoGao Office is the project director preparing an organization proposal.
 
 Avoid robotic status phrasing such as "已启用技能" or internal implementation narration unless a command result truly needs to be reported.
 Progress updates should speak in user outcomes, not implementation internals. Do not mention scaffolding, configs, templates, default engineering roles, or old iteration fixes unless reporting an actual error.
@@ -80,13 +80,13 @@ Stop once there is enough information to propose the organization.
 
 Choose the recommended organization dynamically from the project:
 
-- single-window: the current chat is the project manager and sole worker.
-- multi-employee: the current chat is project manager/controller and invites a few specialist employees. The user talks to the controller by default; the controller dispatches work to employee threads.
+- single-window: the current chat is the project director and sole worker.
+- multi-employee: the current chat is project director/controller and invites a few specialist employees. The user talks to the controller by default; the controller dispatches work to employee threads and receives employee reports.
 - cleanup-only: organize project memory without starting employees.
 
 Do not use a fixed default. Trust the model's project judgment.
 
-Use human job titles for employees: Project Manager, Designer, Engineer, Release Checker, Researcher, Editor, etc. Put process names such as visual asset pipeline, frontend runtime, or QA/release inside the responsibility domain, not the title.
+Use human job titles for employees: Project Director, Designer, Engineer, Release Checker, Researcher, Editor, etc. Put process names such as visual asset pipeline, frontend runtime, or QA/release inside the responsibility domain, not the title.
 
 The proposal must include:
 
@@ -132,16 +132,16 @@ Formal takeover must complete before employee prompts or threads are created:
 2. office signboard: create `Agent Office/`
 3. house rules: apply root `AGENTS.md` with backup when authorized by the selected option
 4. old records room: archive absorbed old knowledge under `Agent Office/Archive/Old Project Memory/`
-5. manager signboard: record the current chat as founding project manager
-6. title the current chat with the project-manager job title when Codex Desktop title tools are available
+5. director signboard: record the current chat as founding project director
+6. title the current chat with the project-director job title when Codex Desktop title tools are available
 7. employee files: write profiles and memories
 8. onboarding: invite employees
-9. dispatch setup: record that the user speaks to the project manager by default, and employees receive task messages from the manager unless the user requests direct employee access
+9. dispatch setup: record that the user speaks to the project director by default, and employees receive task messages from the director unless the user requests direct employee access
 
 If the user chooses an option that does not complete formal takeover, do not output employee launch prompts or create employee threads.
 If the user chooses A or B, stop after takeover and onboarding. Report that the office is ready, list employees, and ask whether the user wants a direction-advisor conversation. Do not assign the first task, draft a project plan, browse the web, or create task-result files.
 
-If the current thread cannot be renamed automatically, do not silently skip it. Tell the user the exact title to set manually, for example `项目总监` or `Project Manager`.
+If the current thread cannot be renamed automatically, do not silently skip it. Tell the user the exact title to set manually, for example `项目总监` or `Project Director`.
 
 Use blockquotes for takeover warnings:
 
@@ -164,7 +164,7 @@ Record the resulting `dispatch_policy.max_parallel_employee_tasks` in `office-pl
 
 ## Employee Onboarding
 
-Prefer automatic Codex Desktop thread creation when available and authorized. First set the current project-manager conversation title to its job title only. Then create threads only for employees other than the current project manager. Set each employee thread title to the job title only, for example `Designer` or `设计师`. Record thread IDs in `Agent Office/thread-registry.md`.
+Prefer automatic Codex Desktop thread creation when available and authorized. First set the current project-director conversation title to its job title only. Then create threads only for employees other than the current project director. Set each employee thread title to the job title only, for example `Designer` or `设计师`. Record thread IDs in `Agent Office/thread-registry.md`.
 
 If thread tools are unavailable, output manual prompts. Human instructions go outside fenced code blocks, and the fenced `text` block must contain only the message to send.
 
@@ -194,21 +194,21 @@ If the user has a direction, follow it and ask at most 1-2 targeted questions be
 
 ## Controller Dispatch
 
-In multi-employee mode, keep the user's main experience simple: they can keep talking to the project-manager chat, while the project manager routes work and records handoffs. Default dispatch is non-blocking: the project manager assigns work, tells the user who owns the next step, then stops until the user asks it to continue.
+In multi-employee mode, keep the user's main experience simple: they can keep talking to the project-director chat, while the project director routes work, records handoffs, receives employee reports, and advances according to the user's A/B/C progress mode.
 
-Every request after onboarding starts with a task routing gate. The project manager first asks:
+Every request after onboarding starts with a task routing gate. The project director first asks:
 
 - What final outcome does the user actually want?
 - What is the next unblocked workflow stage?
 - Does an existing employee clearly own that stage?
-- Is this small office-maintenance work the project manager should simply do?
+- Is this small office-maintenance work the project director should simply do?
 - Is ownership unclear enough that one short question or a judgment task is needed?
 
 For existing offices, the routing read budget is intentionally small: `office-plan.json`, `task-board.md`, `thread-registry.md`, `project-brief.md`, optional root `AGENTS.md`, and only the likely owner's `current-task.md`. Do not read every employee profile or memory before choosing an owner. Do not run full validation before ordinary task routing.
 
-If an employee clearly owns the next stage, dispatch it. Do not let the project manager do that employee's work just because it can. If the work has no clear employee owner, is tiny coordination, or is office maintenance, the project manager may handle it directly and record the outcome. If the request spans multiple stages, dispatch only the first unblocked stage and record the likely next owner in `communication.md`.
+If an employee clearly owns the next stage, dispatch it. Do not let the project director do that employee's work just because it can. If the work has no clear employee owner, is tiny coordination, or is office maintenance, the project director may handle it directly and record the outcome. If the request spans multiple stages, dispatch only the first unblocked stage and record the likely next owner in `communication.md`.
 
-The project manager may write routing rationale, handoff framing, inputs, constraints, and acceptance criteria. It must not write the employee-owned output itself: not the final prompt set, visual concept, copy draft, code patch, QA verdict, research conclusion, or release checklist unless the user explicitly asks the project manager to take over that employee's work. If the project manager includes a suggestion, label it as "交接框架，待员工判断" / "handoff framing for the employee to judge."
+The project director may write routing rationale, handoff framing, inputs, constraints, and acceptance criteria. It must not write the employee-owned output itself: not the final prompt set, visual concept, copy draft, code patch, QA verdict, research conclusion, or release checklist unless the user explicitly asks the project director to take over that employee's work. If the project director includes a suggestion, label it as "交接框架，待员工判断" / "handoff framing for the employee to judge."
 
 When the user gives a request after employees are onboarded:
 
@@ -218,64 +218,76 @@ When the user gives a request after employees are onboarded:
 4. update `task-board.md`, `communication.md`, and each assigned employee's `current-task.md`.
 5. send a concise task message to the employee thread when thread tools are available.
 6. ask the employee to update its own `memory.md` and `current-task.md` before replying.
-7. report the assignment to the user and stop. Do not poll, wait, or read the employee thread unless the user asks the project manager to wait and continue.
+7. report the assignment to the user and follow the selected A/B/C progress mode. Do not poll, wait, or read the employee thread unless automatic progress is active or the user asks the project director to continue.
 
-Keep the dispatch transaction small. The project manager should update at most the active task board, one handoff in `communication.md`, and the assigned employee's `current-task.md`; then send at most one employee-thread message and immediately report back. Do not inspect unrelated employee folders, old archives, or downstream roles during dispatch. If any write or thread action is unavailable, output a manual dispatch packet and stop instead of trying to recover inside the same turn.
+Keep the dispatch transaction small. The project director should update at most the active task board, one handoff in `communication.md`, and the assigned employee's `current-task.md`; then send at most one employee-thread message and immediately report back. Do not inspect unrelated employee folders, old archives, or downstream roles during dispatch. If any write or thread action is unavailable, output a manual dispatch packet and stop instead of trying to recover inside the same turn.
 
 If the chosen employee has no registered thread ID, has `TBD`, or the thread cannot be tied to this project, do not create orphan active records. Output the employee's manual dispatch packet in a fenced `text` block and stop. Record the task only after the user confirms the packet was sent, the thread is registered, or the employee returns a result.
 
 Do not make the user manually visit employee threads unless the user asks for that control.
 
-After dispatch, show informational continuation paths as numbered items, not A/B/C/D choices. A/B/C/D are only for user choices that authorize different actions.
-Also offer an opt-in watch command after the numbered continuation paths. Watching is not a fourth default path; it is an explicit command the user may send when they want the project manager to keep checking progress.
-The watch command must be outside the numbered list and inside its own fenced `text` block.
+Before longer or multi-employee work starts, show a short progress expectation and ask for A/B/C. A/B/C are real choices here, not decoration:
 
-Watch mode rules:
+- A. 手动推进 / Manual progress: dispatch the current step and wait for the user to come back with a short phrase.
+- B. 半自动推进 / Semi-automatic progress: continue from employee reports, but stop at key checkpoints, dependency gaps, risky actions, or user-judgment moments.
+- C. 自动推进到检查点 / Automatic progress until checkpoint: continue safely until the next user checkpoint; create or update a Codex heartbeat only when automation tools are available and the user selected this mode.
 
-- Start only after a clear request such as `盯进度 T-xxx`, `帮我盯 T-xxx`, `Watch T-xxx`, or "please watch this task."
-- Use thread reads sparingly. Pick an initial interval from 30-60 seconds based on expected complexity and token cost.
-- If the employee is clearly in a long multi-step task, use the longer side of the interval. If the employee seems near completion and reads are cheap, use a shorter interval.
-- Do not exceed 60 seconds between checks while actively watching.
-- Do not narrate every quiet check. Report meaningful progress, blocker, handoff, completion, or timeout only.
-- Stop when the employee finishes, blocks, asks for user input, hands off to another role, the user interrupts, or repeated checks show no meaningful progress.
-- The project manager may advance to the next employee only when the previous employee's output exists and the office plan makes the next owner clear. It must not do another employee's work unless the user explicitly authorizes takeover.
+After dispatch, follow the selected progress mode. The project director must not rush downstream work before employee reports and dependencies are ready. If a user later sends `跟进`, `继续`, `OK`, `好的`, `可以`, or an English equivalent, resolve it by current task context. If several tasks could continue, list task titles and ask the user to choose by number or name.
+
+Employee reports must come back to the project director in fixed shape:
+
+```text
+【员工汇报】
+汇报人：{员工职位}
+任务：{任务名}
+状态：已完成 / 阻塞 / 需要确认
+产出位置：{路径或线程摘要}
+结论摘要：{短摘要}
+建议下一步：{建议交给谁或停在哪里}
+需要用户介入：是/否
+```
+
+English:
+
+```text
+[Employee Report]
+Reporter: {employee job title}
+Task: {task title}
+Status: done / blocked / needs-confirmation
+Output location: {path or thread summary}
+Summary: {short summary}
+Suggested next step: {next owner or stop point}
+User input needed: yes/no
+```
 
 Chinese example:
 
 ````md
 已派工给：`{员工职位}`
-任务：`{任务编号}` {一句话任务}
+任务：`{任务名}`
 当前状态：等待 `{员工职位}` 完成。
 
-接下来你可以这样推进：
-1. 员工完成后，回到项目总监这里发 `继续推进 {任务编号}`。
-2. 直接去 `{员工职位}` 窗口继续聊，让它完成后按办公室规则写交接。
-3. 如果你想手动接力，把员工产物复制给下一位合适员工。
+我会按你选择的推进方式处理：
+- A：等你回来发 `跟进` / `继续` / `OK` 后再推进。
+- B：员工汇报回来后，我会继续流转，但关键检查点会停下来给你看。
+- C：我会自动推进到下一个用户检查点；如可用，会设置 heartbeat 防止中断。
 
-需要我替你盯进度的话，回复：
-
-```text
-盯进度 {任务编号}
-```
+如果还有多个可继续任务，我会列任务名让你选。
 ````
 
 English example:
 
 ````md
 Assigned to: `{employee job title}`
-Task: `{task id}` {one-sentence task}
+Task: `{task title}`
 Current status: waiting for `{employee job title}`.
 
-You can continue in three ways:
-1. After the employee finishes, return here and send `Continue {task id}`.
-2. Continue directly in the `{employee job title}` chat and let it write the handoff.
-3. Manually copy the employee output to the next suitable employee.
+I will follow the progress mode you chose:
+- A: I wait until you return with `continue`, `ok`, or a similar short reply.
+- B: I continue from employee reports, but stop at key checkpoints.
+- C: I continue automatically until the next user checkpoint; if available, I set a heartbeat to avoid interruption.
 
-If you want me to watch progress for you, reply:
-
-```text
-Watch {task id}
-```
+If several tasks can continue, I will list task titles and ask you to choose.
 ````
 
 ## Language Rules

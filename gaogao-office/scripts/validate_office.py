@@ -11,7 +11,7 @@ from pathlib import Path, PureWindowsPath
 
 
 OFFICE_DIR = "Agent Office"
-OFFICE_SCHEMA_VERSION = "0.2.9"
+OFFICE_SCHEMA_VERSION = "1.0.0"
 
 REQUIRED_FILES = [
     "Agent Office/README.md",
@@ -311,11 +311,15 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
         text = read_text(prompt_file)
         if text:
             general_registry_requirements = [
-                ["项目总监派工协议", "Project-Manager Dispatch Protocol"],
+                ["项目总监派工协议", "Project-Director Dispatch Protocol"],
                 ["任务路由判断", "task routing judgment", "Routing decision"],
-                ["1/2/3", "Continue", "继续推进"],
-                ["不反复轮询", "non-blocking", "stops by default"],
-                ["盯进度", "Watch", "30-60"],
+                ["任务名", "task_title", "task title"],
+                ["短词", "short natural-language", "continue", "OK"],
+                ["A/B/C", "手动推进", "semi-automatic", "automatic progress"],
+                ["依赖", "dependency", "A/B/C progress"],
+                ["heartbeat", "自动推进", "automatic follow-up"],
+                ["【员工汇报】", "Employee Report"],
+                ["依赖", "dependency", "wait until required"],
                 ["交接框架", "Handoff frame", "handoff framing"],
                 ["不要替员工写最终产物", "employee-owned output", "不得替员工完成"],
                 ["任务路由读取范围", "task-routing reads", "Task-routing read budget"],
@@ -323,7 +327,7 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 ["孤儿任务", "orphan task"],
                 ["生命周期", "lifecycle state", "operation-router"],
                 ["授权等级", "authorization level", "current valid approval"],
-                ["用户", "user", "project manager"],
+                ["用户", "user", "project director"],
             ]
             for options in general_registry_requirements:
                 if not contains_any(text, options):
@@ -350,14 +354,20 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
         for options in [["out-of-scope", "职责外"], ["Handoffs", "交接"], ["Open Messages", "消息"]]:
             if not contains_any(text, options):
                 findings.append(Finding("warning", "Agent Office/communication.md", f"communication protocol should mention `{label(options)}`"))
-        if not contains_any(text, ["project manager by default", "默认先进入项目总监"]):
-            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain controller-dispatch entry through the project manager"))
+        if not contains_any(text, ["project director by default", "默认先进入项目总监"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain controller-dispatch entry through the project director"))
         if not contains_any(text, ["任务路由判断", "task routing judgment", "routing decision"]):
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain task routing before dispatch or direct work"))
-        if not contains_any(text, ["继续推进", "Continue T-", "non-blocking", "不轮询"]):
-            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain non-blocking dispatch continuation"))
-        if not contains_any(text, ["盯进度", "Watch T-", "30-60"]):
-            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain opt-in watch mode"))
+        if not contains_any(text, ["任务名", "task_title", "task title"]) or not contains_any(text, ["短词", "short natural-language", "continue", "OK"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain title-first continuation with short natural replies"))
+        if not contains_any(text, ["A/B/C", "手动推进", "semi-automatic", "automatic progress"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain A/B/C progress modes"))
+        if not contains_any(text, ["【员工汇报】", "Employee Report"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should include the employee report shape"))
+        if not contains_any(text, ["依赖等待", "Dependency Waiting", "wait for required"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain dependency waiting before the next stage"))
+        if not contains_any(text, ["heartbeat", "自动推进", "automatic follow-up", "automatic progress"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain opt-in automatic progress and heartbeat limits"))
         if not contains_any(text, ["生命周期状态", "lifecycle state"]) or not contains_any(text, ["授权等级", "authorization level"]):
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain lifecycle and authorization routing"))
 
@@ -386,6 +396,16 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 findings.append(Finding("warning", "Agent Office/office-plan.json", "collaboration_mode should be `controller-dispatch`"))
             if data.get("operation_model") != "stateful-router":
                 findings.append(Finding("warning", "Agent Office/office-plan.json", "operation_model should be `stateful-router`"))
+            expected_fields = {
+                "task_reference_policy": "user-facing-title-internal-id",
+                "progress_mode": "ask-per-workstream",
+                "employee_report_route": "director-only",
+                "dependency_policy": "wait-for-required-inputs",
+                "short_continue_policy": "contextual-natural-language",
+            }
+            for field, expected in expected_fields.items():
+                if data.get(field) != expected:
+                    findings.append(Finding("warning", "Agent Office/office-plan.json", f"{field} should be `{expected}`"))
             dispatch_policy = data.get("dispatch_policy")
             if not isinstance(dispatch_policy, dict):
                 findings.append(Finding("warning", "Agent Office/office-plan.json", "dispatch_policy should record local-capacity-aware employee dispatch"))
@@ -409,9 +429,9 @@ def validate_employees(root: Path, findings: list[Finding]) -> None:
         findings.append(Finding("error", "Agent Office/Employees", "no employee role folders found"))
     registry_text = read_text(root / "Agent Office/thread-registry.md")
     if registry_text and not contains_any(registry_text, ["current-window", "项目总监"]):
-        findings.append(Finding("warning", "Agent Office/thread-registry.md", "registry should identify the current chat as the founding project manager"))
-    if registry_text and not contains_any(registry_text, ["Current project-manager window title", "当前项目总监窗口标题"]):
-        findings.append(Finding("warning", "Agent Office/thread-registry.md", "registry should state the title for the current project-manager chat"))
+        findings.append(Finding("warning", "Agent Office/thread-registry.md", "registry should identify the current chat as the founding project director"))
+    if registry_text and not contains_any(registry_text, ["Current project-director window title", "当前项目总监窗口标题"]):
+        findings.append(Finding("warning", "Agent Office/thread-registry.md", "registry should state the title for the current project-director chat"))
     if registry_text:
         for line in registry_text.splitlines():
             if line.startswith("|") and " / " in line and "Thread Title" not in line and "---" not in line:

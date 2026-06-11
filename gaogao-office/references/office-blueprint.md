@@ -5,13 +5,13 @@ GaoGao Office creates a lightweight `Agent Office/` with a public area, employee
 ## Operating Model
 
 - The user is the final decision-maker. Respect the user's preferred form of address. In Chinese chat, default to natural `你` wording when no preference is visible; use `BOSS` only if the user has already chosen or accepted it. In English chat, use `you` for user-facing copy and `user` or `project owner` for internal descriptions.
-- The current GaoGao Office chat becomes the founding project manager by default.
-- In Codex Desktop, the founding project manager chat should be titled with its job title only, not the project name or skill invocation.
-- The project manager maintains public files, routes work, keeps the office clean, and invites employees only after formal takeover.
-- Multi-employee offices use single-entry, non-blocking controller-dispatch by default: the user talks mainly to the project manager; the project manager splits tasks, sends work to employee threads, records the handoff, and stops until the user asks it to continue.
+- The current GaoGao Office chat becomes the founding project director by default.
+- In Codex Desktop, the founding project director chat should be titled with its job title only, not the project name or skill invocation.
+- The project director maintains public files, routes work, keeps the office clean, and invites employees only after formal takeover.
+- Multi-employee offices use single-entry controller-dispatch by default: the user talks mainly to the project director; the project director splits tasks, sends work to employee threads, receives employee reports, waits for required dependencies, and advances according to the user's A/B/C progress choice.
 - Employee roster size is not the same as active concurrency. Employees may all be onboarded, but active work dispatch follows `dispatch_policy`; low or unknown local capacity means one employee task at a time.
 - Other employees read public files plus only their own private folder by default.
-- Employees primarily receive work from the project manager. Direct user-to-employee work is allowed only when the user explicitly wants it.
+- Employees primarily receive work from the project director and report back to the project director. Direct user-to-employee work is allowed only when the user explicitly wants it.
 - Old project memory is not ordinary working context after absorption.
 
 ## Structure
@@ -51,7 +51,7 @@ Each employee folder has:
 - `memory.md`: private continuity with `Next Action` at the top and `Work Log` below.
 - `current-task.md`: current status: waiting / active / deferred / cancelled / done.
 
-Employees update their own memory after meaningful work. The project manager may update employee files during onboarding, maintenance, or recovery.
+Employees update their own memory after meaningful work. The project director may update employee files during onboarding, maintenance, or recovery.
 
 ## Archive
 
@@ -70,20 +70,20 @@ Ordinary employees load:
 7. `Agent Office/Employees/{employee-slug}/memory.md`
 8. `Agent Office/Employees/{employee-slug}/current-task.md`
 
-The project manager may also read `communication.md`, `decisions.md`, `thread-registry.md`, migration reports, and employee files when maintaining the office.
+The project director may also read `communication.md`, `decisions.md`, `thread-registry.md`, migration reports, and employee files when maintaining the office.
 
 ## Controller Dispatch Loop
 
-When the user gives work to the project manager after employees are onboarded:
+When the user gives work to the project director after employees are onboarded:
 
-1. run the task routing gate: identify final outcome, next workflow stage, candidate owner, and whether the work should be dispatched, handled by the project manager, or clarified
-2. if one employee clearly owns the next stage, dispatch it to that employee; if no employee owns it or it is tiny office maintenance, the project manager may handle it directly
-3. for multi-stage work, split only the next unblocked subtask and record the likely next owner without dispatching downstream work too early
-4. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
-5. send task messages to employee threads when tools are available
-6. require each employee to update its own `memory.md` and `current-task.md`
-7. report the assignment to the user with numbered continuation paths, then stop
-8. resume only when the user returns with a continuation request, explicitly asks the project manager to wait, or authorizes project-manager takeover of an employee task
+1. before long or multi-employee work starts, state expected steps, participating employees, and the next user checkpoint, then ask for A/B/C progress mode
+2. run the task routing gate: identify final outcome, next workflow stage, candidate owner, and whether the work should be dispatched, handled by the project director, or clarified
+3. if one employee clearly owns the next stage, dispatch it to that employee; if no employee owns it or it is tiny office maintenance, the project director may handle it directly
+4. for multi-stage work, split only the next unblocked subtask and record the likely next owner without dispatching downstream work too early
+5. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
+6. send task messages to employee threads when tools are available
+7. require each employee to update its own `memory.md` and `current-task.md`, then report back with the fixed employee-report shape
+8. record partial reports, wait for required dependencies, and advance only according to A/B/C mode
 
 This loop should reduce the user's coordination burden. It should not create busywork or route tiny tasks to employees just because threads exist.
 
@@ -93,21 +93,19 @@ Dispatch must stay small: update the active task board, one communication handof
 
 Do not create orphan active tasks. If the target employee thread ID is `TBD`, missing, or not tied to this project, show the manual dispatch packet and stop; record the task after the user confirms it was sent, the employee thread is registered, or a result returns.
 
-The project manager must not claim an employee's work as complete unless that employee completed it or the user explicitly authorized the project manager to take over. If the project manager uses a tool that supports another employee's task, record it as tool execution or handoff support, then route the judgment/result back to the responsible role.
+The project director must not claim an employee's work as complete unless that employee completed it or the user explicitly authorized the project director to take over. If the project director uses a tool that supports another employee's task, record it as tool execution or handoff support, then route the judgment/result back to the responsible role.
 
-Handoff support is not employee output. The project manager may preserve the user's goal, constraints, source materials, and acceptance criteria, but it must not finish the creative, prompt, design, code, research, QA, or release deliverable that belongs to an employee unless takeover is explicitly authorized.
+Handoff support is not employee output. The project director may preserve the user's goal, constraints, source materials, and acceptance criteria, but it must not finish the creative, prompt, design, code, research, QA, or release deliverable that belongs to an employee unless takeover is explicitly authorized.
 
-## Optional Watch Mode
+## Progress Modes And Heartbeat
 
-Watching employee progress is opt-in. The project manager may watch only after a clear request such as `Watch T-001`, `盯进度 T-001`, or an equivalent instruction.
+A/B/C progress is chosen before long or multi-employee work:
 
-When watching:
+- A manual progress: dispatch the current step and wait for a short user reply such as `跟进`, `继续`, `OK`, `continue`, or `ok`.
+- B semi-automatic progress: continue from employee reports, but stop at key checkpoints, dependency gaps, risky actions, or user judgment.
+- C automatic progress until checkpoint: continue safely until the next user checkpoint. If automation tools are available, the project director may create or update a current-thread heartbeat.
 
-- Check employee threads at an adaptive 30-60 second interval; never exceed 60 seconds while actively watching.
-- Use longer intervals for complex tasks or when the employee is clearly still reasoning, and shorter intervals only when completion looks near or reads are cheap.
-- Report only meaningful progress, blockers, handoffs, completion, or timeout.
-- Stop when the employee finishes, blocks, asks for user input, hands off to another role, the user interrupts, or repeated checks show no meaningful progress.
-- Do not take over the employee's work unless the user explicitly authorizes project-manager takeover.
+Heartbeat reminders are not extra authority. When awakened, the project director checks whether unfinished work remains, continues only if safe, and stops immediately if the work is done, blocked, risky, or needs the user. Automatic progress never authorizes deletion, archive moves, publishing, or `AGENTS.md` changes.
 
 ## Context Budgets
 

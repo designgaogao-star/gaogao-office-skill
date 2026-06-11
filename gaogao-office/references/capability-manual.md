@@ -4,7 +4,7 @@ Use this when the user asks what GaoGao Office can do, asks for a manual, says `
 
 Do not scan the project, write files, create threads, archive files, or change `AGENTS.md` when answering in manual mode. Explain capabilities only. Follow the user's language; output only Chinese or only English unless the user asks for both.
 
-Keep the manual compact, but do not omit core capabilities: project checkup, new project takeover, existing project migration, employee onboarding, task routing, watch progress, role memory, retire/replace roles, office cleanup, old-memory archive, and Codex thread enhancement.
+Keep the manual compact, but do not omit core capabilities: project checkup, new project takeover, existing project migration, employee onboarding, task routing, A/B/C progress modes, employee reports, role memory, retire/replace roles, office cleanup, old-memory archive, and Codex thread/heartbeat enhancement.
 
 ## Chinese Manual Shape
 
@@ -22,7 +22,8 @@ Keep the manual compact, but do not omit core capabilities: project checkup, new
 | 旧项目迁移 | 有旧 planning、vibe、规则、任务或上下文散落 | 是 | 先给迁移方案，再等确认 |
 | 员工入职 | 想把长期项目拆给多个专业对话窗口 | 是 | 正式接管后再授权 |
 | 任务路由 | 你只跟项目总监说需求，由它判断谁来做 | 可能 | 派工前会记录任务 |
-| 盯进度 | 你希望项目总监定时看员工进展 | 否或少量记录 | 需要明确说 `盯进度 T-xxx` |
+| A/B/C 推进 | 长任务开工前选择手动、半自动或自动推进到检查点 | 可能 | 每条长任务开工前由你选择 |
+| 员工汇报 | 员工完成后按固定格式汇报给项目总监 | 可能 | 员工完成正式任务后使用 |
 | 角色记忆 | 让每个岗位保留自己的长期记忆 | 是 | 员工完成正式任务后更新 |
 | 撤岗/换岗 | 减少员工、停掉方向、换新窗口接任 | 是 | 先给保留和归档方案 |
 | 办公室清理 | 把旧提示词、临时计划、重复入口移出工作区 | 是 | 先列清单，再确认 |
@@ -37,9 +38,9 @@ Keep the manual compact, but do not omit core capabilities: project checkup, new
 | `接管项目` | 想正式建立或刷新 `Agent Office/` |
 | `迁移旧项目` | 有旧 planning、vibe、规则、任务或上下文要吸收 |
 | `健康检查` | 已经有办公室，想看看有没有过期、混乱或缺记录 |
-| `继续推进 T-xxx` | 员工完成后，让项目总监继续流转 |
-| `盯进度 T-xxx` | 临时让项目总监替你看员工进展 |
-| `停止盯进度` | 停止项目总监轮询员工窗口 |
+| `跟进` / `继续` / `OK` | 按当前唯一等待任务继续推进 |
+| `自动推进到检查点` | 让项目总监继续到下次需要你查看的位置 |
+| `停止自动推进` | 停止自动推进或 heartbeat |
 | `撤岗` | 停用员工、缩编或把某个方向收起来 |
 
 **我不会默认做什么**
@@ -48,7 +49,7 @@ Keep the manual compact, but do not omit core capabilities: project checkup, new
 - 不会默认改 `AGENTS.md`。
 - 不会默认创建、读取、归档或停用线程。
 - 不会默认删除旧资料。
-- 不会默认盯进度或反复轮询员工窗口。
+- 不会默认自动推进或反复轮询员工窗口。
 - 不会在办公室接管完成后自动开始项目任务。
 
 **最常用的三种开始方式**
@@ -69,7 +70,8 @@ Keep the manual compact, but do not omit core capabilities: project checkup, new
 <summary>高级能力怎么理解</summary>
 
 - 多员工不是默认越多越好。GaoGao Office 会根据项目判断该单窗口还是多员工。
-- 项目总监默认是当前窗口。你可以只和它说话，它负责把任务派给合适员工。
+- 项目总监默认是当前窗口。你可以只和它说话，它负责把任务派给合适员工，并接收员工汇报。
+- 长任务开工前会先给你预计步骤、参与员工和下次检查点，再让你选 A/B/C 推进方式。
 - 员工窗口有自己的岗位档案、当前任务和记忆文件；默认不读别人的私有区。
 - 已吸收的旧资料会进入 `Agent Office/Archive/Old Project Memory/`，日常员工不会读它。
 - 线程相关能力依赖 Codex Desktop 当前是否提供线程工具；工具不可用时，会退回手动提示词。
@@ -79,7 +81,7 @@ Keep the manual compact, but do not omit core capabilities: project checkup, new
 1. 新项目：只读体检 → 组织方案 → A/B/C/D → 正式接管 → 是否进入方向顾问。
 2. 旧项目：扫描旧知识 → 吸收地图 → 接管方案 → 归档已吸收旧资料 → 员工入职。
 3. 单窗口：当前项目总监负责全部长期记忆和任务记录。
-4. 多员工：用户主要找项目总监，项目总监按职责派工并停止等待。
+4. 多员工：用户主要找项目总监，项目总监按职责派工、等待员工汇报，并按 A/B/C 推进。
 5. 换岗/撤岗：保留已完成工作和记忆，取消未来任务，必要时归档线程。
 
 </details>
@@ -95,7 +97,7 @@ Keep the manual compact, but do not omit core capabilities: project checkup, new
 ## English Manual Shape
 
 ````md
-I am GaoGao Office. Think of me as a project manager for long-running AI-assisted projects: I inspect the project, propose whether to create `Agent Office/`, absorb old project memory, onboard employee chats, and route later work to the right role.
+I am GaoGao Office. Think of me as a project director for long-running AI-assisted projects: I inspect the project, propose whether to create `Agent Office/`, absorb old project memory, onboard employee chats, and route later work to the right role.
 
 > Manual mode only explains capabilities. I will not scan the project, write files, change `AGENTS.md`, create threads, or archive anything.
 
@@ -107,8 +109,9 @@ I am GaoGao Office. Think of me as a project manager for long-running AI-assiste
 | New project takeover | You want durable order in a new long-running project | Yes | Requires A/B approval |
 | Existing project migration | Old planning, vibe, rules, tasks, or context are scattered | Yes | Migration plan first, then approval |
 | Employee onboarding | You want specialist chats for long-running roles | Yes | After formal takeover |
-| Task routing | You talk to the project manager; it decides who should do the next step | Maybe | Task is recorded before dispatch |
-| Watch progress | You want the project manager to check employee progress | No or small records | Explicit `Watch T-xxx` request |
+| Task routing | You talk to the project director; it decides who should do the next step | Maybe | Task is recorded before dispatch |
+| A/B/C progress | Choose manual, semi-automatic, or automatic progress until the next checkpoint | Maybe | You choose before each long workstream |
+| Employee reports | Employees report back to the project director in a fixed shape | Maybe | Used after meaningful employee work |
 | Role memory | Each role keeps durable private continuity | Yes | Employees update after real work |
 | Retire or replace roles | Downsize, stop a direction, or move a role into a fresh chat | Yes | Proposal before changes |
 | Office cleanup | Move old prompts, temporary plans, and duplicate entrances out of the active surface | Yes | Reviewed list first |
@@ -123,9 +126,9 @@ I am GaoGao Office. Think of me as a project manager for long-running AI-assiste
 | `take over` | Create or refresh `Agent Office/` |
 | `migrate` | Absorb old planning, vibe, rules, tasks, or context |
 | `health check` | Audit an existing office for stale or missing records |
-| `Continue T-xxx` | Continue after an employee finishes |
-| `Watch T-xxx` | Temporarily let the project manager watch progress |
-| `Stop watching` | Stop polling employee chats |
+| `continue` / `ok` / `proceed` | Continue the current waiting task from context |
+| `automatic progress to checkpoint` | Continue until the next user checkpoint |
+| `stop automatic progress` | Stop automatic progress or heartbeat |
 | `retire role` | Retire employees, downsize, or close a direction |
 
 **What I Will Not Do By Default**
@@ -134,7 +137,7 @@ I am GaoGao Office. Think of me as a project manager for long-running AI-assiste
 - I will not change `AGENTS.md` by default.
 - I will not create, read, archive, or retire threads by default.
 - I will not delete old material by default.
-- I will not watch progress or repeatedly poll employee chats by default.
+- I will not automatically progress or repeatedly poll employee chats by default.
 - I will not start project work automatically after office takeover.
 
 **Common Starting Points**
@@ -155,7 +158,8 @@ Use $gaogao-office to take over this old project. Give me the migration plan fir
 <summary>How the advanced parts work</summary>
 
 - More employees is not automatically better. GaoGao Office recommends one chat or multiple employees based on the project.
-- The current chat is the project manager by default. You can keep talking to it while it dispatches work.
+- The current chat is the project director by default. You can keep talking to it while it dispatches work and receives employee reports.
+- Before long work starts, it gives expected steps, participating employees, and the next user checkpoint, then asks you to choose A/B/C progress mode.
 - Employee chats keep their own profile, current task, and memory; they do not read other private folders by default.
 - Absorbed old material goes to `Agent Office/Archive/Old Project Memory/`; ordinary employees do not use it as daily context.
 - Thread operations depend on Codex Desktop thread tools. If they are unavailable, GaoGao Office falls back to manual prompts.
@@ -164,8 +168,8 @@ Typical workflows:
 
 1. New project: checkup -> proposal -> A/B/C/D -> formal takeover -> optional direction advisor.
 2. Existing project: old-memory scan -> absorption map -> takeover proposal -> archive absorbed sources -> employee onboarding.
-3. One-person office: the current project manager keeps all durable memory and task records.
-4. Multi-employee office: the user mainly talks to the project manager; it dispatches by responsibility and stops.
+3. One-person office: the current project director keeps all durable memory and task records.
+4. Multi-employee office: the user mainly talks to the project director; it dispatches by responsibility, waits for employee reports, and follows A/B/C progress.
 5. Role retirement or replacement: preserve completed work and memory, cancel future tasks, and archive threads when approved.
 
 </details>
