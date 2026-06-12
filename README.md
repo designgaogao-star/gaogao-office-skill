@@ -1,5 +1,7 @@
 # GaoGao Office Skill
 
+**Language:** English | [简体中文](README.zh-CN.md)
+
 `gaogao-office` is a Codex skill for creating, migrating, and maintaining a lightweight `Agent Office/` inside long-running agent-assisted projects.
 
 It treats the current chat as the founding project director, renames that chat to its job title when Codex Desktop allows it, proposes an organization, and invites employees only after formal takeover. In multi-employee mode, the user can keep talking to that one project-director chat while it judges each request, routes employee-owned work to the right thread according to local capacity, receives employee reports, waits for dependencies, and advances according to the user's A/B/C progress mode.
