@@ -64,6 +64,7 @@ Before changing files:
 - State that the current chat will become the founding project director unless the user only wants a proposal.
 - In multi-employee mode, make the current project director the user-facing controller by default: the user talks to this chat, this chat decomposes requests, dispatches work to employee threads, records the handoff, waits for employee reports, and only advances when dependencies are ready. Do not poll employee threads, wait in-chat, or take over employee work unless the user explicitly chooses automatic progress or asks for that mode.
 - Treat employee reporting as three separate steps: employee local closeout, employee-report content, then report transport. Meaningful employee work is not done until the employee updates `memory.md`, updates `current-task.md`, prepares the fixed report shape, and either sends it to the registered project-director thread with `send_message_to_thread` or outputs a copyable report when automatic return is unavailable.
+- When the project director receives `【员工汇报】` / `[Employee Report]`, treat it as an employee report, not a new user request. Verify reporter, task title, status, output, and user-input need; then update `task-board.md` and `communication.md`. If dependencies are missing, wait. If dependencies are ready, continue only under the selected A/B/C progress mode.
 - In Codex Desktop, after formal takeover, rename the current chat to the founding project-director job title only, such as `项目总监` or `Project Director`. Do this before creating other employee threads when the thread title tool is available; if it is unavailable or the current thread cannot be confidently identified, tell the user the exact manual title to use.
 - Inspect project clues read-only: directory name, full filename map excluding skip directories, README, config files, existing `AGENTS.md`, `vibe/`, top-level docs, and Git status when available.
 - Before dispatching multiple employee threads, run or emulate `scripts/inspect_capacity.py`. Employees may all be onboarded, but active task dispatch must follow `dispatch_policy`; unknown or low-capacity machines dispatch one employee at a time.
@@ -158,12 +159,13 @@ Use this when `Agent Office/` already exists and the user wants to use the lates
 3. Preserve continuity: read public office files and employee memory only as needed to summarize current truth. Do not delete employee memory.
 4. Produce an upgrade proposal before writing:
    - what existing office version or missing fields were detected
+   - whether the office only needs a protocol patch, such as missing employee return/report-intake fields or an uncertain project-director thread ID
    - what facts will be kept
    - which active files will be refreshed
    - which old office files, stale employees, old prompts, or old project-memory sources will be archived
    - whether root `AGENTS.md` needs a new proposal and backup
 5. Show A/B/C/D reply options:
-   - A: upgrade the office to the current GaoGao Office workflow, preserve memories, archive stale material, and apply approved `AGENTS.md`
+   - A: patch/upgrade the office to the current GaoGao Office workflow, preserving memories and applying only the needed protocol/template updates
    - B: only audit and report; write nothing
    - C: rebuild the employee roster, but preserve old memories in archive
    - D: pause

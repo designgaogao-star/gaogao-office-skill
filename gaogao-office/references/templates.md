@@ -297,6 +297,34 @@ If you cannot send it back to the project-director thread automatically, output 
 ```
 ````
 
+## Report Intake Reply Shape
+
+Use this when the project director receives an employee report. Keep it short.
+
+Chinese:
+
+````md
+**收到员工汇报**
+
+- 任务：`{任务名}`
+- 汇报人：`{员工职位}`
+- 状态：`{已完成 / 阻塞 / 需要确认}`
+- 记录：已更新 `task-board.md` 和 `communication.md`
+- 下一步：{等待缺失汇报 / 按 A/B/C 继续 / 需要用户判断}
+````
+
+English:
+
+````md
+**Employee Report Received**
+
+- Task: `{task title}`
+- Reporter: `{employee job title}`
+- Status: `{done / blocked / needs-confirmation}`
+- Records: updated `task-board.md` and `communication.md`
+- Next: {wait for missing reports / continue under A/B/C / need user judgment}
+````
+
 Chinese employee launch prompt shape:
 
 ```text

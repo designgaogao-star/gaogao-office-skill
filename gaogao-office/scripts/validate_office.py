@@ -11,7 +11,7 @@ from pathlib import Path, PureWindowsPath
 
 
 OFFICE_DIR = "Agent Office"
-OFFICE_SCHEMA_VERSION = "1.0.1"
+OFFICE_SCHEMA_VERSION = "1.0.2"
 
 REQUIRED_FILES = [
     "Agent Office/README.md",
@@ -323,6 +323,8 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 ["项目总监 Thread ID", "Project-director Thread ID"],
                 ["自动回传", "auto-return", "Employee Return Protocol"],
                 ["手动复制", "manual copy", "copyable report"],
+                ["汇报接收", "Report Intake", "report-intake"],
+                ["waiting-dependency"],
                 ["依赖", "dependency", "wait until required"],
                 ["交接框架", "Handoff frame", "handoff framing"],
                 ["不要替员工写最终产物", "employee-owned output", "不得替员工完成"],
@@ -375,6 +377,10 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain employee report transport and manual fallback"))
         if not contains_any(text, ["依赖等待", "Dependency Waiting", "wait for required"]):
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain dependency waiting before the next stage"))
+        if not contains_any(text, ["汇报接收", "Report Intake", "report-intake"]):
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should include a project-director report intake record"))
+        if "waiting-dependency" not in text:
+            findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should include `waiting-dependency` for incomplete upstream reports"))
         if not contains_any(text, ["heartbeat", "自动推进", "automatic follow-up", "automatic progress"]):
             findings.append(Finding("warning", "Agent Office/communication.md", "communication protocol should explain opt-in automatic progress and heartbeat limits"))
         if not contains_any(text, ["生命周期状态", "lifecycle state"]) or not contains_any(text, ["授权等级", "authorization level"]):
@@ -411,6 +417,7 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 "employee_report_route": "director-only",
                 "employee_report_transport": "director-thread-first",
                 "employee_report_fallback": "copyable-report",
+                "employee_report_intake": "director-verifies-records-and-routes",
                 "dependency_policy": "wait-for-required-inputs",
                 "short_continue_policy": "contextual-natural-language",
             }

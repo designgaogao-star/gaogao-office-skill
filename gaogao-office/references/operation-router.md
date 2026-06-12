@@ -190,13 +190,23 @@ Automatic return is allowed only when all are true:
 
 If any condition is false, the employee outputs a copyable report in its own chat and states that it must be copied back to the project-director chat. Do not claim the report was sent.
 
+## Employee Report Intake
+
+When the project director receives `【员工汇报】` / `[Employee Report]`, do not treat it as a fresh user request.
+
+1. Verify reporter, task title, status, output location, summary, suggested next step, and whether user input is needed.
+2. If the shape is incomplete or the task does not match the office records, ask for the missing piece and do not advance.
+3. If valid, update the matching task in `task-board.md`, append a short report-intake record in `communication.md`, and update dependency status.
+4. If downstream work depends on other employees, wait for the missing reports.
+5. If dependencies are complete, continue only according to the chosen A/B/C progress mode.
+
 ## Project-Director Self-Check
 
 Before acting, the project director asks:
 
 ```text
 当前状态是什么？
-用户这句话是在请求说明、体检、接管、维护、派工、自然语言继续、自动推进，还是普通任务？
+用户这句话是在请求说明、体检、接管、维护、派工、员工汇报、自然语言继续、自动推进，还是普通任务？
 这个动作会不会写文件、改 AGENTS、移动资料、操作线程？
 当前回复里有没有足够授权？
 如果有员工负责下一步，我是不是应该派工而不是自办？
@@ -208,7 +218,7 @@ English equivalent:
 
 ```text
 What lifecycle state am I in?
-Is the user asking for manual, checkup, takeover, maintenance, dispatch, natural-language continue, automatic progress, or ordinary work?
+Is the user asking for manual, checkup, takeover, maintenance, dispatch, employee report intake, natural-language continue, automatic progress, or ordinary work?
 Will this write files, change AGENTS.md, move old memory, or operate threads?
 Do I have enough approval in the current reply?
 If an employee owns the next step, should I dispatch instead of doing it myself?

@@ -28,7 +28,7 @@ If validation is unavailable, noisy, or slow, do not stall. Report the useful fi
 - `communication.md` messages or handoffs that are unresolved
 - `thread-registry.md` entries that are missing thread IDs, stale, retired, or still waiting
 - whether controller-dispatch is still true: user requests should enter through the project director by default, employees should update current task/memory before reporting, and employee reports should either return via `send_message_to_thread` to a confirmed project-director thread ID or fall back to a copyable report
-- whether v1.0.0 offices are missing the v1.0.1 upward report transport fields: `employee_report_transport`, `employee_report_fallback`, project-director thread ID status, and manual-copy fallback wording
+- whether older offices are missing v1.0.2 report fields: `employee_report_transport`, `employee_report_fallback`, `employee_report_intake`, project-director thread ID status, manual-copy fallback wording, and report-intake records
 - employee folders missing `README.md`, `memory.md`, or `current-task.md`
 - employee `memory.md` files that are too long, stale, or contain shared facts that belong in public files
 - `decisions.md` entries that are superseded or unresolved
@@ -92,11 +92,23 @@ When upgrading an existing office:
 
 1. Start read-only and tell the user the old office will not be deleted automatically.
 2. Summarize current public truth and employee memories that must survive.
-3. Propose what to refresh, what to archive, and what to leave alone.
-4. Ask for A/B/C/D approval before overwriting active office files.
-5. Preserve or archive retired employee folders instead of deleting them.
-6. Rebuild current templates only after approval, then run validation again.
-7. Treat stale A/B/C/D letters as expired if the next user reply after the options was not a valid letter.
+3. If the office mostly works but lacks the current report-return/report-intake protocol, offer a protocol-only patch before a full refresh.
+4. Propose what to refresh, what to archive, and what to leave alone.
+5. Ask for A/B/C/D approval before overwriting active office files.
+6. Preserve or archive retired employee folders instead of deleting them.
+7. Rebuild current templates only after approval, then run validation again.
+8. Treat stale A/B/C/D letters as expired if the next user reply after the options was not a valid letter.
+
+Light upgrade options:
+
+```text
+回 A / B / C / D 即可
+```
+
+- A. 只补协议：补 `employee_report_intake`、项目总监 thread ID 登记说明、汇报接收记录；不重建员工记忆。
+- B. 健康检查：只读审计并给报告。
+- C. 完整升级：刷新办公室模板，保留/归档旧员工记忆。
+- D. 暂停。
 
 Use this wording when helpful:
 

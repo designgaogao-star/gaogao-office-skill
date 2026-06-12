@@ -17,15 +17,15 @@ From the package repository:
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v1.0.1"
+git commit -m "Release gaogao office v1.0.2"
 ```
 
 ## 3. Tag
 
 ```bash
-git tag v1.0.1
+git tag v1.0.2
 git push origin main
-git push origin v1.0.1
+git push origin v1.0.2
 ```
 
 ## 4. Zip Asset
@@ -34,23 +34,11 @@ The release asset should be `outputs/gaogao-office-skill.zip` from the parent wo
 
 ## 5. Release Notes
 
-```md
-# GaoGao Office v1.0.1
-
-Focused employee-report return patch for the stable office-collaboration release.
-
-Highlights:
-- employees now have an explicit upward report transport
-- after real work, employees update `memory.md` and `current-task.md` before reporting
-- employee reports prefer `send_message_to_thread` to a confirmed project-director thread ID
-- if thread tools or the director thread ID are unavailable, employees output a copyable report instead of pretending it was sent
-- v1.0.0 offices validate with a warning and can be upgraded without rebuilding employee memory
-- no change to the lightweight `Agent Office/` structure
-```
+Use `docs/release-notes-v1.0.2.md` as the GitHub release body. The release page should show Chinese by default and keep English in a collapsed `<details>` section.
 
 ## 6. GitHub Release
 
-Upload `outputs/gaogao-office-skill.zip` as the release asset for `v1.0.1`.
+Upload `outputs/gaogao-office-skill.zip` as the release asset for `v1.0.2`.
 
 ## 7. Install Prompt
 

@@ -13,6 +13,7 @@ GaoGao Office creates a lightweight `Agent Office/` with a public area, employee
 - Other employees read public files plus only their own private folder by default.
 - Employees primarily receive work from the project director and report back to the project director. Direct user-to-employee work is allowed only when the user explicitly wants it.
 - Employee report transport is explicit: after local memory/task updates, employees use `send_message_to_thread` to the registered project-director thread only when that thread ID is confirmed. Otherwise they produce a copyable report for manual return.
+- Report intake is explicit too: the project director verifies the report shape, updates `task-board.md` and `communication.md`, waits for missing dependencies, then advances only under A/B/C mode.
 - Old project memory is not ordinary working context after absorption.
 
 ## Structure
@@ -84,7 +85,7 @@ When the user gives work to the project director after employees are onboarded:
 5. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
 6. send task messages to employee threads when tools are available
 7. require each employee to update its own `memory.md` and `current-task.md`, then return the fixed employee-report shape to the project director
-8. record partial reports, wait for required dependencies, and advance only according to A/B/C mode
+8. when a report returns, verify reporter/task/status/output, update `task-board.md` and `communication.md`, wait for required dependencies, and advance only according to A/B/C mode
 
 This loop should reduce the user's coordination burden. It should not create busywork or route tiny tasks to employees just because threads exist.
 

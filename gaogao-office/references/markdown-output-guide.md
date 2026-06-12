@@ -413,6 +413,34 @@ I will follow the progress mode you chose:
 If several tasks can continue, I will list task titles and ask you to choose.
 ````
 
+## Report Intake Shape
+
+Use after an employee report reaches the project director.
+
+Chinese:
+
+````md
+**收到员工汇报**
+
+- 任务：`{任务名}`
+- 汇报人：`{员工职位}`
+- 状态：`{已完成 / 阻塞 / 需要确认}`
+- 已记录：`task-board.md`、`communication.md`
+- 下一步：{等待谁 / 按 A/B/C 继续 / 需要你判断}
+````
+
+English:
+
+````md
+**Employee Report Received**
+
+- Task: `{task title}`
+- Reporter: `{employee job title}`
+- Status: `{done / blocked / needs-confirmation}`
+- Recorded: `task-board.md`, `communication.md`
+- Next: {waiting for whom / continue under A/B/C / needs your judgment}
+````
+
 ## Final Answer Preflight
 
 Before replying to the user, remove private drafting traces. The final answer must not contain:

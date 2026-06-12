@@ -4,7 +4,7 @@
 
 It treats the current chat as the founding project director, renames that chat to its job title when Codex Desktop allows it, proposes an organization, and invites employees only after formal takeover. In multi-employee mode, the user can keep talking to that one project-director chat while it judges each request, routes employee-owned work to the right thread according to local capacity, receives employee reports, waits for dependencies, and advances according to the user's A/B/C progress mode.
 
-v1.0.1 is a focused collaboration patch: employee reports now have an explicit return transport. Employees update role memory and current task first, then prefer `send_message_to_thread` back to a confirmed project-director thread; if that is unavailable, they output a copyable report for manual return.
+v1.0.2 tightens the collaboration loop: employee reports still return by thread when possible, and the project director now has a concise intake rule for validating reports, updating `task-board.md` / `communication.md`, waiting for missing dependencies, and advancing only under the selected A/B/C progress mode.
 
 ## When To Use It
 

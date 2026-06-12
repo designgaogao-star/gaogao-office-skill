@@ -17,15 +17,15 @@ python work/run_gaogao_office_gate.py --workspace .
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v1.0.1"
+git commit -m "Release gaogao office v1.0.2"
 ```
 
 ## 3. 打 tag
 
 ```bash
-git tag v1.0.1
+git tag v1.0.2
 git push origin main
-git push origin v1.0.1
+git push origin v1.0.2
 ```
 
 ## 4. Zip 资产
@@ -34,23 +34,11 @@ git push origin v1.0.1
 
 ## 5. Release Notes
 
-```md
-# GaoGao Office v1.0.1
-
-稳定办公室协作版的员工汇报回传补丁。
-
-重点：
-- 员工现在有明确的上行汇报传输规则
-- 员工完成正式任务后，先更新 `memory.md` 和 `current-task.md`，再汇报
-- 员工汇报优先用 `send_message_to_thread` 发回已确认的项目总监 thread ID
-- 如果线程工具或项目总监 thread ID 不可用，员工输出可复制汇报，不假装已经发送
-- v1.0.0 办公室只会得到升级 warning，可以保留员工记忆补上新协议
-- 不改变轻量化 `Agent Office/` 目录结构
-```
+使用 `docs/release-notes-v1.0.2.md` 作为 GitHub release 正文。发布页默认展示中文，英文放在折叠的 `<details>` 里，方便切换查看。
 
 ## 6. GitHub Release
 
-把 `outputs/gaogao-office-skill.zip` 上传为 `v1.0.1` 的发布附件。
+把 `outputs/gaogao-office-skill.zip` 上传为 `v1.0.2` 的发布附件。
 
 ## 7. 安装提示
 

@@ -23,7 +23,7 @@ Keep the manual compact, but do not omit core capabilities: project checkup, new
 | 员工入职 | 想把长期项目拆给多个专业对话窗口 | 是 | 正式接管后再授权 |
 | 任务路由 | 你只跟项目总监说需求，由它判断谁来做 | 可能 | 派工前会记录任务 |
 | A/B/C 推进 | 长任务开工前选择手动、半自动或自动推进到检查点 | 可能 | 每条长任务开工前由你选择 |
-| 员工汇报 | 员工完成后更新记忆，并按固定格式回传项目总监 | 可能 | 员工完成正式任务后使用 |
+| 员工汇报 | 员工完成后更新记忆、回传项目总监，并由总监验收记账 | 可能 | 员工完成正式任务后使用 |
 | 角色记忆 | 让每个岗位保留自己的长期记忆 | 是 | 员工完成正式任务后更新 |
 | 撤岗/换岗 | 减少员工、停掉方向、换新窗口接任 | 是 | 先给保留和归档方案 |
 | 办公室清理 | 把旧提示词、临时计划、重复入口移出工作区 | 是 | 先列清单，再确认 |
@@ -70,7 +70,7 @@ Keep the manual compact, but do not omit core capabilities: project checkup, new
 <summary>高级能力怎么理解</summary>
 
 - 多员工不是默认越多越好。GaoGao Office 会根据项目判断该单窗口还是多员工。
-- 项目总监默认是当前窗口。你可以只和它说话，它负责把任务派给合适员工，并接收员工汇报。
+- 项目总监默认是当前窗口。你可以只和它说话，它负责派工、接收员工汇报、更新任务记录并等待依赖齐全。
 - 长任务开工前会先给你预计步骤、参与员工和下次检查点，再让你选 A/B/C 推进方式。
 - 员工窗口有自己的岗位档案、当前任务和记忆文件；默认不读别人的私有区。
 - 已吸收的旧资料会进入 `Agent Office/Archive/Old Project Memory/`，日常员工不会读它。
@@ -111,7 +111,7 @@ I am GaoGao Office. Think of me as a project director for long-running AI-assist
 | Employee onboarding | You want specialist chats for long-running roles | Yes | After formal takeover |
 | Task routing | You talk to the project director; it decides who should do the next step | Maybe | Task is recorded before dispatch |
 | A/B/C progress | Choose manual, semi-automatic, or automatic progress until the next checkpoint | Maybe | You choose before each long workstream |
-| Employee reports | Employees update memory and return a fixed report to the project director | Maybe | Used after meaningful employee work |
+| Employee reports | Employees update memory, return a report, and the project director records intake | Maybe | Used after meaningful employee work |
 | Role memory | Each role keeps durable private continuity | Yes | Employees update after real work |
 | Retire or replace roles | Downsize, stop a direction, or move a role into a fresh chat | Yes | Proposal before changes |
 | Office cleanup | Move old prompts, temporary plans, and duplicate entrances out of the active surface | Yes | Reviewed list first |
@@ -158,7 +158,7 @@ Use $gaogao-office to take over this old project. Give me the migration plan fir
 <summary>How the advanced parts work</summary>
 
 - More employees is not automatically better. GaoGao Office recommends one chat or multiple employees based on the project.
-- The current chat is the project director by default. You can keep talking to it while it dispatches work and receives employee reports.
+- The current chat is the project director by default. You can keep talking to it while it dispatches work, receives reports, records intake, and waits for dependencies.
 - Before long work starts, it gives expected steps, participating employees, and the next user checkpoint, then asks you to choose A/B/C progress mode.
 - Employee chats keep their own profile, current task, and memory; they do not read other private folders by default.
 - Absorbed old material goes to `Agent Office/Archive/Old Project Memory/`; ordinary employees do not use it as daily context.
