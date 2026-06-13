@@ -370,9 +370,9 @@ Chinese employee launch prompt shape:
 4. 当前等待什么派工
 5. 如需开工，你需要项目总监给什么输入
 
-之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再生成 `【员工汇报】`。
+之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md；完整汇报优先写入 `Agent Office/Exchange/Reports/{任务名}.md`，线程只回传任务名、报告路径、状态和是否需要用户介入。
 
-回传规则：读取 `Agent Office/thread-registry.md` 确认项目总监窗口标题和 thread ID。如果 Codex Desktop 提供 `send_message_to_thread`，且项目总监 thread ID 已登记并能确认属于本项目，就主动把完整 `【员工汇报】` 发回项目总监线程；如果 thread ID 是 `current-window`、`TBD`、缺失或不确定，或线程工具不可用，就在本窗口输出可复制的 `【员工汇报】`，并写明“需要复制回项目总监窗口”。不要把汇报发给其他员工。
+回传规则：读取 `Agent Office/thread-registry.md` 确认项目总监窗口标题和 thread ID。如果 Codex Desktop 提供 `send_message_to_thread`，且项目总监 thread ID 已登记并能确认属于本项目，就只把短索引发回项目总监线程：任务名、报告文件路径、状态、是否需要用户介入；如果 thread ID 是 `current-window`、`TBD`、缺失或不确定，或线程工具不可用，就在本窗口输出可复制的 `【员工汇报】`，并写明“需要复制回项目总监窗口”。不要把汇报发给其他员工。
 ```
 
 ### Designer
@@ -408,9 +408,9 @@ Read first:
 
 For the first reply, use 5-8 lines to confirm who you are, what you own, what you must not touch, what dispatch you are waiting for, and what input you would need to start.
 
-Then wait for the project director to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md before preparing the `[Employee Report]` shape.
+Then wait for the project director to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md. Write the full report to `Agent Office/Exchange/Reports/{task title}.md` when practical; thread return should carry only task title, report path, status, and whether user input is needed.
 
-Return rule: read `Agent Office/thread-registry.md` for the project-director chat title and thread ID. If Codex Desktop exposes `send_message_to_thread` and the project-director thread ID is registered and clearly tied to this project, send the full `[Employee Report]` back to that thread. If the ID is `current-window`, `TBD`, missing, uncertain, or thread tools are unavailable, output a copyable `[Employee Report]` in this chat and state that it needs to be copied back to the project-director chat. Do not send reports to other employees.
+Return rule: read `Agent Office/thread-registry.md` for the project-director chat title and thread ID. If Codex Desktop exposes `send_message_to_thread` and the project-director thread ID is registered and clearly tied to this project, send only a short index back to that thread: task title, report file path, status, and whether user input is needed. If the ID is `current-window`, `TBD`, missing, uncertain, or thread tools are unavailable, output a copyable `[Employee Report]` in this chat and state that it needs to be copied back to the project-director chat. Do not send reports to other employees.
 ```
 ````
 

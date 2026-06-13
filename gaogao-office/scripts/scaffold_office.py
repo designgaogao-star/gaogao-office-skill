@@ -25,7 +25,7 @@ EMPLOYEES_DIR = "Employees"
 PROPOSALS_DIR = "Proposals"
 ARCHIVE_DIR = "Archive"
 LEGACY_ARCHIVE_DIR = "Old Project Memory"
-OFFICE_SCHEMA_VERSION = "1.0.3"
+OFFICE_SCHEMA_VERSION = "1.0.4"
 
 
 ROLE_DEFINITIONS = {
@@ -159,7 +159,7 @@ class OfficeSpec:
     task_reference_policy: str = "user-facing-title-internal-id"
     progress_mode: str = "ask-per-workstream"
     employee_report_route: str = "director-only"
-    employee_report_transport: str = "director-thread-first"
+    employee_report_transport: str = "file-first-thread-index"
     employee_report_fallback: str = "copyable-report"
     employee_report_intake: str = "director-verifies-records-and-routes"
     dependency_policy: str = "wait-for-required-inputs"
@@ -452,7 +452,7 @@ def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) ->
         task_reference_policy=coalesce(raw.get("task_reference_policy"), raw.get("taskReferencePolicy"), default="user-facing-title-internal-id"),
         progress_mode=coalesce(raw.get("progress_mode"), raw.get("progressMode"), default="ask-per-workstream"),
         employee_report_route=coalesce(raw.get("employee_report_route"), raw.get("employeeReportRoute"), default="director-only"),
-        employee_report_transport=coalesce(raw.get("employee_report_transport"), raw.get("employeeReportTransport"), default="director-thread-first"),
+        employee_report_transport=coalesce(raw.get("employee_report_transport"), raw.get("employeeReportTransport"), default="file-first-thread-index"),
         employee_report_fallback=coalesce(raw.get("employee_report_fallback"), raw.get("employeeReportFallback"), default="copyable-report"),
         employee_report_intake=coalesce(raw.get("employee_report_intake"), raw.get("employeeReportIntake"), default="director-verifies-records-and-routes"),
         dependency_policy=coalesce(raw.get("dependency_policy"), raw.get("dependencyPolicy"), default="wait-for-required-inputs"),
@@ -487,7 +487,7 @@ def load_office_spec(args: argparse.Namespace, root: Path) -> OfficeSpec:
         task_reference_policy="user-facing-title-internal-id",
         progress_mode="ask-per-workstream",
         employee_report_route="director-only",
-        employee_report_transport="director-thread-first",
+        employee_report_transport="file-first-thread-index",
         employee_report_fallback="copyable-report",
         employee_report_intake="director-verifies-records-and-routes",
         dependency_policy="wait-for-required-inputs",
@@ -791,7 +791,7 @@ def render_project_brief(spec: OfficeSpec) -> str:
 {notes}
 
 默认协作方式：用户主要和当前项目总监窗口沟通；项目总监按需派工给员工窗口，员工统一向项目总监汇报，项目总监根据依赖是否齐全再推进下一阶段。
-员工回传规则：员工完成正式任务后，先更新自己的 `memory.md` 和 `current-task.md`，再生成 `【员工汇报】`。如果 Codex Desktop 线程工具可用且 `thread-registry.md` 里能确定项目总监 thread ID，员工优先用 `send_message_to_thread` 发回项目总监；否则在员工窗口输出可复制汇报，等待用户或项目总监带回。
+员工回传规则：员工完成正式任务后，先更新自己的 `memory.md` 和 `current-task.md`，再把完整汇报写入办公室文件；如果 Codex Desktop 线程工具可用且 `thread-registry.md` 里能确定项目总监 thread ID，员工只用 `send_message_to_thread` 发回任务名、报告路径、状态和是否需要用户介入。否则在员工窗口输出可复制汇报，等待用户或项目总监带回。
 汇报接收规则：项目总监收到 `【员工汇报】` 后，先判断汇报人、任务名、状态、产出位置、是否需要用户介入；再更新 `task-board.md` 和 `communication.md`。依赖未齐时只记录“已收到/仍在等待”，不要提前推进。
 岗位校准规则：员工第一次接到正式任务前，项目总监先让用户选择轻量、标准、深度或跳过校准。员工把项目语境转成自己的岗位成功标准、质量红线、常见误判、需要确认的情况和当前任务第一判断，并写入自己的 `memory.md`。深度校准、联网、广泛读文件或外部参考都需要单独授权。
 文件优先通信规则：完整派工包和员工完整汇报尽量写入办公室文件；线程消息只传任务名、文件路径、状态和是否需要用户介入。
@@ -1564,11 +1564,11 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "- 项目总监 Thread ID：`current-window`，除非 Codex Desktop 能可靠识别并写入真实 thread ID。",
             "- 登记修复：如果项目总监能唯一确认自己的 thread ID，就更新本行；否则保持 `current-window`。",
             "- 员工自动回传条件：Codex Desktop 提供 `send_message_to_thread`，且本表中项目总监 Thread ID 是真实 ID、不是 `current-window` / `TBD` / 空值。",
-            "- 自动回传不可用时：员工必须在自己的窗口输出完整 `【员工汇报】`，并标注“需要复制回项目总监窗口”。",
+            "- 自动回传不可用时：员工必须在自己的窗口输出完整 `【员工汇报】` 或报告文件路径，并标注“需要复制回项目总监窗口”。",
             "",
             "## 员工回传协议",
             "",
-            "员工完成正式任务后的顺序：更新 `memory.md` -> 更新 `current-task.md` -> 生成 `【员工汇报】` -> 回传项目总监。员工不得默认把汇报发给其他员工。",
+            "员工完成正式任务后的顺序：更新 `memory.md` -> 更新 `current-task.md` -> 完整汇报优先写入 `Agent Office/Exchange/Reports/` -> 回传短索引给项目总监。员工不得默认把汇报发给其他员工。",
             "",
             "## 项目总监接收汇报协议",
             "",
@@ -1658,11 +1658,11 @@ def render_thread_registry(spec: OfficeSpec) -> str:
         "- Project-director Thread ID: `current-window` unless Codex Desktop can reliably identify and write the real thread ID.",
         "- Registration repair: if the project director can uniquely identify its own thread ID, update this line; otherwise keep `current-window`.",
         "- Employee auto-return condition: Codex Desktop exposes `send_message_to_thread`, and this registry contains a real project-director Thread ID, not `current-window`, `TBD`, or blank.",
-        "- If auto-return is unavailable: employees must output the full `[Employee Report]` in their own chat and mark that it needs to be copied back to the project-director chat.",
+        "- If auto-return is unavailable: employees must output the full `[Employee Report]` or report file path in their own chat and mark that it needs to be copied back to the project-director chat.",
         "",
         "## Employee Return Protocol",
         "",
-        "After real work: update `memory.md` -> update `current-task.md` -> prepare `[Employee Report]` -> return it to the project director. Employees do not send reports to other employees by default.",
+        "After real work: update `memory.md` -> update `current-task.md` -> write the full report to `Agent Office/Exchange/Reports/` when practical -> return a short index to the project director. Employees do not send reports to other employees by default.",
         "",
         "## Project-Director Report Intake Protocol",
         "",

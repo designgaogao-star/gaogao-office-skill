@@ -17,15 +17,15 @@ python work/run_gaogao_office_gate.py --workspace .
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v1.0.3"
+git commit -m "Release gaogao office v1.0.4"
 ```
 
 ## 3. 打 tag
 
 ```bash
-git tag v1.0.3
+git tag v1.0.4
 git push origin main
-git push origin v1.0.3
+git push origin v1.0.4
 ```
 
 ## 4. Zip 资产
@@ -34,11 +34,11 @@ git push origin v1.0.3
 
 ## 5. Release Notes
 
-使用 `docs/release-notes-v1.0.3.md` 作为 GitHub release 正文。发布页默认展示中文，英文放在折叠的 `<details>` 里，方便切换查看。
+使用 `docs/release-notes-v1.0.4.md` 作为 GitHub release 正文。发布页默认展示中文，英文放在折叠的 `<details>` 里，方便切换查看。
 
 ## 6. GitHub Release
 
-把 `outputs/gaogao-office-skill.zip` 上传为 `v1.0.3` 的发布附件。
+把 `outputs/gaogao-office-skill.zip` 上传为 `v1.0.4` 的发布附件。
 
 ## 7. 安装提示
 

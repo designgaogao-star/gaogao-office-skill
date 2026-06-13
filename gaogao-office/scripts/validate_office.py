@@ -11,7 +11,7 @@ from pathlib import Path, PureWindowsPath
 
 
 OFFICE_DIR = "Agent Office"
-OFFICE_SCHEMA_VERSION = "1.0.3"
+OFFICE_SCHEMA_VERSION = "1.0.4"
 
 REQUIRED_FILES = [
     "Agent Office/README.md",
@@ -420,7 +420,7 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 "task_reference_policy": "user-facing-title-internal-id",
                 "progress_mode": "ask-per-workstream",
                 "employee_report_route": "director-only",
-                "employee_report_transport": "director-thread-first",
+                "employee_report_transport": "file-first-thread-index",
                 "employee_report_fallback": "copyable-report",
                 "employee_report_intake": "director-verifies-records-and-routes",
                 "dependency_policy": "wait-for-required-inputs",

@@ -17,15 +17,15 @@ From the package repository:
 ```bash
 git status --short
 git add README.md README.zh-CN.md LICENSE .gitignore docs examples gaogao-office
-git commit -m "Release gaogao office v1.0.3"
+git commit -m "Release gaogao office v1.0.4"
 ```
 
 ## 3. Tag
 
 ```bash
-git tag v1.0.3
+git tag v1.0.4
 git push origin main
-git push origin v1.0.3
+git push origin v1.0.4
 ```
 
 ## 4. Zip Asset
@@ -34,11 +34,11 @@ The release asset should be `outputs/gaogao-office-skill.zip` from the parent wo
 
 ## 5. Release Notes
 
-Use `docs/release-notes-v1.0.3.md` as the GitHub release body. The release page should show Chinese by default and keep English in a collapsed `<details>` section.
+Use `docs/release-notes-v1.0.4.md` as the GitHub release body. The release page should show Chinese by default and keep English in a collapsed `<details>` section.
 
 ## 6. GitHub Release
 
-Upload `outputs/gaogao-office-skill.zip` as the release asset for `v1.0.3`.
+Upload `outputs/gaogao-office-skill.zip` as the release asset for `v1.0.4`.
 
 ## 7. Install Prompt
 
