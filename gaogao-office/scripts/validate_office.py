@@ -11,7 +11,7 @@ from pathlib import Path, PureWindowsPath
 
 
 OFFICE_DIR = "Agent Office"
-OFFICE_SCHEMA_VERSION = "1.0.2"
+OFFICE_SCHEMA_VERSION = "1.0.3"
 
 REQUIRED_FILES = [
     "Agent Office/README.md",
@@ -330,6 +330,9 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 ["不要替员工写最终产物", "employee-owned output", "不得替员工完成"],
                 ["任务路由读取范围", "task-routing reads", "Task-routing read budget"],
                 ["派工事务", "dispatch transaction", "manual dispatch packet"],
+                ["岗位校准", "Role calibration", "Role Calibration"],
+                ["Exchange/Dispatch", "file-first", "文件优先"],
+                ["Exchange/Reports", "Full report file", "完整报告文件"],
                 ["孤儿任务", "orphan task"],
                 ["生命周期", "lifecycle state", "operation-router"],
                 ["授权等级", "authorization level", "current valid approval"],
@@ -351,6 +354,8 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 ["current-task.md"],
                 ["send_message_to_thread"],
                 ["thread-registry.md"],
+                ["Role Calibration", "岗位校准"],
+                ["Exchange/Reports", "完整报告文件", "Full report file"],
                 ["需要复制回项目总监窗口", "copied back to the project-director chat"],
             ]
             for options in launch_prompt_requirements:
@@ -420,6 +425,11 @@ def validate_content(root: Path, findings: list[Finding]) -> None:
                 "employee_report_intake": "director-verifies-records-and-routes",
                 "dependency_policy": "wait-for-required-inputs",
                 "short_continue_policy": "contextual-natural-language",
+                "role_calibration_policy": "ask-before-first-dispatch",
+                "role_calibration_levels": "light-standard-deep-skip",
+                "inter_agent_communication": "file-first-thread-index",
+                "exchange_retention_policy": "consume-and-summarize-no-default-delete",
+                "thread_permission_policy": "user-owned-per-thread",
             }
             for field, expected in expected_fields.items():
                 if data.get(field) != expected:
@@ -489,9 +499,13 @@ def validate_employees(root: Path, findings: list[Finding]) -> None:
             findings.append(Finding("warning", f"{rel_employee}/memory.md", "memory should have a `## Next Action` section"))
         if not contains_any(memory_text, ["## Work Log"]):
             findings.append(Finding("warning", f"{rel_employee}/memory.md", "memory should have a `## Work Log` section"))
+        if not contains_any(memory_text, ["Role Calibration", "岗位校准"]):
+            findings.append(Finding("warning", f"{rel_employee}/memory.md", "memory should include a role calibration section for first-assignment self-learning"))
         task_text = read_text(employee / "current-task.md")
         if not contains_any(task_text, ["status: waiting", "status: active", "status: deferred", "status: cancelled", "status: done"]):
             findings.append(Finding("warning", f"{rel_employee}/current-task.md", "current-task should record a task status"))
+        if not contains_any(task_text, ["Role Calibration", "岗位校准"]) or not contains_any(task_text, ["Exchange/Reports", "完整汇报"]):
+            findings.append(Finding("warning", f"{rel_employee}/current-task.md", "current-task should mention role calibration and file-first report handling"))
 
 
 def validate_budgets(root: Path, findings: list[Finding]) -> None:

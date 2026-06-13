@@ -10,7 +10,9 @@ This file is the single reference for command routing, lifecycle state, and auth
 2. **Existing office first**: if `Agent Office/` already exists, treat skill invocation as `maintenance` or `upgrade`, not fresh initialization.
 3. **Safety before action**: classify lifecycle state and authorization level before writes, thread actions, archive moves, or deletion.
 4. **Routing before doing**: after employees exist, every project task starts with task routing. If a suitable employee owns the next step, dispatch it instead of doing that employee's work in the project-director chat.
-5. **Director receives reports**: employees do not default-dispatch to each other. They close out local state, return reports to the project director when transport is available, and otherwise produce copyable reports for manual return.
+5. **First-assignment calibration**: employee startup is not role training. Before the first real task for an employee, ask the user for light, standard, deep, or skipped calibration; the employee writes project-specific role judgment into its own memory.
+6. **File-first transport**: full dispatch packets and employee reports should live in office files when practical. Thread messages carry task title, file path, status, and whether user input is needed.
+7. **Director receives reports**: employees do not default-dispatch to each other. They close out local state, return report indexes to the project director when transport is available, and otherwise produce copyable reports for manual return.
 
 ## One-Pass Checkup Budget
 
@@ -99,7 +101,7 @@ Hard rules:
 - Do not merge office takeover with project work.
 - Do not let the project director do clear employee-owned work just because it can.
 - The project director may frame a handoff, define acceptance criteria, and preserve the user's constraints, but must not create the creative, technical, design, prompt, research, QA, or release output that belongs to an employee unless the user explicitly asks the project director to take over that work.
-- Employees report back to the project director using the fixed employee-report shape. The report has a transport layer: use `send_message_to_thread` only when `thread-registry.md` contains a real confirmed project-director thread ID; otherwise output a copyable report and say it needs to be copied back to the project-director chat. The project director records partial results and waits when downstream work depends on several employees.
+- Employees report back to the project director using the fixed employee-report shape. The report has a transport layer: when possible, write the full report to `Agent Office/Exchange/Reports/` and use `send_message_to_thread` only for a short index; otherwise output a copyable report and say it needs to be copied back to the project-director chat. The project director records partial results and waits when downstream work depends on several employees.
 - Dispatch messages preserve inputs and boundaries. If the project director adds direction, label it as handoff framing that the employee should judge, not as the final employee deliverable.
 - Thread operations are conditional capabilities, not universal promises.
 
@@ -117,12 +119,14 @@ Before dispatch, use a small task-routing read budget for existing offices:
 After the project director chooses an employee owner, finish dispatch in one small transaction and then follow the user's progress mode:
 
 1. update only the minimal active records: `task-board.md`, `communication.md`, and the assigned employee's `current-task.md`
-2. send one concise employee task message only when a registered employee thread ID and thread tool are available
-3. do not inspect unrelated employee folders, old memory archives, or downstream roles
-4. do not create downstream tasks until the required employee output exists
-5. if downstream work depends on several employees, record partial reports and wait for all required inputs
-6. if file writes or employee-thread sends are unavailable, show a manual dispatch packet and stop
-7. every dispatch includes the return target: project-director title, project-director thread ID status, automatic return condition, and manual-copy fallback
+2. before that employee's first real task, ask the user for calibration level: A light, B standard, C deep, D skip
+3. when practical, write the full dispatch packet to `Agent Office/Exchange/Dispatch/`; otherwise keep the handoff short in `communication.md`
+4. send one concise employee task message only when a registered employee thread ID and thread tool are available; the message should carry task title, file path, status, and return requirement
+5. do not inspect unrelated employee folders, old memory archives, or downstream roles
+6. do not create downstream tasks until the required employee output exists
+7. if downstream work depends on several employees, record partial reports and wait for all required inputs
+8. if file writes or employee-thread sends are unavailable, show a manual dispatch packet and stop
+9. every dispatch includes the return target: project-director title, project-director thread ID status, automatic return condition, and manual-copy fallback
 
 If the target employee's thread ID is `TBD`, missing, or not clearly tied to this project, do not mark the task `active` yet and do not create orphan task records. Show a manual dispatch packet for that employee and stop. The project director can record the task after the user confirms the packet was sent, after the employee thread is registered, or after an employee result returns.
 
@@ -141,6 +145,21 @@ Before longer or multi-employee work starts, the project director gives a short 
 - C. 自动推进到检查点 / Automatic progress until checkpoint: keep advancing until the next user checkpoint when thread tools and, if needed, heartbeat automation are available.
 
 C mode may create or update a heartbeat for the current thread only when automation tools exist. Discover and use the Codex automation tool when the environment exposes one; if no automation tool is available, explain the downgrade instead of writing raw automation instructions. Heartbeat reminders should wake the project director to check whether unfinished work remains, continue only if safe, and stop immediately if work is done, blocked, risky, or needs the user. Automatic progress never authorizes deletion, publishing, archive moves, or `AGENTS.md` changes.
+
+## Role Calibration
+
+Role calibration happens before an employee's first real assignment, not during startup. Show the user the cost/benefit choices and use only the chosen level:
+
+```text
+回 A / B / C / D 即可
+```
+
+- A. 轻量校准 / Light: lowest token cost; write 3-5 project-specific success criteria and one confirmation trigger.
+- B. 标准校准 / Standard: recommended for core employees; write success criteria, quality red lines, common mistakes, confirmation triggers, and the first-task judgment.
+- C. 深度校准 / Deep: highest cost; use only after explicit approval for broader file reads, web research, or user-provided references.
+- D. 跳过 / Skip: no calibration now; fastest, but the role may be less stable.
+
+Employees write calibration into their own `memory.md` `Role Calibration` section. If a role needs live platform rules, market facts, professional standards, or external references, it must say what evidence is missing instead of pretending to know it.
 
 ## Employee Report Shape
 
@@ -175,10 +194,11 @@ User input needed: yes/no
 The employee completion chain is fixed:
 
 ```text
+complete first-task role calibration when required
 update memory.md
 update current-task.md
-prepare Employee Report
-return it to the project director
+write full Employee Report to office file when practical
+return a short report index to the project director
 ```
 
 Automatic return is allowed only when all are true:
@@ -186,9 +206,9 @@ Automatic return is allowed only when all are true:
 - Codex Desktop exposes `send_message_to_thread`.
 - `Agent Office/thread-registry.md` contains a real project-director thread ID.
 - The ID is not `current-window`, `TBD`, blank, stale, or ambiguous.
-- The employee is returning a report to the project director, not sending work to another employee.
+- The employee is returning a report index to the project director, not sending work to another employee.
 
-If any condition is false, the employee outputs a copyable report in its own chat and states that it must be copied back to the project-director chat. Do not claim the report was sent.
+If any condition is false, the employee outputs a copyable report in its own chat and states that it must be copied back to the project-director chat. Do not claim the report was sent. If the full report was written to a file, return the file path instead of pasting the full content into thread chat.
 
 ## Employee Report Intake
 

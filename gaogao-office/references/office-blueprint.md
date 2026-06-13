@@ -12,8 +12,9 @@ GaoGao Office creates a lightweight `Agent Office/` with a public area, employee
 - Employee roster size is not the same as active concurrency. Employees may all be onboarded, but active work dispatch follows `dispatch_policy`; low or unknown local capacity means one employee task at a time.
 - Other employees read public files plus only their own private folder by default.
 - Employees primarily receive work from the project director and report back to the project director. Direct user-to-employee work is allowed only when the user explicitly wants it.
-- Employee report transport is explicit: after local memory/task updates, employees use `send_message_to_thread` to the registered project-director thread only when that thread ID is confirmed. Otherwise they produce a copyable report for manual return.
+- Employee report transport is explicit and file-first: after local memory/task updates, employees write the full report into office files when practical, then use `send_message_to_thread` only for a short report index when the project-director thread ID is confirmed. Otherwise they produce a copyable report for manual return.
 - Report intake is explicit too: the project director verifies the report shape, updates `task-board.md` and `communication.md`, waits for missing dependencies, then advances only under A/B/C mode.
+- First-assignment role calibration is opt-in by level. Employee startup only confirms role and boundaries; before the first real task, the project director asks the user to choose light, standard, deep, or skipped calibration. The employee writes project-specific role judgment into its own `memory.md`.
 - Old project memory is not ordinary working context after absorption.
 
 ## Structure
@@ -32,6 +33,9 @@ Agent Office/
   office-plan.json
   Proposals/
     AGENTS.proposed.md
+  Exchange/              # created only when file-first dispatch/report packets are needed
+    Dispatch/
+    Reports/
   Employees/
     employee-slug/
       README.md
@@ -51,6 +55,7 @@ Each employee folder has:
 
 - `README.md`: employee profile with job value, responsibility domain, judgment standard, write scope, forbidden areas, and handoff rules.
 - `memory.md`: private continuity with `Next Action` at the top and `Work Log` below.
+- `memory.md` also carries `Role Calibration` after the first real assignment: success criteria, quality red lines, common mistakes, confirmation triggers, and first-task judgment.
 - `current-task.md`: current status: waiting / active / deferred / cancelled / done.
 
 Employees update their own memory after meaningful work. The project director may update employee files during onboarding, maintenance, or recovery.
@@ -82,16 +87,18 @@ When the user gives work to the project director after employees are onboarded:
 2. run the task routing gate: identify final outcome, next workflow stage, candidate owner, and whether the work should be dispatched, handled by the project director, or clarified
 3. if one employee clearly owns the next stage, dispatch it to that employee; if no employee owns it or it is tiny office maintenance, the project director may handle it directly
 4. for multi-stage work, split only the next unblocked subtask and record the likely next owner without dispatching downstream work too early
-5. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
-6. send task messages to employee threads when tools are available
-7. require each employee to update its own `memory.md` and `current-task.md`, then return the fixed employee-report shape to the project director
-8. when a report returns, verify reporter/task/status/output, update `task-board.md` and `communication.md`, wait for required dependencies, and advance only according to A/B/C mode
+5. before an employee's first real task, ask the user for role calibration level: light, standard, deep, or skip
+6. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
+7. write a file-first dispatch packet under `Exchange/Dispatch/` when the handoff would otherwise be long
+8. send short task-index messages to employee threads when tools are available
+9. require each employee to update its own `memory.md` and `current-task.md`, then write a report under `Exchange/Reports/` when practical
+10. when a report index returns, verify reporter/task/status/output, update `task-board.md` and `communication.md`, wait for required dependencies, and advance only according to A/B/C mode
 
 This loop should reduce the user's coordination burden. It should not create busywork or route tiny tasks to employees just because threads exist.
 
 Task routing must stay small. Read `office-plan.json`, `task-board.md`, `thread-registry.md`, `project-brief.md`, optional root `AGENTS.md`, and only the likely owner's `current-task.md`; do not read every employee file or run full validation before ordinary dispatch.
 
-Dispatch must stay small: update the active task board, one communication handoff, and the assigned employee's current task; send one employee-thread message when possible; then report and stop. Each dispatch includes the project-director return target and the manual-copy fallback. If writes or employee-thread sends are unavailable, provide a manual dispatch packet instead of expanding the turn.
+Dispatch must stay small: update the active task board, one communication handoff, and the assigned employee's current task; write a dispatch packet only when the handoff is too long for a concise thread message; send one employee-thread index when possible; then report and stop. Each dispatch includes the project-director return target and the manual-copy fallback. If writes or employee-thread sends are unavailable, provide a manual dispatch packet instead of expanding the turn.
 
 Do not create orphan active tasks. If the target employee thread ID is `TBD`, missing, or not tied to this project, show the manual dispatch packet and stop; record the task after the user confirms it was sent, the employee thread is registered, or a result returns.
 

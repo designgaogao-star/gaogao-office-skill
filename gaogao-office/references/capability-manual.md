@@ -4,7 +4,7 @@ Use this when the user asks what GaoGao Office can do, asks for a manual, says `
 
 Do not scan the project, write files, create threads, archive files, or change `AGENTS.md` when answering in manual mode. Explain capabilities only. Follow the user's language; output only Chinese or only English unless the user asks for both.
 
-Keep the manual compact, but do not omit core capabilities: project checkup, new project takeover, existing project migration, employee onboarding, task routing, A/B/C progress modes, employee reports, role memory, retire/replace roles, office cleanup, old-memory archive, and Codex thread/heartbeat enhancement.
+Keep the manual compact, but do not omit core capabilities: project checkup, new project takeover, existing project migration, employee onboarding, first-assignment role calibration, task routing, file-first dispatch/reporting, A/B/C progress modes, employee reports, role memory, retire/replace roles, office cleanup, old-memory archive, and Codex thread/heartbeat enhancement.
 
 ## Chinese Manual Shape
 
@@ -21,7 +21,9 @@ Keep the manual compact, but do not omit core capabilities: project checkup, new
 | 新项目接管 | 刚开项目，想建立长期工作秩序 | 是 | 需要你选 A/B |
 | 旧项目迁移 | 有旧 planning、vibe、规则、任务或上下文散落 | 是 | 先给迁移方案，再等确认 |
 | 员工入职 | 想把长期项目拆给多个专业对话窗口 | 是 | 正式接管后再授权 |
+| 岗位校准 | 员工第一次正式开工前，让岗位形成本项目专属判断标准 | 是 | 由你选择轻量/标准/深度/跳过 |
 | 任务路由 | 你只跟项目总监说需求，由它判断谁来做 | 可能 | 派工前会记录任务 |
+| 文件优先交接 | 减少员工窗口里反复粘贴长背景和长汇报 | 可能 | 派工或汇报较长时使用 |
 | A/B/C 推进 | 长任务开工前选择手动、半自动或自动推进到检查点 | 可能 | 每条长任务开工前由你选择 |
 | 员工汇报 | 员工完成后更新记忆、回传项目总监，并由总监验收记账 | 可能 | 员工完成正式任务后使用 |
 | 角色记忆 | 让每个岗位保留自己的长期记忆 | 是 | 员工完成正式任务后更新 |
@@ -73,6 +75,8 @@ Keep the manual compact, but do not omit core capabilities: project checkup, new
 - 项目总监默认是当前窗口。你可以只和它说话，它负责派工、接收员工汇报、更新任务记录并等待依赖齐全。
 - 长任务开工前会先给你预计步骤、参与员工和下次检查点，再让你选 A/B/C 推进方式。
 - 员工窗口有自己的岗位档案、当前任务和记忆文件；默认不读别人的私有区。
+- 员工第一次正式任务前可以做岗位校准：轻量最省 token，标准适合核心岗位，深度需要额外授权，跳过最快但稳定性较弱。
+- 派工包和完整汇报可以写进 `Agent Office/Exchange/`，线程里只发路径和状态，减少窗口上下文消耗。
 - 已吸收的旧资料会进入 `Agent Office/Archive/Old Project Memory/`，日常员工不会读它。
 - 线程相关能力依赖 Codex Desktop 当前是否提供线程工具；员工回传还需要项目总监 thread ID 已登记。工具或 ID 不可用时，会退回手动复制汇报。
 
@@ -109,7 +113,9 @@ I am GaoGao Office. Think of me as a project director for long-running AI-assist
 | New project takeover | You want durable order in a new long-running project | Yes | Requires A/B approval |
 | Existing project migration | Old planning, vibe, rules, tasks, or context are scattered | Yes | Migration plan first, then approval |
 | Employee onboarding | You want specialist chats for long-running roles | Yes | After formal takeover |
+| Role calibration | Before an employee's first real task, turn project context into role-specific judgment | Yes | You choose light / standard / deep / skip |
 | Task routing | You talk to the project director; it decides who should do the next step | Maybe | Task is recorded before dispatch |
+| File-first handoff | Reduce long repeated chat between employee windows | Maybe | Used when dispatches or reports are long |
 | A/B/C progress | Choose manual, semi-automatic, or automatic progress until the next checkpoint | Maybe | You choose before each long workstream |
 | Employee reports | Employees update memory, return a report, and the project director records intake | Maybe | Used after meaningful employee work |
 | Role memory | Each role keeps durable private continuity | Yes | Employees update after real work |
@@ -161,6 +167,8 @@ Use $gaogao-office to take over this old project. Give me the migration plan fir
 - The current chat is the project director by default. You can keep talking to it while it dispatches work, receives reports, records intake, and waits for dependencies.
 - Before long work starts, it gives expected steps, participating employees, and the next user checkpoint, then asks you to choose A/B/C progress mode.
 - Employee chats keep their own profile, current task, and memory; they do not read other private folders by default.
+- Before an employee's first real task, role calibration can be light, standard, deep, or skipped. Deep calibration needs separate approval for broader reading, web research, or external references.
+- Full dispatch packets and reports can live under `Agent Office/Exchange/`; thread messages carry paths and status to reduce chat context.
 - Absorbed old material goes to `Agent Office/Archive/Old Project Memory/`; ordinary employees do not use it as daily context.
 - Thread operations depend on Codex Desktop thread tools. Employee return also needs a registered project-director thread ID. If tools or the ID are unavailable, GaoGao Office falls back to manual prompts or copyable employee reports.
 

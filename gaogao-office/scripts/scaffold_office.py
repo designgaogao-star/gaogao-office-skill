@@ -25,7 +25,7 @@ EMPLOYEES_DIR = "Employees"
 PROPOSALS_DIR = "Proposals"
 ARCHIVE_DIR = "Archive"
 LEGACY_ARCHIVE_DIR = "Old Project Memory"
-OFFICE_SCHEMA_VERSION = "1.0.2"
+OFFICE_SCHEMA_VERSION = "1.0.3"
 
 
 ROLE_DEFINITIONS = {
@@ -164,6 +164,11 @@ class OfficeSpec:
     employee_report_intake: str = "director-verifies-records-and-routes"
     dependency_policy: str = "wait-for-required-inputs"
     short_continue_policy: str = "contextual-natural-language"
+    role_calibration_policy: str = "ask-before-first-dispatch"
+    role_calibration_levels: str = "light-standard-deep-skip"
+    inter_agent_communication: str = "file-first-thread-index"
+    exchange_retention_policy: str = "consume-and-summarize-no-default-delete"
+    thread_permission_policy: str = "user-owned-per-thread"
 
 
 def normalize_language(raw: str | None) -> str:
@@ -452,6 +457,11 @@ def load_config_spec(config_path: Path, args: argparse.Namespace, root: Path) ->
         employee_report_intake=coalesce(raw.get("employee_report_intake"), raw.get("employeeReportIntake"), default="director-verifies-records-and-routes"),
         dependency_policy=coalesce(raw.get("dependency_policy"), raw.get("dependencyPolicy"), default="wait-for-required-inputs"),
         short_continue_policy=coalesce(raw.get("short_continue_policy"), raw.get("shortContinuePolicy"), default="contextual-natural-language"),
+        role_calibration_policy=coalesce(raw.get("role_calibration_policy"), raw.get("roleCalibrationPolicy"), default="ask-before-first-dispatch"),
+        role_calibration_levels=coalesce(raw.get("role_calibration_levels"), raw.get("roleCalibrationLevels"), default="light-standard-deep-skip"),
+        inter_agent_communication=coalesce(raw.get("inter_agent_communication"), raw.get("interAgentCommunication"), default="file-first-thread-index"),
+        exchange_retention_policy=coalesce(raw.get("exchange_retention_policy"), raw.get("exchangeRetentionPolicy"), default="consume-and-summarize-no-default-delete"),
+        thread_permission_policy=coalesce(raw.get("thread_permission_policy"), raw.get("threadPermissionPolicy"), default="user-owned-per-thread"),
     )
 
 
@@ -482,6 +492,11 @@ def load_office_spec(args: argparse.Namespace, root: Path) -> OfficeSpec:
         employee_report_intake="director-verifies-records-and-routes",
         dependency_policy="wait-for-required-inputs",
         short_continue_policy="contextual-natural-language",
+        role_calibration_policy="ask-before-first-dispatch",
+        role_calibration_levels="light-standard-deep-skip",
+        inter_agent_communication="file-first-thread-index",
+        exchange_retention_policy="consume-and-summarize-no-default-delete",
+        thread_permission_policy="user-owned-per-thread",
     )
 
 
@@ -534,6 +549,9 @@ def render_agents_proposal(language: str) -> str:
 - 员工回传优先使用线程工具：若 Codex Desktop 提供 `send_message_to_thread`，且 `Agent Office/thread-registry.md` 有可确认的项目总监 thread ID，就主动发回项目总监线程；否则在员工窗口输出可复制汇报，等待复制回项目总监窗口。
 - 项目总监收到 `【员工汇报】` 后，先按员工汇报接收协议验收、更新任务板和沟通记录，再判断依赖是否齐全；缺依赖就等待，齐全后按用户选择的 A/B/C 推进。
 - 用户安排较长任务时，项目总监先说明预计步骤、参与员工和下一个用户检查点，并让用户用 A/B/C 选择手动推进、半自动推进或自动推进到检查点。
+- 员工第一次接到正式任务前，项目总监给用户校准档位选择：A 轻量、B 标准、C 深度、D 跳过。员工按用户选择把项目语境转成自己的岗位判断标准，并写入自己的 `memory.md`。
+- 深度岗位校准、联网、读取更多资料或引入外部参考都需要单独授权；员工不能假装掌握未经验证的实时资料、平台规则或专业规范。
+- 跨员工通信优先走文件：完整派工包和完整汇报尽量写入办公室文件，线程消息只传任务名、文件路径、状态和是否需要用户介入。
 - 项目总监每次收到需求都先做任务路由判断：员工职责明确就派给员工；没有合适员工或只是办公室小事时自己处理；归属会影响方向时只补问一句。
 - 如果后续阶段依赖多个员工结果，项目总监必须等待依赖齐全；收到部分员工汇报时，只记录当前结果并说明还在等谁。
 - 项目总监可以写交接框架、输入约束和验收标准，但不得替员工完成创意、提示词、设计、代码、研究、检查或发布产物，除非用户明确要求项目总监接手。
@@ -569,6 +587,9 @@ Coordination:
 - Employee return prefers thread tools: if Codex Desktop exposes `send_message_to_thread` and `Agent Office/thread-registry.md` has a confirmed project-director thread ID, send the report to that thread; otherwise output a copyable report in the employee chat for manual return to the project-director chat.
 - When the project director receives an `[Employee Report]`, it validates the report shape, updates task-board and communication records, then checks dependencies. If dependencies are missing, it waits; if they are ready, it advances only according to the user's A/B/C progress mode.
 - Before longer work starts, the project director gives the user an expected step count, participating employees, and the next user checkpoint, then asks the user to choose A/B/C: manual progress, semi-automatic progress, or automatic progress until the checkpoint.
+- Before an employee's first real assignment, the project director gives the user calibration choices: A light, B standard, C deep, D skip. The employee turns project context into role-specific judgment standards and writes them to its own `memory.md`.
+- Deep role calibration, web access, broader file reading, or external references require separate authorization. Employees must state missing evidence instead of pretending to know live platform rules or unverified professional standards.
+- Inter-agent communication is file-first: write full dispatch packets and reports into office files when practical; thread messages should carry task title, file path, status, and whether user input is needed.
 - The project director runs a task routing judgment for every request: dispatch clear employee-owned work, handle unowned or small office-maintenance work directly, and ask one brief question when ownership affects direction.
 - If a downstream stage depends on several employee results, the project director must wait until required inputs are complete. Partial reports should be recorded, not rushed into the next stage.
 - The project director may write handoff framing, input constraints, and acceptance criteria, but must not create employee-owned creative, prompt, design, code, research, QA, or release output unless the user explicitly asks the project director to take over.
@@ -755,6 +776,11 @@ def render_project_brief(spec: OfficeSpec) -> str:
 - 员工汇报传输：{spec.employee_report_transport}
 - 员工汇报降级：{spec.employee_report_fallback}
 - 员工汇报接收：{spec.employee_report_intake}
+- 岗位校准策略：{spec.role_calibration_policy}
+- 岗位校准档位：{spec.role_calibration_levels}
+- 员工通信方式：{spec.inter_agent_communication}
+- Exchange 保留策略：{spec.exchange_retention_policy}
+- 线程权限策略：{spec.thread_permission_policy}
 - 依赖策略：{spec.dependency_policy}
 - 短词推进策略：{spec.short_continue_policy}
 - 风险等级：{spec.risk_level}
@@ -767,6 +793,8 @@ def render_project_brief(spec: OfficeSpec) -> str:
 默认协作方式：用户主要和当前项目总监窗口沟通；项目总监按需派工给员工窗口，员工统一向项目总监汇报，项目总监根据依赖是否齐全再推进下一阶段。
 员工回传规则：员工完成正式任务后，先更新自己的 `memory.md` 和 `current-task.md`，再生成 `【员工汇报】`。如果 Codex Desktop 线程工具可用且 `thread-registry.md` 里能确定项目总监 thread ID，员工优先用 `send_message_to_thread` 发回项目总监；否则在员工窗口输出可复制汇报，等待用户或项目总监带回。
 汇报接收规则：项目总监收到 `【员工汇报】` 后，先判断汇报人、任务名、状态、产出位置、是否需要用户介入；再更新 `task-board.md` 和 `communication.md`。依赖未齐时只记录“已收到/仍在等待”，不要提前推进。
+岗位校准规则：员工第一次接到正式任务前，项目总监先让用户选择轻量、标准、深度或跳过校准。员工把项目语境转成自己的岗位成功标准、质量红线、常见误判、需要确认的情况和当前任务第一判断，并写入自己的 `memory.md`。深度校准、联网、广泛读文件或外部参考都需要单独授权。
+文件优先通信规则：完整派工包和员工完整汇报尽量写入办公室文件；线程消息只传任务名、文件路径、状态和是否需要用户介入。
 运行中枢规则：项目总监每次行动前判断生命周期状态、动作授权等级和任务归属；没有当前有效授权时，只能报告、提案或询问。
 任务路由规则：每次收到需求先判断最终目标、当前阶段和下一位负责人；员工职责明确就派工，办公室小事自己处理，归属不清且影响方向时只补问一句。
 默认派工策略：员工可以全部入职，但项目总监按本机容量控制并发；配置未知或偏低时一次只派一个员工。
@@ -812,6 +840,11 @@ Generated: {today}
 - Employee report transport: {spec.employee_report_transport}
 - Employee report fallback: {spec.employee_report_fallback}
 - Employee report intake: {spec.employee_report_intake}
+- Role calibration policy: {spec.role_calibration_policy}
+- Role calibration levels: {spec.role_calibration_levels}
+- Inter-agent communication: {spec.inter_agent_communication}
+- Exchange retention policy: {spec.exchange_retention_policy}
+- Thread permission policy: {spec.thread_permission_policy}
 - Dependency policy: {spec.dependency_policy}
 - Short continue policy: {spec.short_continue_policy}
 - Risk level: {spec.risk_level}
@@ -824,6 +857,8 @@ Generated: {today}
 Default collaboration style: the user primarily talks to the current project-director chat; the project director dispatches employee-owned work as needed, employees report back to the project director, and the project director advances only after required dependencies are ready.
 Employee return rule: after real work, employees update their own `memory.md` and `current-task.md`, then prepare an `[Employee Report]`. If Codex Desktop thread tools are available and `thread-registry.md` identifies the project-director thread ID, employees send the report back with `send_message_to_thread`; otherwise they output a copyable report in their own chat for the user or project director to carry back.
 Report intake rule: when the project director receives an `[Employee Report]`, it identifies reporter, task title, status, output location, and whether user input is needed; then updates `task-board.md` and `communication.md`. If dependencies are missing, record received/missing inputs and do not advance early.
+Role calibration rule: before an employee's first real assignment, the project director asks the user to choose light, standard, deep, or skipped calibration. The employee writes project-specific success criteria, quality red lines, common mistakes, confirmation triggers, and first-task judgment to its own `memory.md`. Deep calibration requires explicit approval for broad reads, web research, or external references.
+File-first communication rule: write full dispatch packets and employee reports into office files when practical. Thread messages should carry only task title, file path, status, and whether user input is needed.
 Operation router rule: before acting, the project director classifies lifecycle state, authorization level, and task owner; without current valid approval, it can only report, propose, or ask.
 Task routing rule: dispatch clear employee-owned work, handle tiny office-maintenance work directly, and ask one brief clarification when ownership affects direction.
 Default dispatch policy: employees may all onboard, but the project director controls concurrent employee work based on local capacity. Unknown or low-capacity machines dispatch one employee at a time.
@@ -893,6 +928,8 @@ def render_task_board(spec: OfficeSpec) -> str:
 - 每项任务必须有 owner、reviewer、写入范围、预计步骤、下一次用户检查点和依赖状态。
 - 多员工任务默认由项目总监先做任务路由判断，再拆分和派工；员工统一向项目总监汇报。
 - 员工汇报先走 `send_message_to_thread` 回项目总监线程；项目总监 thread ID 不确定或线程工具不可用时，使用可复制汇报降级。
+- 员工第一次正式任务前按用户选择的校准档位写入 `memory.md` 的岗位校准区；未授权时不得做深度校准、联网或大范围读取。
+- 派工和汇报优先使用办公室文件承载完整内容；线程只传任务名、文件路径、状态和是否需要用户介入。
 - 项目总监收到员工汇报后，先把对应任务状态更新为 done / blocked / needs-confirmation / waiting-dependency，再判断是否继续。
 - 依赖未齐时，项目总监只记录已返回结果并等待缺失汇报，不提前推进下一阶段。
 - 派工并发按办公室派工策略执行；本机容量未知或偏低时，一次只派一个员工。
@@ -912,6 +949,8 @@ Last updated: {today}
 - Every task needs an owner, reviewer, write scope, expected steps, next user checkpoint, and dependency status.
 - Multi-employee work starts with task routing judgment, then is split and dispatched by the project director; employees report back to the project director.
 - Employee reports use `send_message_to_thread` back to the project-director thread first; if the director thread ID is uncertain or thread tools are unavailable, fall back to a copyable report.
+- Before an employee's first real assignment, write role calibration into that employee's `memory.md` according to the user's chosen calibration level; deep calibration, web, and broad file reads require approval.
+- Full dispatch and report details should live in office files when practical; thread messages carry only task title, file path, status, and whether user input is needed.
 - When the project director receives an employee report, update the matching task status to done / blocked / needs-confirmation / waiting-dependency before deciding whether to continue.
 - When dependencies are missing, record returned results and wait for the missing reports before advancing.
 - Follow the office dispatch policy; when local capacity is unknown or low, dispatch one employee at a time.
@@ -946,7 +985,9 @@ def render_communication(language: str) -> str:
 - 项目总监先判断生命周期状态和授权等级；写文件、改 `AGENTS.md`、移动旧资料或操作线程前，必须确认当前回复已经授权。
 - 需要跨角色处理时，在本文件追加一条消息记录，写清楚 from、to、task_title、task_id、routing decision、requested response、next owner。
 - 员工不默认互相派工。员工完成正式任务后必须先更新自己的 `memory.md` 和 `current-task.md`，再用 `【员工汇报】` 格式向项目总监汇报。
-- 员工回传优先走项目总监线程：如果 Codex Desktop 提供 `send_message_to_thread`，且 `thread-registry.md` 能确定项目总监 thread ID，就主动把 `【员工汇报】` 发回项目总监线程。否则在员工窗口输出可复制汇报，并说明需要复制回项目总监窗口。
+- 员工完整汇报优先写入办公室文件；如果 Codex Desktop 提供 `send_message_to_thread`，且 `thread-registry.md` 能确定项目总监 thread ID，就只把任务名、报告路径、状态和是否需要用户介入发回项目总监线程。否则在员工窗口输出可复制汇报，并说明需要复制回项目总监窗口。
+- 首次正式派工前，项目总监让用户选择岗位校准档位：A 轻量、B 标准、C 深度、D 跳过。员工把校准结果写入自己的 `memory.md`，深度校准、联网、广泛读文件或外部参考都需要单独授权。
+- 文件优先：完整派工包可写入 `Agent Office/Exchange/Dispatch/`，完整员工汇报可写入 `Agent Office/Exchange/Reports/`。线程消息优先只传任务名、文件路径、状态和是否需要用户介入。
 - 项目总监收到 `【员工汇报】` 时，先验收汇报格式和任务归属，再更新 `task-board.md`、本文件的汇报接收记录和依赖等待记录；不能因为只收到部分汇报就推进下游。
 - 用户侧推进优先使用任务名和自然语言短词，例如 `跟进`、`继续`、`OK`、`好的`。如果多个任务都可推进，项目总监列出任务名让用户选。
 - `A/B/C/D` 只用于会触发不同动作的授权选择；`1/2/3` 只用于信息说明或多任务消歧。
@@ -964,6 +1005,7 @@ def render_communication(language: str) -> str:
 结论摘要：{短摘要}
 建议下一步：{下一步或等待项目总监判断}
 需要用户介入：是/否
+完整报告文件：Agent Office/Exchange/Reports/{任务名}.md 或 none
 ```
 
 ## 员工回传状态
@@ -974,6 +1016,7 @@ def render_communication(language: str) -> str:
 项目总监线程：已确认 / 未登记 / 不确定
 回传方式：send_message_to_thread / 手动复制
 结果：已发送 / 需要复制回项目总监窗口
+完整报告文件：Agent Office/Exchange/Reports/{任务名}.md 或 none
 ```
 
 ## 员工汇报接收记录
@@ -1026,7 +1069,9 @@ heartbeat：已设置 / 未设置 / 工具不可用
 - The project director classifies lifecycle state and authorization level first; before writing files, changing `AGENTS.md`, moving old memory, or operating threads, it must confirm the current reply authorized that action.
 - When cross-role coordination is needed, append a message here with from, to, task_title, task_id, routing decision, requested response, and next owner.
 - Employees do not dispatch to each other by default. After meaningful work, employees update their own `memory.md` and `current-task.md`, then report back to the project director with the `Employee Report` shape.
-- Employee return prefers the project-director thread: when Codex Desktop exposes `send_message_to_thread` and `thread-registry.md` identifies the project-director thread ID, send the `[Employee Report]` back to that thread. Otherwise output a copyable report in the employee chat and state that it needs to be carried back to the project-director chat.
+- Full employee reports prefer office files; when Codex Desktop exposes `send_message_to_thread` and `thread-registry.md` identifies the project-director thread ID, send only the task title, report path, status, and user-input need back to that thread. Otherwise output a copyable report in the employee chat and state that it needs to be carried back to the project-director chat.
+- Before the first real dispatch to an employee, the project director asks the user to choose role calibration: A light, B standard, C deep, D skip. Employees write calibration to their own `memory.md`; deep calibration, web, broad file reads, or external references require separate approval.
+- File-first: full dispatch packets may go in `Agent Office/Exchange/Dispatch/`; full employee reports may go in `Agent Office/Exchange/Reports/`. Thread messages should carry task title, file path, status, and whether user input is needed.
 - When the project director receives an `[Employee Report]`, validate report shape and task ownership first, then update `task-board.md`, this file's report-intake record, and dependency waiting record. Do not advance downstream from partial reports.
 - User-facing continuation uses task titles and short natural-language replies such as `continue`, `ok`, or `proceed`. If several tasks can continue, list task titles and ask the user to choose.
 - Use A/B/C/D only for choices that authorize different actions; use 1/2/3 only for informational guidance or task disambiguation.
@@ -1044,6 +1089,7 @@ Output: {path or concise result}
 Summary: {short summary}
 Recommended next step: {next step or project-director judgment}
 Needs user input: yes/no
+Full report file: Agent Office/Exchange/Reports/{task title}.md or none
 ```
 
 ## Employee Return Status
@@ -1054,6 +1100,7 @@ Task: {task title}
 Project-director thread: confirmed / not registered / uncertain
 Return method: send_message_to_thread / manual copy
 Result: sent / needs copy back to project-director chat
+Full report file: Agent Office/Exchange/Reports/{task title}.md or none
 ```
 
 ## Employee Report Intake Record
@@ -1153,6 +1200,8 @@ def render_employee_readme(spec: OfficeSpec, role: RoleSpec) -> str:
 - 默认接收项目总监派工，完成后把结果回给项目总监；不要默认把任务直接派给其他员工。
 - 回给项目总监时必须使用 `【员工汇报】` 格式，写清汇报人、任务名、状态、产出位置、结论摘要、建议下一步和是否需要用户介入。
 - 回传优先用 `send_message_to_thread` 发到已登记的项目总监 thread ID；如果 thread ID 不确定或工具不可用，就在本窗口输出可复制汇报并说明需要复制回项目总监窗口。
+- 第一次正式任务前，按用户选择的校准档位更新自己的 `memory.md` 岗位校准区；深度校准、联网、广泛读文件或外部参考必须先获得授权。
+- 大段任务背景、派工包和完整汇报优先写入办公室文件；线程里只回传任务名、文件路径、状态和是否需要用户介入。
 - 职责外请求先路由给合适员工或项目总监。
 - 正经完成任务后，更新 `memory.md` 的 `Next Action` 和 `Work Log`，必要时更新 `current-task.md`。
 """
@@ -1208,6 +1257,8 @@ You are not a feature module; you are the person holding this job's judgment for
 - Receive work from the project director by default and return results to the project director; do not dispatch work directly to other employees by default.
 - Report back with the `Employee Report` shape, naming reporter, task title, status, output, summary, recommended next step, and whether user input is needed.
 - Prefer `send_message_to_thread` to the registered project-director thread ID; if the ID is uncertain or the tool is unavailable, output a copyable report here and state that it needs to be copied back to the project-director chat.
+- Before the first real task, update your `memory.md` role calibration section according to the user's chosen calibration level; deep calibration, web, broad file reads, or external references require approval first.
+- Put long task context, dispatch packets, and full reports in office files when practical; thread messages should return task title, file path, status, and whether user input is needed.
 - Route out-of-scope requests to the right employee or project director.
 - After significant work, update `memory.md` `Next Action` and `Work Log`; update `current-task.md` when needed.
 """
@@ -1243,6 +1294,17 @@ reason: 初始接管状态；等待用户或项目总监确认下一步。
 - 职责域：{role.domain or role.mission}
 - 写入范围：{role.write_scope}
 - 交接对象：{role.handoff_to}
+
+## Role Calibration / 岗位校准
+
+status: not-calibrated
+level: waiting-user-choice
+
+- 成功标准：首次正式派工前，根据用户选择的校准档位写入 3-7 条本项目岗位成功标准。
+- 质量红线：记录这个岗位在本项目里不能越过的质量底线。
+- 常见误判：记录容易把项目带偏的判断误区。
+- 需要确认：记录必须问项目总监或用户的情况。
+- 当前任务第一判断：首次正式任务开始前补充。
 
 ## 用户偏好
 
@@ -1283,6 +1345,17 @@ reason: Initial takeover state; waiting for the user or project director to conf
 - Write scope: {role.write_scope}
 - Handoff target: {role.handoff_to}
 
+## Role Calibration
+
+status: not-calibrated
+level: waiting-user-choice
+
+- Success criteria: before the first real assignment, write 3-7 project-specific success criteria for this role according to the user's calibration choice.
+- Quality red lines: record the quality floor this role must not cross in this project.
+- Common misjudgments: record likely ways this role could steer the project wrong.
+- Confirmation triggers: record what must be checked with the project director or user.
+- First-task judgment: fill this before starting the first real task.
+
 ## User Preferences
 
 - None recorded yet.
@@ -1321,8 +1394,10 @@ owner: {role.title}
 ## 完成时
 
 - 更新本文件状态：waiting / active / deferred / cancelled / done。
+- 第一次正式任务开始前，按用户选择的校准档位更新 `memory.md` 的 `Role Calibration / 岗位校准`。
 - 更新 `memory.md` 的 `Next Action` 和 `Work Log`。
-- 生成 `【员工汇报】`，优先用 `send_message_to_thread` 发回已登记的项目总监 thread ID；不能自动发回时，在本窗口输出可复制汇报并说明需要复制回项目总监窗口。
+- 完整汇报优先写入 `Agent Office/Exchange/Reports/{{任务名}}.md`；线程只发任务名、报告路径、状态和是否需要用户介入。
+- 不能写报告文件或自动发回时，在本窗口输出可复制 `【员工汇报】` 并说明需要复制回项目总监窗口。
 - 不默认直接派其他员工；建议下一步即可，由项目总监决定是否推进。
 """
     return f"""# Current Task
@@ -1348,8 +1423,10 @@ owner: {role.title}
 ## On Completion
 
 - Update this file status: waiting / active / deferred / cancelled / done.
+- Before the first real task starts, update `memory.md` `Role Calibration` according to the user's chosen calibration level.
 - Update `memory.md` `Next Action` and `Work Log`.
-- Prepare the `Employee Report`, prefer `send_message_to_thread` to the registered project-director thread ID, and fall back to a copyable report in this chat when automatic return is unavailable.
+- Write the full report to `Agent Office/Exchange/Reports/{{task title}}.md` when practical; thread messages should return task title, report path, status, and whether user input is needed.
+- If file reporting or automatic return is unavailable, output a copyable `[Employee Report]` in this chat.
 - Do not dispatch other employees directly by default; recommend the next step and let the project director decide.
 """
 
@@ -1388,9 +1465,9 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
 4. 当前等待什么派工
 5. 如需开工，你需要项目总监给什么输入
 
-之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md，再生成下面格式的汇报。
+之后等待项目总监派工；只有用户明确点名找你时，才直接回应用户。完成正式任务后，先更新自己的 memory.md 和 current-task.md；完整汇报优先写入 `Agent Office/Exchange/Reports/{{任务名}}.md`，线程只回传报告路径、状态和是否需要用户介入。不能写文件或自动发回时，再在本窗口输出完整汇报。
 
-回传规则：读取 `Agent Office/thread-registry.md` 确认项目总监窗口标题和 thread ID。如果 Codex Desktop 提供 `send_message_to_thread`，且项目总监 thread ID 已登记且能确认属于本项目，就主动把完整 `【员工汇报】` 发回项目总监线程；如果 thread ID 是 `current-window`、`TBD`、缺失或不确定，或线程工具不可用，就在本窗口输出可复制的 `【员工汇报】`，并写明“需要复制回项目总监窗口”。不要把汇报发给其他员工。
+回传规则：读取 `Agent Office/thread-registry.md` 确认项目总监窗口标题和 thread ID。如果 Codex Desktop 提供 `send_message_to_thread`，且项目总监 thread ID 已登记且能确认属于本项目，就主动把短索引发回项目总监线程：任务名、报告文件路径、状态、是否需要用户介入；如果 thread ID 是 `current-window`、`TBD`、缺失或不确定，或线程工具不可用，就在本窗口输出可复制的 `【员工汇报】`，并写明“需要复制回项目总监窗口”。不要把汇报发给其他员工。
 
 【员工汇报】
 汇报人：{role.title}
@@ -1400,6 +1477,7 @@ def render_prompt_body(spec: OfficeSpec, role: RoleSpec) -> str:
 结论摘要：{{短摘要}}
 建议下一步：{{下一步或等待项目总监判断}}
 需要用户介入：是/否
+完整报告文件：Agent Office/Exchange/Reports/{{任务名}}.md 或 none
 """
     return f"""Conversation role: {role.title}
 
@@ -1433,9 +1511,9 @@ For the first reply, only confirm onboarding. Do not edit files and do not start
 4. what dispatch you are waiting for
 5. what input you would need from the project director to start
 
-Then wait for the project director to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md, then prepare this report shape.
+Then wait for the project director to dispatch work; respond directly to the user only when explicitly addressed. After real work, update your own memory.md and current-task.md. Write the full report to `Agent Office/Exchange/Reports/{{task title}}.md` when practical, and use thread return only for the report path, status, and whether user input is needed. If file reporting or automatic return is unavailable, output the full report here.
 
-Return rule: read `Agent Office/thread-registry.md` for the project-director chat title and thread ID. If Codex Desktop exposes `send_message_to_thread` and the project-director thread ID is registered and clearly tied to this project, send the full `[Employee Report]` back to that project-director thread. If the ID is `current-window`, `TBD`, missing, uncertain, or thread tools are unavailable, output a copyable `[Employee Report]` in this chat and state that it needs to be copied back to the project-director chat. Do not send reports to other employees.
+Return rule: read `Agent Office/thread-registry.md` for the project-director chat title and thread ID. If Codex Desktop exposes `send_message_to_thread` and the project-director thread ID is registered and clearly tied to this project, send a short index back to that project-director thread: task title, report file path, status, and whether user input is needed. If the ID is `current-window`, `TBD`, missing, uncertain, or thread tools are unavailable, output a copyable `[Employee Report]` in this chat and state that it needs to be copied back to the project-director chat. Do not send reports to other employees.
 
 [Employee Report]
 Reporter: {role.title}
@@ -1445,6 +1523,7 @@ Output: {{path or concise result}}
 Summary: {{short summary}}
 Recommended next step: {{next step or project-director judgment}}
 Needs user input: yes/no
+Full report file: Agent Office/Exchange/Reports/{{task title}}.md or none
 """
 
 
@@ -1515,19 +1594,22 @@ def render_thread_registry(spec: OfficeSpec) -> str:
             "会写文件、改 AGENTS.md、移动旧资料或操作线程的动作，必须有当前有效选项或明确授权。A/B/C/D 只用于授权动作或推进模式选择；过期字母不能当作批准。",
             "",
             "需要员工时，先更新任务板、communication.md 和员工 current-task，再把下面这种派工消息发给员工窗口。",
-            "派工事务要小：最多更新 `task-board.md`、一条 `communication.md` 交接、被派员工 `current-task.md`，最多发送一条员工线程消息；然后向用户汇报并停止。写入或线程发送不可用时，输出手动派工包并停止。",
+            "首次正式派工前，给用户校准档位：A 轻量（最低 token，3-5 条标准）、B 标准（核心员工推荐，标准/禁区/误判/交接）、C 深度（高成本，需授权广泛读取、联网或参考资料）、D 跳过（最省 token，稳定性较弱）。员工把校准结果写入自己的 `memory.md`，不要把长校准内容塞进聊天。",
+            "派工事务要小：最多更新 `task-board.md`、一条 `communication.md` 交接、被派员工 `current-task.md`，必要时写一个 `Agent Office/Exchange/Dispatch/{任务名}.md` 派工包；线程消息只发任务名、派工包路径、状态和回传要求；然后向用户汇报并停止。",
             "目标员工 Thread ID 为 `TBD`、缺失或不属于本项目时，不把任务标成 active，不写孤儿任务；输出手动派工包并停止。等用户确认已发送、线程登记完成或员工结果返回后，再记录任务。",
             "员工汇报统一回项目总监。只收到部分汇报时，更新依赖状态，说明已收到谁、还等谁，不提前推进。",
             "",
             "```text",
             "本次派工：{任务名}",
+            "岗位校准：{未校准时先按用户选择的 A/B/C/D 执行；已校准则写已完成}",
             "路由判断：{为什么这件事归这个员工；如果有下一棒，写下一棒是谁}",
+            "派工包：Agent Office/Exchange/Dispatch/{任务名}.md；如未使用文件包则写 none",
             "交接框架：{目标、约束、输入材料、验收标准；不要替员工写最终产物}",
             "请先读取 AGENTS.md、Agent Office 公共文件，以及你自己的员工文件夹。",
             "写入范围：{明确路径或范围}",
             "交付内容：{期望输出}",
             f"回传目标：项目总监窗口 `{manager_title}`；若 thread-registry.md 中有真实项目总监 thread ID，优先用 send_message_to_thread 发回。",
-            "完成后请更新你的 memory.md 和 current-task.md，然后生成【员工汇报】。如果无法自动发回项目总监线程，请在本窗口输出完整汇报，并写明需要复制回项目总监窗口。",
+            "完成后请更新你的 memory.md 和 current-task.md；完整汇报优先写入 Agent Office/Exchange/Reports/{任务名}.md，线程只回传报告路径、状态和是否需要用户介入。无法写文件或自动发回时，再在本窗口输出完整【员工汇报】。",
             "```",
             "",
             "派工后按用户选择的 A/B/C 推进模式工作。A 等用户短词触发，如 `跟进`、`继续`、`OK`；B 按员工汇报推进到关键检查点；C 可设置或更新 heartbeat 并推进到检查点。",
@@ -1606,19 +1688,22 @@ def render_thread_registry(spec: OfficeSpec) -> str:
         "Actions that write files, change AGENTS.md, move old memory, or operate threads require a current valid option or explicit approval. A/B/C/D are only for authorization or progress-mode choices; stale letters are not approval.",
         "",
         "When an employee is needed, update the task board, communication.md, and employee current-task before sending a concise task message like this.",
-        "Keep the dispatch transaction small: update at most `task-board.md`, one `communication.md` handoff, and the assigned employee's `current-task.md`; send at most one employee-thread message; then report and stop. If unavailable, show a manual dispatch packet and stop.",
+        "Before the first real dispatch to an employee, ask the user for calibration level: A light (lowest tokens, 3-5 standards), B standard (recommended for core employees, standards/red lines/mistakes/handoff), C deep (high cost, requires approval for broader reads, web, or references), D skip (lowest cost, weaker continuity). The employee writes calibration into its own `memory.md`; do not put long calibration in chat.",
+        "Keep the dispatch transaction small: update at most `task-board.md`, one `communication.md` handoff, and the assigned employee's `current-task.md`; when useful, write `Agent Office/Exchange/Dispatch/{task title}.md`; thread messages carry only task title, dispatch packet path, status, and return requirement; then report and stop.",
         "If the target employee Thread ID is `TBD`, missing, or not tied to this project, do not mark the task active or create orphan task records. Show the manual dispatch packet and stop. Record after user confirmation, thread registration, or employee result return.",
         "Employees report back to the project director. With partial reports, update dependency status and wait for missing inputs instead of advancing.",
         "",
         "```text",
         "Dispatch task: {task title}",
+        "Role calibration: {if not calibrated, follow the user's A/B/C/D choice first; otherwise write complete}",
         "Routing decision: {why this belongs to this employee; name the likely next owner if any}",
+        "Dispatch packet: Agent Office/Exchange/Dispatch/{task title}.md; write none if no file packet is used",
         "Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}",
         "First read AGENTS.md, Agent Office public files, and your own employee folder.",
         "Write scope: {explicit paths or scope}",
         "Deliverable: {expected output}",
         f"Return target: project-director chat `{manager_title}`; if thread-registry.md contains a real project-director thread ID, prefer send_message_to_thread.",
-        "After completion, update your memory.md and current-task.md, then prepare the Employee Report. If you cannot send it back to the project-director thread automatically, output the full report here and state that it needs to be copied back to the project-director chat.",
+        "After completion, update memory.md and current-task.md; write the full report to Agent Office/Exchange/Reports/{task title}.md when practical, and send back only report path, status, and whether user input is needed. If file writing or automatic return is unavailable, output the full Employee Report here.",
         "```",
         "",
         "After dispatch, follow the user's A/B/C progress mode. A waits for `continue`, `ok`, or `proceed`; B advances from reports but stops at checkpoints; C may set/update a heartbeat and continue to the checkpoint.",

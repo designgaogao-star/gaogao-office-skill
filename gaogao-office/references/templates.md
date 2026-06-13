@@ -187,23 +187,25 @@ When the user sends work to the project director:
 3. if one employee clearly owns the next stage, dispatch to that employee; if no employee owns it or it is small office maintenance, the project director may handle it
 4. update `task-board.md`, `communication.md`, and assigned employee `current-task.md`
 5. follow `dispatch_policy.max_parallel_employee_tasks`; do not dispatch all employees in parallel unless the user explicitly approves it
-6. send the employee a concise task message when thread tools and a registered employee thread ID are available
-7. include the project-director return target in that message: title, thread ID status, automatic return condition, and manual-copy fallback
-8. ask the employee to update `memory.md` and `current-task.md`, then return the fixed employee-report shape to the project director
-9. record partial employee reports, wait for required dependencies, and continue only according to A/B/C mode
-10. in automatic progress mode, create or update heartbeat only when automation tools are available and stop at completion, blocker, risk, or the next user checkpoint
+6. before an employee's first real task, ask the user to choose role calibration: A light, B standard, C deep, D skip
+7. when the handoff is long, write it to `Agent Office/Exchange/Dispatch/{task title}.md`
+8. send the employee a concise task-index message when thread tools and a registered employee thread ID are available
+9. include the project-director return target in that message: title, thread ID status, automatic return condition, and manual-copy fallback
+10. ask the employee to update `memory.md` and `current-task.md`, write full reports to `Agent Office/Exchange/Reports/` when practical, and return a short report index to the project director
+11. record partial employee reports, wait for required dependencies, and continue only according to A/B/C mode
+12. in automatic progress mode, create or update heartbeat only when automation tools are available and stop at completion, blocker, risk, or the next user checkpoint
 
 The project director may write handoff framing, inputs, constraints, and acceptance criteria. It must not write the employee-owned final output unless the user explicitly asks the project director to take over that employee's work.
 
 Task-routing read budget: read `office-plan.json`, `task-board.md`, `thread-registry.md`, `project-brief.md`, optional root `AGENTS.md`, and only the likely owner's `current-task.md`. Do not read every employee file or run full validation before ordinary dispatch.
 
-Dispatch transaction budget: update only `task-board.md`, `communication.md`, and the assigned employee's `current-task.md`; send at most one employee-thread message; then report to the user and stop. If writes or thread sends are unavailable, show a manual dispatch packet and stop.
+Dispatch transaction budget: update only `task-board.md`, `communication.md`, and the assigned employee's `current-task.md`; write a dispatch file only when it saves thread context; send at most one employee-thread index message; then report to the user and stop. If writes or thread sends are unavailable, show a manual dispatch packet and stop.
 
 If the employee thread ID is `TBD`, missing, or not clearly tied to this project, do not mark the task `active`. Show the manual dispatch packet and stop; record the task after the user confirms it was sent or after the employee result returns.
 
 ## Employee Report Shape
 
-Employees reply to the project director in this shape after real work. If `send_message_to_thread` is available and `thread-registry.md` has a confirmed project-director thread ID, send this report to that thread; otherwise output the report as a copyable block and say it needs to be copied back to the project-director chat.
+Employees reply to the project director in this shape after real work. Prefer writing the full report to `Agent Office/Exchange/Reports/{task title}.md`; if `send_message_to_thread` is available and `thread-registry.md` has a confirmed project-director thread ID, send only the task title, report path, status, and user-input need to that thread. Otherwise output the report as a copyable block and say it needs to be copied back to the project-director chat.
 
 ```text
 【员工汇报】
@@ -214,6 +216,7 @@ Employees reply to the project director in this shape after real work. If `send_
 结论摘要：{短摘要}
 建议下一步：{建议交给谁或停在哪里}
 需要用户介入：是/否
+完整报告文件：Agent Office/Exchange/Reports/{任务名}.md 或 none
 ```
 
 English:
@@ -227,6 +230,7 @@ Output location: {path or thread summary}
 Summary: {short summary}
 Suggested next step: {next owner or stop point}
 User input needed: yes/no
+Full report file: Agent Office/Exchange/Reports/{task title}.md or none
 ```
 
 ## Dispatch Reply Shape
@@ -240,6 +244,7 @@ Chinese:
 任务：`{任务名}`
 路由判断：{为什么这件事归这个员工；若有下一棒，写下一棒是谁}
 交接框架：{目标、约束、输入材料、验收标准；不要替员工写最终产物}
+派工包：Agent Office/Exchange/Dispatch/{任务名}.md 或 none
 当前状态：等待 `{员工职位}` 完成。
 
 我会按你选择的推进方式处理：
@@ -257,11 +262,13 @@ Manual dispatch packet fallback:
 
 ```text
 本次派工：{任务名}
+岗位校准：{未校准时先按用户选择的 A/B/C/D 执行；已校准则写已完成}
 路由判断：{为什么这件事归这个员工}
+派工包：Agent Office/Exchange/Dispatch/{任务名}.md 或 none
 交接框架：{目标、约束、输入材料、验收标准；不要替员工写最终产物}
 回传目标：项目总监窗口 `{项目总监标题}`；若 thread-registry.md 有真实项目总监 thread ID，优先用 send_message_to_thread 发回。
-完成后请更新你的 memory.md 和 current-task.md，然后用 `【员工汇报】` 格式回复给项目总监。
-如果无法自动发回项目总监线程，请在本窗口输出完整 `【员工汇报】`，并写明需要复制回项目总监窗口。
+完成后请更新你的 memory.md 和 current-task.md；完整汇报优先写入 Agent Office/Exchange/Reports/{任务名}.md，线程只回传报告路径、状态和是否需要用户介入。
+如果无法写文件或自动发回项目总监线程，请在本窗口输出完整 `【员工汇报】`，并写明需要复制回项目总监窗口。
 ```
 ````
 
@@ -272,6 +279,7 @@ Assigned to: `{employee job title}`
 Task: `{task title}`
 Routing decision: {why this belongs to this employee; name the likely next owner if any}
 Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}
+Dispatch packet: Agent Office/Exchange/Dispatch/{task title}.md or none
 Current status: waiting for `{employee job title}`.
 
 I will follow the progress mode you chose:
@@ -289,11 +297,13 @@ The employee thread is not registered yet, so I will not create an orphan active
 
 ```text
 Dispatch task: {task title}
+Role calibration: {if not calibrated, follow the user's A/B/C/D choice first; otherwise write complete}
 Routing decision: {why this belongs to this employee}
+Dispatch packet: Agent Office/Exchange/Dispatch/{task title}.md or none
 Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}
 Return target: project-director chat `{project-director title}`; if thread-registry.md contains a real project-director thread ID, prefer send_message_to_thread.
-After completion, update your memory.md and current-task.md, then prepare the `[Employee Report]` shape.
-If you cannot send it back to the project-director thread automatically, output the full report here and state that it needs to be copied back to the project-director chat.
+After completion, update memory.md and current-task.md; write the full report to Agent Office/Exchange/Reports/{task title}.md when practical, and send only report path, status, and user-input need.
+If file reporting or automatic return is unavailable, output the full `[Employee Report]` here and state that it needs to be copied back to the project-director chat.
 ```
 ````
 

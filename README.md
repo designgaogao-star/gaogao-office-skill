@@ -7,7 +7,7 @@
 
 它会让当前窗口先接任第一任项目总监，提出组织方案，等你用 A/B/C/D 拍板后再正式接管。多员工模式下，你也可以继续只和项目总监窗口说话，由它先判断每个需求该谁负责，再按本机容量派给员工窗口、接收员工汇报，并根据依赖关系和你选择的 A/B/C 推进模式继续流转。
 
-v1.0.2 把协作闭环再补完整：员工汇报仍优先通过线程回传；项目总监收到后会先验收格式、更新 `task-board.md` / `communication.md`、等待缺失依赖，再按用户选择的 A/B/C 推进模式继续。
+v1.0.3 增加首次正式派工的岗位校准，并把员工通信改成文件优先：员工把项目语境沉淀成自己的岗位判断标准，完整派工包和完整汇报优先写入 `Agent Office/Exchange/`，线程里只传路径、状态和是否需要用户介入。
 
 ## 什么时候适合用
 
@@ -126,7 +126,7 @@ Copy-Item -Recurse .\gaogao-office $dest
 
 It treats the current chat as the founding project director, renames that chat to its job title when Codex Desktop allows it, proposes an organization, and invites employees only after formal takeover. In multi-employee mode, the user can keep talking to that one project-director chat while it judges each request, routes employee-owned work to the right thread according to local capacity, receives employee reports, waits for dependencies, and advances according to the user's A/B/C progress mode.
 
-v1.0.2 tightens the collaboration loop: employee reports still return by thread when possible, and the project director now has a concise intake rule for validating reports, updating `task-board.md` / `communication.md`, waiting for missing dependencies, and advancing only under the selected A/B/C progress mode.
+v1.0.3 adds first-assignment role calibration and file-first employee communication. Employees turn project context into role-specific judgment in their own memory, while full dispatch packets and full reports live in `Agent Office/Exchange/` when practical; thread messages carry paths, status, and user-input needs.
 
 ## When To Use It
 

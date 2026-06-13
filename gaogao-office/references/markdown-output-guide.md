@@ -208,7 +208,9 @@ Chinese shape:
 | 新项目接管 | 刚开项目，想建立长期工作秩序 | 是 | 需要你选 A/B |
 | 旧项目迁移 | 有旧 planning、vibe、规则、任务或上下文散落 | 是 | 先给迁移方案，再等确认 |
 | 员工入职 | 想把长期项目拆给多个专业对话窗口 | 是 | 正式接管后再授权 |
+| 岗位校准 | 员工第一次正式开工前形成本项目专属判断标准 | 是 | 由你选择轻量/标准/深度/跳过 |
 | 任务路由 | 你只跟项目总监说需求，由它判断谁来做 | 可能 | 派工前会记录任务 |
+| 文件优先交接 | 减少员工窗口里的长背景和长汇报 | 可能 | 派工或汇报较长时使用 |
 | A/B/C 推进 | 手动、半自动或自动推进到检查点 | 可能 | 每条长任务开工前由你选择 |
 | 角色记忆 | 让每个岗位保留自己的长期记忆 | 是 | 员工完成正式任务后更新 |
 | 撤岗/换岗 | 减少员工、停掉方向、换新窗口接任 | 是 | 先给保留和归档方案 |
@@ -382,9 +384,11 @@ Use this after the project director assigns work to any employee. Adapt the empl
 ````md
 已派工给：`{员工职位}`
 任务：`{任务名}`
+岗位校准：{轻量 / 标准 / 深度 / 跳过 / 已完成}
 路由判断：{为什么这件事归这个员工；如果有下一棒，写下一棒是谁}
+派工包：`Agent Office/Exchange/Dispatch/{任务名}.md` / `none`
 交接框架：{只保留目标、约束、输入材料、验收标准；不要替员工写最终产物}
-回传方式：{已登记项目总监 thread ID，将自动回传 / 未登记，将在员工窗口输出可复制汇报}
+回传方式：{报告写入文件后回传短索引 / 未登记，将在员工窗口输出可复制汇报}
 当前状态：等待 `{员工职位}` 完成。
 
 我会按你选择的推进方式处理：
@@ -400,9 +404,11 @@ English:
 ````md
 Assigned to: `{employee job title}`
 Task: `{task title}`
+Role calibration: {light / standard / deep / skipped / complete}
 Routing decision: {why this belongs to this employee; name the likely next owner if any}
+Dispatch packet: `Agent Office/Exchange/Dispatch/{task title}.md` / `none`
 Handoff frame: {goal, constraints, inputs, acceptance criteria only; do not write the employee-owned output}
-Return method: {registered project-director thread ID, automatic return / not registered, copyable employee report}
+Return method: {file report plus short index / not registered, copyable employee report}
 Current status: waiting for `{employee job title}`.
 
 I will follow the progress mode you chose:
@@ -425,6 +431,7 @@ Chinese:
 - 任务：`{任务名}`
 - 汇报人：`{员工职位}`
 - 状态：`{已完成 / 阻塞 / 需要确认}`
+- 完整报告：`Agent Office/Exchange/Reports/{任务名}.md` / `none`
 - 已记录：`task-board.md`、`communication.md`
 - 下一步：{等待谁 / 按 A/B/C 继续 / 需要你判断}
 ````
@@ -437,6 +444,7 @@ English:
 - Task: `{task title}`
 - Reporter: `{employee job title}`
 - Status: `{done / blocked / needs-confirmation}`
+- Full report: `Agent Office/Exchange/Reports/{task title}.md` / `none`
 - Recorded: `task-board.md`, `communication.md`
 - Next: {waiting for whom / continue under A/B/C / needs your judgment}
 ````
